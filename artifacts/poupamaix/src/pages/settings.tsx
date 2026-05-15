@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
@@ -44,7 +44,6 @@ export default function Settings() {
   const { language, setLanguage, t, languages } = useI18n();
   const { toast } = useToast();
   const updateMutation = useUpdateProfile();
-  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [name,     setName]     = useState(user?.name  || "");
   const [email,    setEmail]    = useState(user?.email  || "");
@@ -114,7 +113,7 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="flex items-center gap-5">
-              <div className="relative group cursor-pointer" onClick={() => avatarInputRef.current?.click()}>
+              <label htmlFor="avatar-input" className="relative group cursor-pointer">
                 <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border group-hover:ring-primary transition-all">
                   {user?.avatarUrl ? (
                     <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
@@ -127,14 +126,23 @@ export default function Settings() {
                     ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     : <Camera className="w-5 h-5 text-white" />}
                 </div>
-              </div>
+              </label>
               <div>
-                <Button variant="outline" size="sm" className="bg-background" onClick={() => avatarInputRef.current?.click()} disabled={isUploadingPhoto}>
-                  <Upload className="w-3.5 h-3.5 mr-2" />
-                  {isUploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
-                </Button>
+                <label htmlFor="avatar-input">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-input bg-background text-sm font-medium cursor-pointer hover:bg-accent transition-colors ${isUploadingPhoto ? "pointer-events-none opacity-60" : ""}`}>
+                    <Upload className="w-3.5 h-3.5" />
+                    {isUploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
+                  </div>
+                </label>
                 <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG ou GIF · Máx 10 MB</p>
-                <input ref={avatarInputRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                <input
+                  id="avatar-input"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={isUploadingPhoto}
+                  onChange={handleAvatarChange}
+                />
               </div>
             </div>
 
