@@ -28,7 +28,7 @@ function getBaseUrl(req: any): string {
   return `${req.protocol}://${req.get("host")}`;
 }
 
-const PLAN_PRICE_ID = "price_1TXNhyDNf06AuejqvQ9wLcYh";
+const PLAN_PRICE_ID = "price_1TXOsi6LuUnWVnzqRtOPYreZ";
 
 // Fetch the subscription plan price directly from Stripe API
 router.get("/stripe/plan", async (_req, res) => {
