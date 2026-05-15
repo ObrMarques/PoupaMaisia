@@ -7,7 +7,6 @@ import { useEffect } from "react";
 import { AppLayout } from "@/components/layout";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
-import Onboarding from "@/pages/onboarding";
 import Dashboard from "@/pages/dashboard";
 import Transactions from "@/pages/transactions";
 import Goals from "@/pages/goals";
@@ -19,22 +18,17 @@ import Settings from "@/pages/settings";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ component: Component, requireOnboarding = true }: any) {
-  const { user, token } = useAuth();
+function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
+  const { token } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (!token) {
       setLocation("/login");
-    } else if (requireOnboarding && user && !user.onboardingCompleted) {
-      setLocation("/onboarding");
-    } else if (!requireOnboarding && user && user.onboardingCompleted) {
-      setLocation("/dashboard");
     }
-  }, [token, user, setLocation, requireOnboarding]);
+  }, [token, setLocation]);
 
   if (!token) return null;
-  if (requireOnboarding && user && !user.onboardingCompleted) return null;
 
   return (
     <AppLayout>
@@ -48,18 +42,6 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
-      <Route path="/onboarding">
-        {() => {
-          const { user, token } = useAuth();
-          const [, setLocation] = useLocation();
-          useEffect(() => {
-            if (!token) setLocation("/login");
-            else if (user?.onboardingCompleted) setLocation("/dashboard");
-          }, [token, user, setLocation]);
-          if (!token || user?.onboardingCompleted) return null;
-          return <Onboarding />;
-        }}
-      </Route>
       <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
       <Route path="/goals" component={() => <ProtectedRoute component={Goals} />} />
@@ -69,7 +51,7 @@ function Router() {
       <Route path="/premium" component={() => <ProtectedRoute component={Premium} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route component={() => <div className="p-8">Not Found</div>} />
+      <Route component={() => <ProtectedRoute component={Dashboard} />} />
     </Switch>
   );
 }

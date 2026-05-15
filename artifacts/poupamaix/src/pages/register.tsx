@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useLocation } from "wouter";
-import { useRegister } from "@workspace/api-client-react";
+import { useRegister, useCompleteOnboarding } from "@workspace/api-client-react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -20,6 +20,7 @@ export default function Register() {
   const { login } = useAuth();
   const { toast } = useToast();
   const registerMutation = useRegister();
+  const onboardingMutation = useCompleteOnboarding();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -32,7 +33,14 @@ export default function Register() {
       {
         onSuccess: (data) => {
           login(data.user, data.token);
-          setLocation("/onboarding");
+          onboardingMutation.mutate(
+            { data: { currency: "BRL", initialGoalName: null, initialGoalAmount: null, favoriteCategories: [] } },
+            {
+              onSettled: () => {
+                setLocation("/dashboard");
+              },
+            }
+          );
         },
         onError: () => {
           toast({
@@ -97,8 +105,13 @@ export default function Register() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={registerMutation.isPending} data-testid="button-register">
-              {registerMutation.isPending ? "Criando conta..." : "Criar conta"}
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMutation.isPending || onboardingMutation.isPending}
+              data-testid="button-register"
+            >
+              {registerMutation.isPending || onboardingMutation.isPending ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>
         </Form>

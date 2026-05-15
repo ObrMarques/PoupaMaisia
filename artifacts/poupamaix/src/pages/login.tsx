@@ -31,11 +31,7 @@ export default function Login() {
       {
         onSuccess: (data) => {
           login(data.user, data.token);
-          if (data.user.onboardingCompleted) {
-            setLocation("/dashboard");
-          } else {
-            setLocation("/onboarding");
-          }
+          setLocation("/dashboard");
         },
         onError: () => {
           toast({
