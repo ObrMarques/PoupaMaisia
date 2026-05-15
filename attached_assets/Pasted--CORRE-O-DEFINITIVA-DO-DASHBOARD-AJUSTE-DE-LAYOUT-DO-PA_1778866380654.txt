@@ -1,0 +1,137 @@
+# CORREÇÃO DEFINITIVA DO DASHBOARD + AJUSTE DE LAYOUT DO PAINEL
+
+## 1. ERRO CRÍTICO AINDA NÃO RESOLVIDO
+
+O dashboard continua sem atualizar corretamente após criar:
+
+* receita
+* despesa
+
+O problema ainda existe e precisa ser corrigido DEFINITIVAMENTE.
+
+---
+
+# PROBLEMA ATUAL
+
+Após adicionar uma transação:
+
+* saldo total demora atualizar
+* receitas não atualizam
+* despesas não atualizam
+* taxa de economia não atualiza
+* dashboard fica desincronizado
+
+---
+
+# CORREÇÃO OBRIGATÓRIA (DEFINITIVA)
+
+## IMPLEMENTAR ATUALIZAÇÃO INSTANTÂNEA REAL
+
+Assim que:
+
+* criar transação
+* editar transação
+* excluir transação
+
+o dashboard deve:
+
+* recalcular imediatamente
+* atualizar sem delay
+* sem precisar recarregar página
+* sem precisar sair da tela
+
+---
+
+# SOLUÇÃO TÉCNICA OBRIGATÓRIA
+
+## NÃO usar apenas fetch após salvar.
+
+Implementar:
+
+* estado global reativo real
+* atualização otimista
+* listeners automáticos
+* sincronização instantânea entre:
+
+  * transações
+  * dashboard
+  * gráficos
+  * metas
+
+---
+
+# O DASHBOARD DEVE ATUALIZAR EM TEMPO REAL:
+
+* saldo total
+* receitas
+* despesas
+* taxa de economia
+* gráficos
+* metas
+
+SEM delay.
+
+---
+
+# IMPORTANTE
+
+Corrigir a raiz do problema:
+
+* estado não sincronizado
+* cache travado
+* dashboard não ouvindo mudanças
+* re-renderização falhando
+
+---
+
+# 2. ALTERAÇÃO NO PAINEL (LAYOUT)
+
+## REMOVER DO DASHBOARD/PAINEL:
+
+* botão “Nova transação”
+* seção “Transações recentes”
+
+IMPORTANTE:
+
+* remover APENAS do painel/dashboard
+* NÃO apagar a funcionalidade do sistema
+
+---
+
+# AS TRANSAÇÕES DEVEM CONTINUAR EXISTINDO:
+
+* na tela de receitas/despesas
+* histórico
+* relatórios
+* outras áreas apropriadas
+
+---
+
+# OBJETIVO VISUAL
+
+Deixar o painel/dashboard:
+
+* mais limpo
+* mais minimalista
+* mais profissional
+* estilo fintech premium
+
+---
+
+# EXPERIÊNCIA FINAL
+
+Quero que:
+
+* dashboard atualize instantaneamente
+* painel fique limpo e organizado
+* sem elementos desnecessários
+* aparência de aplicativo bancário moderno
+
+---
+
+# IMPORTANTE FINAL
+
+* corrigir definitivamente o bug de sincronização
+* não fazer solução temporária
+* manter alta performance
+* manter experiência fluida e premium no PoupaMais

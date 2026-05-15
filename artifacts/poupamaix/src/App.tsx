@@ -26,8 +26,8 @@ const Paywall      = lazy(() => import("@/pages/paywall"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 2,
-      gcTime:    1000 * 60 * 10,
+      staleTime: 0,
+      gcTime:    1000 * 60 * 5,
       retry: 1,
       refetchOnWindowFocus: false,
       refetchOnReconnect:   false,

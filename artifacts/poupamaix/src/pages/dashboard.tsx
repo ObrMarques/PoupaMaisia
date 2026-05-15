@@ -1,9 +1,9 @@
-import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
@@ -18,7 +18,6 @@ export default function Dashboard() {
     ? { backgroundColor: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
     : { backgroundColor: "#FFFFFF", borderColor: "#E0E0E0", color: "#111" };
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
-  const { data: recentTransactions, isLoading: loadingTransactions } = useGetRecentTransactions();
   const { data: spending, isLoading: loadingSpending } = useGetSpendingByCategory();
   const { data: trend, isLoading: loadingTrend } = useGetMonthlyTrend();
   const { data: goals, isLoading: loadingGoals } = useGetGoals();
@@ -37,20 +36,12 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
           <p className="text-muted-foreground">Olá, {user?.name}</p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/transactions">
-            <Button variant="outline" className="bg-background" data-testid="button-add-transaction">
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Transação
-            </Button>
-          </Link>
-          <Link href="/ai">
-            <Button className="bg-primary text-primary-foreground">
-              <Sparkles className="w-4 h-4 mr-2" />
-              Perguntar ao PoupaAI
-            </Button>
-          </Link>
-        </div>
+        <Link href="/ai">
+          <Button className="bg-primary text-primary-foreground">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Perguntar ao PoupaAI
+          </Button>
+        </Link>
       </div>
 
       {/* Cartões de Resumo */}
@@ -136,41 +127,6 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Transações Recentes</CardTitle>
-                <CardDescription>Suas últimas movimentações financeiras</CardDescription>
-              </div>
-              <Link href="/transactions">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Ver todas</Button>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {loadingTransactions ? (
-                  Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
-                ) : recentTransactions?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma transação ainda.</p>
-                ) : (
-                  recentTransactions?.slice(0, 5).map((t) => (
-                    <div key={t.id} className="flex items-center justify-between py-3 border-b border-border last:border-0" data-testid={`row-transaction-${t.id}`}>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-sm truncate">{t.description}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {(t as any).categoryName ? `${(t as any).categoryName} · ` : ""}
-                          {new Date(t.date).toLocaleDateString('pt-BR')}
-                        </p>
-                      </div>
-                      <div className={`font-semibold text-sm ml-4 shrink-0 tabular-nums ${t.type === 'income' ? 'text-[#00C851]' : 'text-foreground'}`}>
-                        {t.type === 'income' ? '+' : '−'}{formatCurrency(t.amount, currency)}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Área Lateral */}
