@@ -1,0 +1,119 @@
+Correção unificada no aplicativo **PoupaMais** — agrupar as 3 últimas melhorias em um único pacote de ajustes de UX e funcionalidades:
+
+# PACOTE ÚNICO DE MELHORIAS (CATEGORIAS + METAS + UX)
+
+## 1. CORREÇÃO DO MODAL DE CATEGORIAS (POSIÇÃO E LAYOUT)
+
+Corrigir completamente o seletor de categorias:
+
+* o modal/lista NÃO pode sair da tela
+* deve abrir centralizado corretamente ou como bottom sheet bem posicionado
+* respeitar todas as telas (mobile e desktop)
+* nunca ultrapassar limites da viewport
+* garantir alinhamento perfeito vertical e horizontal
+
+### UX do modal
+
+* fundo com overlay escuro (blur ou transparência)
+* animação suave de entrada e saída
+* fechar ao clicar fora
+* experiência fluida estilo app bancário premium
+
+---
+
+## 2. REMOÇÃO DE EMOJIS NAS CATEGORIAS
+
+Limpar completamente o visual:
+
+* remover todos os emojis das categorias
+* manter apenas texto limpo
+* opcional: ícones minimalistas (outline), sem emojis
+
+### Exemplo correto:
+
+* Alimentação
+* Transporte
+* Moradia
+
+### Exemplo errado (remover):
+
+* 🍔 Alimentação
+* 🚗 Transporte
+* 🏠 Moradia
+
+---
+
+## 3. CATEGORIAS PERSONALIZADAS (INPUT LIVRE)
+
+Manter categorias padrão + adicionar personalização:
+
+### Nova opção:
+
+* “Categoria personalizada”
+
+Quando selecionada:
+
+* exibir campo de texto para o usuário digitar o nome
+* salvar no banco como categoria customizada
+* permitir reutilização futura
+
+### Exemplos:
+
+* Freelance
+* Estudo online
+* Negócio próprio
+* Investimentos pessoais
+
+---
+
+## 4. METAS PERSONALIZADAS (INPUT LIVRE)
+
+No sistema de metas:
+
+### Nova opção:
+
+* “Meta personalizada”
+
+Quando selecionada:
+
+* abrir campo de texto para o usuário definir nome da meta
+* permitir qualquer objetivo financeiro
+
+### Exemplos:
+
+* Comprar um iPhone
+* Viagem para Europa
+* Casa própria
+* Reserva de emergência
+
+---
+
+## 5. REGRAS GERAIS DE FUNCIONAMENTO
+
+* manter categorias e metas padrão funcionando normalmente
+* opções personalizadas sempre aparecem como alternativa, não substituição
+* salvar tudo corretamente no banco de dados
+* permitir uso em relatórios, dashboard e gráficos
+* garantir compatibilidade com filtros e histórico
+
+---
+
+## 6. EXPERIÊNCIA FINAL
+
+* interface limpa e profissional
+* sem emojis
+* estilo fintech premium
+* responsivo (mobile + desktop)
+* animações suaves
+* sem bugs de layout
+* sensação de aplicativo bancário moderno
+
+---
+
+## IMPORTANTE
+
+* não quebrar estrutura existente
+* manter performance alta
+* garantir consistência visual em todo o app PoupaMais
+* aplicar padrão de qualidade de startup real
+* foco em UX fluida e profissional

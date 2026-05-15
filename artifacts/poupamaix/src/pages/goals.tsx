@@ -10,24 +10,32 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/currency-input";
 import { Input } from "@/components/ui/input";
-import { Plus, Target, TrendingUp } from "lucide-react";
+import { Plus, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
 const GOAL_TYPES: Record<string, string> = {
-  savings: "Poupança",
-  travel: "Viagem",
+  savings:   "Poupança",
+  travel:    "Viagem",
   emergency: "Emergência",
-  purchase: "Compra",
-  other: "Outro",
+  purchase:  "Compra",
+  other:     "Personalizada",
 };
 
 const GOAL_ICONS: Record<string, string> = {
-  savings: "💰",
-  travel: "✈️",
+  savings:   "💰",
+  travel:    "✈️",
   emergency: "🛡️",
-  purchase: "🛍️",
-  other: "🎯",
+  purchase:  "🛍️",
+  other:     "🎯",
+};
+
+const EXAMPLES: Record<string, string[]> = {
+  savings:   ["Reserva de emergência", "Fundo de aposentadoria"],
+  travel:    ["Viagem para Europa", "Férias em Gramado"],
+  emergency: ["3 meses de gastos", "Fundo de emergência"],
+  purchase:  ["Comprar um iPhone", "Notebook novo", "Carro usado"],
+  other:     ["Casa própria", "Curso online", "Negócio próprio"],
 };
 
 export default function Goals() {
@@ -47,16 +55,20 @@ export default function Goals() {
   const [type, setType] = useState<"savings" | "travel" | "emergency" | "purchase" | "other">("savings");
 
   const handleCreate = () => {
-    if (!name || !targetAmount) return;
+    if (!name.trim() || !targetAmount) {
+      toast({ title: "Preencha o nome e o valor da meta", variant: "destructive" });
+      return;
+    }
     createMutation.mutate(
-      { data: { name, targetAmount: parseFloat(targetAmount), type } },
+      { data: { name: name.trim(), targetAmount: parseFloat(targetAmount), type } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
           setIsNewGoalOpen(false);
-          setName(""); setTargetAmount("");
+          setName(""); setTargetAmount(""); setType("savings");
           toast({ title: "Meta criada com sucesso" });
-        }
+        },
+        onError: () => toast({ title: "Erro ao criar meta", variant: "destructive" })
       }
     );
   };
@@ -97,21 +109,55 @@ export default function Goals() {
               <Plus className="w-4 h-4 mr-2" /> Nova Meta
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[440px]">
             <DialogHeader>
               <DialogTitle>Criar Nova Meta</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+
               <div className="space-y-2">
-                <Label>Nome da meta</Label>
+                <Label>Tipo de meta</Label>
+                <Select value={type} onValueChange={(v: any) => { setType(v); setName(""); }}>
+                  <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(GOAL_TYPES).map(([k, v]) => (
+                      <SelectItem key={k} value={k}>{v}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>
+                  {type === "other" ? "Qual é o seu objetivo?" : "Nome da meta"}
+                </Label>
                 <Input
-                  placeholder="Ex: Reserva de emergência"
+                  placeholder={
+                    type === "other"
+                      ? "Ex: Casa própria, iPhone, Curso..."
+                      : (EXAMPLES[type]?.[0] ?? "Nome da meta")
+                  }
                   value={name}
                   onChange={e => setName(e.target.value)}
                   className="bg-background"
                   data-testid="input-goal-name"
+                  autoFocus={type === "other"}
                 />
+                {type !== "other" && EXAMPLES[type] && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {EXAMPLES[type].map(ex => (
+                      <button
+                        key={ex}
+                        onClick={() => setName(ex)}
+                        className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      >
+                        {ex}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+
               <div className="space-y-2">
                 <Label>Valor alvo</Label>
                 <CurrencyInput
@@ -121,21 +167,14 @@ export default function Goals() {
                   data-testid="input-goal-amount"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Tipo de meta</Label>
-                <Select value={type} onValueChange={(v: any) => setType(v)}>
-                  <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(GOAL_TYPES).map(([k, v]) => (
-                      <SelectItem key={k} value={k}>{GOAL_ICONS[k]} {v}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+
             </div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setIsNewGoalOpen(false)}>Cancelar</Button>
-              <Button onClick={handleCreate} disabled={createMutation.isPending || !name || !targetAmount}>
+              <Button
+                onClick={handleCreate}
+                disabled={createMutation.isPending || !name.trim() || !targetAmount}
+              >
                 {createMutation.isPending ? "Salvando..." : "Criar Meta"}
               </Button>
             </div>
@@ -143,7 +182,7 @@ export default function Goals() {
         </Dialog>
 
         <Dialog open={isContributeOpen} onOpenChange={setIsContributeOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[380px]">
             <DialogHeader>
               <DialogTitle>Adicionar Contribuição</DialogTitle>
             </DialogHeader>
@@ -203,17 +242,17 @@ export default function Goals() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-base truncate">{g.name}</CardTitle>
-                      <CardDescription>{GOAL_ICONS[g.type] || '🎯'} {GOAL_TYPES[g.type] || g.type}</CardDescription>
+                      <CardDescription>{GOAL_TYPES[g.type] || g.type}</CardDescription>
                     </div>
                     <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-2xl shrink-0 ml-2">
-                      {GOAL_ICONS[g.type] || '🎯'}
+                      {GOAL_ICONS[g.type] || "🎯"}
                     </div>
                   </div>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col justify-end space-y-4">
                   <div className="flex justify-between items-end">
                     <div>
-                      <div className="text-2xl font-bold">{formatCurrency(g.currentAmount, user?.currency)}</div>
+                      <div className="text-2xl font-bold tabular-nums">{formatCurrency(g.currentAmount, user?.currency)}</div>
                       <div className="text-xs text-muted-foreground">de {formatCurrency(g.targetAmount, user?.currency)}</div>
                     </div>
                     <div className="text-right">
@@ -226,15 +265,12 @@ export default function Goals() {
                     <div className="h-2.5 w-full bg-secondary rounded-full overflow-hidden">
                       <div
                         className="h-full transition-all duration-700 rounded-full"
-                        style={{ width: `${progress}%`, backgroundColor: g.color || 'var(--primary)' }}
+                        style={{ width: `${progress}%`, backgroundColor: g.color || "var(--primary)" }}
                       />
                     </div>
-                    {remaining > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        Faltam {formatCurrency(remaining, user?.currency)}
-                      </p>
-                    )}
-                    {remaining <= 0 && (
+                    {remaining > 0 ? (
+                      <p className="text-xs text-muted-foreground">Faltam {formatCurrency(remaining, user?.currency)}</p>
+                    ) : (
                       <p className="text-xs text-[#00C851] font-medium">✓ Meta atingida!</p>
                     )}
                   </div>
