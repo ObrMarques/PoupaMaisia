@@ -2,43 +2,16 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Check, Sparkles, Shield, PieChart, FileText, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 export default function Premium() {
   const { user } = useAuth();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = () => {
     setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const planRes = await fetch("/api/stripe/plan");
-      const plan = await planRes.json();
-      const priceId = plan?.priceId;
-
-      if (!priceId) throw new Error("Plano indisponível no momento.");
-
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ priceId }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Falha ao criar sessão de pagamento");
-      }
-
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch (err: any) {
-      toast({ title: err.message ?? "Erro ao iniciar checkout. Tente novamente.", variant: "destructive" });
-      setLoading(false);
-    }
+    const url = new URL("https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00");
+    if (user?.email) url.searchParams.set("prefilled_email", user.email);
+    window.location.href = url.toString();
   };
 
   if (user?.isPremium) {

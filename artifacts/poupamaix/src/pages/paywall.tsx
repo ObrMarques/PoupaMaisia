@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Check, Lock, Sparkles, Shield, TrendingUp, MessageCircle, BarChart3, Loader2 } from "lucide-react";
 
-const DEFAULT_PRICE_ID = "price_1TXNhyDNf06AuejqvQ9wLcYh";
+const PAYMENT_LINK = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
 
 const FEATURES = [
   { icon: TrendingUp,    label: "Dashboard financeiro completo" },
@@ -84,29 +84,11 @@ export default function Paywall() {
     }
   }
 
-  const handleSubscribe = async () => {
+  const handleSubscribe = () => {
     setLoading(true);
-    try {
-      const token = localStorage.getItem("token");
-      const priceId = plan?.priceId ?? DEFAULT_PRICE_ID;
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ priceId }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error ?? "Falha ao criar sessão de pagamento");
-      }
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch (err: any) {
-      toast({ title: err.message ?? "Erro ao processar pagamento. Tente novamente.", variant: "destructive" });
-      setLoading(false);
-    }
+    const url = new URL(PAYMENT_LINK);
+    if (user?.email) url.searchParams.set("prefilled_email", user.email);
+    window.location.href = url.toString();
   };
 
   const handleRestoreManual = async () => {
