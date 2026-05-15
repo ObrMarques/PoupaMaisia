@@ -1,17 +1,44 @@
+import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Shield, PieChart, FileText } from "lucide-react";
+import { Check, Sparkles, Shield, PieChart, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export default function Premium() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const handleUpgrade = () => {
-    toast({
-      title: "Redirecionando para o checkout seguro",
-      description: "A integração com Stripe seria aberta aqui.",
-    });
+  const handleUpgrade = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const planRes = await fetch("/api/stripe/plan");
+      const plan = await planRes.json();
+      const priceId = plan?.priceId;
+
+      if (!priceId) throw new Error("Plano indisponível no momento.");
+
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ priceId }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Falha ao criar sessão de pagamento");
+      }
+
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch (err: any) {
+      toast({ title: err.message ?? "Erro ao iniciar checkout. Tente novamente.", variant: "destructive" });
+      setLoading(false);
+    }
   };
 
   if (user?.isPremium) {
@@ -85,8 +112,21 @@ export default function Premium() {
               ))}
             </ul>
 
-            <Button size="lg" className="w-full h-14 text-lg font-bold" onClick={handleUpgrade} data-testid="button-upgrade">
-              Começar 7 Dias Grátis
+            <Button
+              size="lg"
+              className="w-full h-14 text-lg font-bold"
+              onClick={handleUpgrade}
+              disabled={loading}
+              data-testid="button-upgrade"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Redirecionando…
+                </span>
+              ) : (
+                "Começar 7 Dias Grátis"
+              )}
             </Button>
             <p className="text-center text-xs text-muted-foreground mt-4">
               Você não será cobrado até o fim do período gratuito.
