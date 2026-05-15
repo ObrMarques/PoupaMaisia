@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Check, Lock, Sparkles, Shield, TrendingUp, MessageCircle, BarChart3, Loader2 } from "lucide-react";
 
 const DEFAULT_PRICE_ID = "price_1TXNhyDNf06AuejqvQ9wLcYh";
-const DEFAULT_PRICE_LABEL = "R$ 9,90/mês";
 
 const FEATURES = [
   { icon: TrendingUp,    label: "Dashboard financeiro completo" },
@@ -19,17 +18,13 @@ const FEATURES = [
   { icon: Shield,        label: "Seus dados 100% seguros" },
 ];
 
-interface StripePrice {
-  id: string;
+interface PlanInfo {
+  priceId: string;
   unitAmount: number;
   currency: string;
-  recurring: { interval: string } | null;
-}
-
-interface StripeProduct {
-  id: string;
-  name: string;
-  prices: StripePrice[];
+  interval: string;
+  productName: string;
+  productDescription: string | null;
 }
 
 function formatPrice(unitAmount: number, currency: string): string {
@@ -43,48 +38,30 @@ export default function Paywall() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading]   = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [products, setProducts] = useState<StripeProduct[]>([]);
-  // Default to the known price ID immediately — no loading spinner needed
-  const [selectedPrice, setSelectedPrice] = useState<StripePrice>({
-    id: DEFAULT_PRICE_ID,
-    unitAmount: 990,
-    currency: "brl",
-    recurring: { interval: "month" },
-  });
+  const [plan, setPlan] = useState<PlanInfo | null>(null);
+  const [planLoading, setPlanLoading] = useState(true);
 
-  // Load Stripe products on mount to enrich the display (optional)
+  // Fetch plan details directly from Stripe API via backend
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    fetch("/api/stripe/products", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetch("/api/stripe/plan")
       .then((r) => r.json())
-      .then((data) => {
-        const prods: StripeProduct[] = data.data ?? [];
-        setProducts(prods);
-        // Override with the authoritative price from Stripe if found
-        for (const p of prods) {
-          const match = p.prices.find((pr) => pr.id === DEFAULT_PRICE_ID);
-          if (match) { setSelectedPrice(match); break; }
-          const monthly = p.prices.find((pr) => pr.recurring?.interval === "month");
-          if (monthly) { setSelectedPrice(monthly); break; }
-        }
-      })
-      .catch(() => {/* keep default */});
+      .then((data: PlanInfo) => { if (data.priceId) setPlan(data); })
+      .catch(() => {})
+      .finally(() => setPlanLoading(false));
   }, []);
 
-  // Check if returning from successful checkout
+  // Check if returning from successful Stripe checkout redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("session_id")) {
-      handleRestoreAfterCheckout();
+      verifyAndActivate();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleRestoreAfterCheckout() {
+  async function verifyAndActivate() {
     setRestoring(true);
     try {
       const token = localStorage.getItem("token");
@@ -108,24 +85,21 @@ export default function Paywall() {
   }
 
   const handleSubscribe = async () => {
-    if (!selectedPrice) {
-      toast({ title: "Carregando planos, aguarde…", variant: "destructive" });
-      return;
-    }
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
+      const priceId = plan?.priceId ?? DEFAULT_PRICE_ID;
       const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ priceId: selectedPrice.id }),
+        body: JSON.stringify({ priceId }),
       });
       if (!res.ok) {
         const err = await res.json();
-        throw new Error(err.error || "Falha ao criar sessão de pagamento");
+        throw new Error(err.error ?? "Falha ao criar sessão de pagamento");
       }
       const { url } = await res.json();
       window.location.href = url;
@@ -158,13 +132,12 @@ export default function Paywall() {
     }
   };
 
-  const priceLabel = selectedPrice
-    ? `${formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}/mês`
+  const priceLabel = plan
+    ? `${formatPrice(plan.unitAmount, plan.currency)}/${plan.interval === "month" ? "mês" : "ano"}`
     : "R$ 9,90/mês";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
-      {/* Gradient background */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-white/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-white/3 rounded-full blur-3xl" />
@@ -196,14 +169,27 @@ export default function Paywall() {
             <div>
               <p className="text-xs text-white/50 uppercase tracking-wider font-medium">Plano</p>
               <p className="font-bold text-lg">
-                {products[0]?.name ?? "PoupaMais Premium"}
+                {plan?.productName ?? "PoupaMais Premium"}
               </p>
+              {plan?.productDescription && (
+                <p className="text-xs text-white/40 mt-0.5 max-w-[180px] leading-relaxed">
+                  {plan.productDescription}
+                </p>
+              )}
             </div>
-            <div className="text-right">
-              <p className="text-2xl font-black">
-                {formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}
-              </p>
-              <p className="text-xs text-white/50">/mês</p>
+            <div className="text-right shrink-0 ml-4">
+              {planLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin text-white/40 ml-auto" />
+              ) : (
+                <>
+                  <p className="text-2xl font-black">
+                    {plan ? formatPrice(plan.unitAmount, plan.currency) : "R$ 9,90"}
+                  </p>
+                  <p className="text-xs text-white/50">
+                    /{plan?.interval === "month" ? "mês" : plan?.interval === "year" ? "ano" : "mês"}
+                  </p>
+                </>
+              )}
             </div>
           </div>
 
