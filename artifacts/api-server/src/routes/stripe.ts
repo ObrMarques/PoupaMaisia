@@ -107,12 +107,13 @@ router.post("/stripe/checkout", authMiddleware, async (req, res) => {
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ["card"],
+      payment_method_types: ["card", "boleto"],
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       success_url: `${baseUrl}/paywall?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/paywall`,
       metadata: { userId: String(user.id) },
+      locale: "pt-BR",
     });
 
     res.json({ url: session.url });

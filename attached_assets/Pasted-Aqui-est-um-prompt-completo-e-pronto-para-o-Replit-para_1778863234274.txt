@@ -1,0 +1,136 @@
+Aqui está um **prompt completo e pronto para o Replit** para adicionar um sistema de checkout no PoupaMais:
+
+---
+
+# SISTEMA DE CHECKOUT — POUPAMAIS PREMIUM
+
+## OBJETIVO
+
+Criar um sistema de checkout completo para assinatura do **PoupaMais Premium**, integrado ao fluxo do aplicativo, com experiência moderna, segura e tipo fintech.
+
+---
+
+# 1. PLANO
+
+* Nome: PoupaMais Premium
+* Preço: R$9,90/mês
+* Teste grátis: 7 dias
+* Renovação automática mensal
+
+---
+
+# 2. FLUXO DO CHECKOUT
+
+## PASSO A PASSO
+
+1. Usuário clica em “Assinar Premium”
+2. Abre tela de checkout
+3. Usuário escolhe método de pagamento
+4. Confirma assinatura
+5. Retorna para o app com acesso liberado
+
+---
+
+# 3. MÉTODOS DE PAGAMENTO
+
+Adicionar opções:
+
+* Cartão de crédito
+* Pix
+* (Opcional futuro: Apple Pay / Google Pay)
+
+---
+
+# 4. TELA DE CHECKOUT
+
+## DESIGN
+
+* estilo fintech premium (preto e branco)
+* interface limpa e moderna
+* responsivo mobile
+
+## ELEMENTOS
+
+* resumo do plano:
+
+  * PoupaMais Premium
+  * R$9,90/mês
+  * 7 dias grátis
+* campo de pagamento
+* botão “Confirmar assinatura”
+* botão “Voltar”
+* carregamento com animação
+
+---
+
+# 5. SEGURANÇA
+
+* criptografar dados de pagamento
+* nunca salvar dados de cartão localmente
+* usar provedor seguro (Stripe ou similar)
+* validar assinatura no backend
+
+---
+
+# 6. LÓGICA DE ASSINATURA
+
+Após pagamento:
+
+* ativar status “Premium = true”
+* liberar todos os recursos:
+
+  * PoupaAI
+  * relatórios avançados
+  * exportações
+  * metas ilimitadas
+* salvar status no banco de dados
+* sincronizar entre dispositivos
+
+---
+
+# 7. PAYWALL INTEGRADO
+
+Se usuário:
+
+* não assinou → mostrar checkout
+* assinou → liberar app
+* expirou trial → redirecionar para checkout automaticamente
+
+---
+
+# 8. EXPERIÊNCIA DO USUÁRIO
+
+* checkout rápido (menos de 1 minuto)
+* sem etapas desnecessárias
+* visual premium estilo Stripe/Netflix
+* feedback visual de pagamento (loading/sucesso/erro)
+* mensagens claras
+
+---
+
+# 9. BACKEND
+
+Implementar:
+
+* API de criação de sessão de pagamento
+* validação de assinatura ativa
+* webhook de confirmação de pagamento
+* controle de status do usuário:
+
+  * trial
+  * ativo
+  * expirado
+
+---
+
+# 10. IMPORTANTE
+
+* sistema deve ser seguro e escalável
+* evitar falsos desbloqueios
+* garantir consistência entre app e backend
+* manter performance alta
+* UX deve parecer app financeiro profissional real
+
+---
+
+Se quiser, posso te fazer o próximo passo também: **checkout estilo Stripe 100% real + integração pronta com Replit backend (Node + Firebase ou Supabase)**.
