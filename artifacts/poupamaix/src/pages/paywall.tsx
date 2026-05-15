@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Check, Lock, Sparkles, Shield, TrendingUp, MessageCircle, BarChart3 } from "lucide-react";
+import { Check, Lock, Sparkles, Shield, TrendingUp, MessageCircle, BarChart3, Loader2 } from "lucide-react";
 
 const FEATURES = [
   { icon: TrendingUp,    label: "Dashboard financeiro completo" },
@@ -15,55 +16,142 @@ const FEATURES = [
   { icon: Shield,        label: "Seus dados 100% seguros" },
 ];
 
+interface StripePrice {
+  id: string;
+  unitAmount: number;
+  currency: string;
+  recurring: { interval: string } | null;
+}
+
+interface StripeProduct {
+  id: string;
+  name: string;
+  prices: StripePrice[];
+}
+
+function formatPrice(unitAmount: number, currency: string): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(unitAmount / 100);
+}
+
 export default function Paywall() {
   const { user, updateUser } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
+  const [products, setProducts] = useState<StripeProduct[]>([]);
+  const [selectedPrice, setSelectedPrice] = useState<StripePrice | null>(null);
+
+  // Load Stripe products on mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("/api/stripe/products", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const prods: StripeProduct[] = data.data ?? [];
+        setProducts(prods);
+        // Auto-select first monthly price
+        for (const p of prods) {
+          const monthly = p.prices.find(
+            (pr) => pr.recurring?.interval === "month"
+          );
+          if (monthly) { setSelectedPrice(monthly); break; }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Check if returning from successful checkout
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("session_id")) {
+      handleRestoreAfterCheckout();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleRestoreAfterCheckout() {
+    setRestoring(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("/api/stripe/subscription-status", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      if (data.active && data.user) {
+        updateUser(data.user);
+        toast({ title: "Assinatura ativada! Bem-vindo ao Premium." });
+        setLocation("/dashboard");
+      } else {
+        toast({ title: "Aguardando confirmação do pagamento…" });
+      }
+    } catch {
+      toast({ title: "Não foi possível verificar o pagamento.", variant: "destructive" });
+    } finally {
+      setRestoring(false);
+    }
+  }
 
   const handleSubscribe = async () => {
+    if (!selectedPrice) {
+      toast({ title: "Carregando planos, aguarde…", variant: "destructive" });
+      return;
+    }
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/users/subscribe", {
+      const res = await fetch("/api/stripe/checkout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
+        body: JSON.stringify({ priceId: selectedPrice.id }),
       });
-      if (!res.ok) throw new Error("Falha ao ativar assinatura");
-      const updated = await res.json();
-      updateUser(updated);
-      toast({ title: "Assinatura ativada! Bem-vindo ao Premium." });
-    } catch {
-      toast({ title: "Erro ao processar pagamento. Tente novamente.", variant: "destructive" });
-    } finally {
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Falha ao criar sessão de pagamento");
+      }
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch (err: any) {
+      toast({ title: err.message ?? "Erro ao processar pagamento. Tente novamente.", variant: "destructive" });
       setLoading(false);
     }
   };
 
-  const handleRestore = async () => {
+  const handleRestoreManual = async () => {
     setRestoring(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/users/subscribe", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const res = await fetch("/api/stripe/subscription-status", {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error();
-      const updated = await res.json();
-      updateUser(updated);
-      toast({ title: "Compra restaurada com sucesso!" });
+      const data = await res.json();
+      if (data.active && data.user) {
+        updateUser(data.user);
+        toast({ title: "Assinatura ativa restaurada com sucesso!" });
+        setLocation("/dashboard");
+      } else {
+        toast({ title: "Nenhuma assinatura ativa encontrada para este e-mail.", variant: "destructive" });
+      }
     } catch {
-      toast({ title: "Nenhuma compra encontrada para restaurar.", variant: "destructive" });
+      toast({ title: "Erro ao verificar assinatura.", variant: "destructive" });
     } finally {
       setRestoring(false);
     }
   };
+
+  const priceLabel = selectedPrice
+    ? `${formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}/mês`
+    : "R$ 9,90/mês";
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
@@ -88,7 +176,7 @@ export default function Paywall() {
               Continue usando o PoupaMais
             </h1>
             <p className="text-white/60 text-sm mt-2 leading-relaxed">
-              Seus {7} dias grátis acabaram. Assine o Premium para retomar o acesso completo ao seu financeiro.
+              Seus 7 dias grátis acabaram. Assine o Premium para retomar o acesso completo ao seu financeiro.
             </p>
           </div>
         </div>
@@ -98,11 +186,24 @@ export default function Paywall() {
           <div className="flex items-start justify-between">
             <div>
               <p className="text-xs text-white/50 uppercase tracking-wider font-medium">Plano</p>
-              <p className="font-bold text-lg">PoupaMais Premium</p>
+              <p className="font-bold text-lg">
+                {products[0]?.name ?? "PoupaMais Premium"}
+              </p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-black">R$ 9,90</p>
-              <p className="text-xs text-white/50">/mês</p>
+              {selectedPrice ? (
+                <>
+                  <p className="text-2xl font-black">
+                    {formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}
+                  </p>
+                  <p className="text-xs text-white/50">/mês</p>
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-white/40 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Carregando…
+                </div>
+              )}
             </div>
           </div>
 
@@ -125,25 +226,32 @@ export default function Paywall() {
           <Button
             className="w-full h-12 text-base font-bold bg-white text-black hover:bg-white/90 rounded-xl"
             onClick={handleSubscribe}
-            disabled={loading || restoring}
+            disabled={loading || restoring || !selectedPrice}
           >
             {loading ? (
               <span className="flex items-center gap-2">
-                <span className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                Processando...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Redirecionando…
               </span>
             ) : (
-              "Assinar Premium — R$ 9,90/mês"
+              `Assinar Premium — ${priceLabel}`
             )}
           </Button>
 
           <Button
             variant="ghost"
             className="w-full h-10 text-sm text-white/60 hover:text-white hover:bg-white/5"
-            onClick={handleRestore}
+            onClick={handleRestoreManual}
             disabled={loading || restoring}
           >
-            {restoring ? "Verificando..." : "Restaurar compra"}
+            {restoring ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Verificando…
+              </span>
+            ) : (
+              "Restaurar compra"
+            )}
           </Button>
         </div>
 
@@ -154,13 +262,15 @@ export default function Paywall() {
           </p>
           <p className="text-xs text-white/40">
             Dúvidas?{" "}
-            <a href="mailto:poupamaisia@gmail.com" className="text-white/60 hover:text-white transition-colors">
+            <a
+              href="mailto:poupamaisia@gmail.com"
+              className="text-white/60 hover:text-white transition-colors"
+            >
               poupamaisia@gmail.com
             </a>
           </p>
         </div>
 
-        {/* User info */}
         {user && (
           <p className="text-center text-xs text-white/30">
             Conectado como {user.email}

@@ -8,6 +8,7 @@ import goalsRouter from "./goals";
 import cardsRouter from "./cards";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
+import stripeRouter from "./stripe";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(goalsRouter);
 router.use(cardsRouter);
 router.use(dashboardRouter);
 router.use(aiRouter);
+router.use(stripeRouter);
 
 export default router;
