@@ -1,0 +1,532 @@
+Crie um aplicativo completo de gestão financeira pessoal chamado **PoupaMais**, com aparência premium de fintech moderna, totalmente funcional, escalável e pronto para publicação na Play Store e App Store.
+
+O aplicativo deve funcionar perfeitamente no celular e desktop, com visual minimalista, profissional, extremamente fluido e experiência de aplicativo bancário moderno.
+
+# IDENTIDADE VISUAL
+
+* Nome do app: PoupaMais
+* Logo: símbolo “$” branco com fundo preto
+* Estilo:
+
+  * moderno
+  * minimalista
+  * premium
+  * fintech startup
+  * elegante
+* Cores principais:
+
+  * Preto (#000000)
+  * Branco (#FFFFFF)
+  * Cinza escuro (#121212)
+  * Cinza claro (#EAEAEA)
+* Interface limpa e sofisticada
+* Modo escuro nativo
+* Design responsivo
+* Animações suaves
+* Sensação de aplicativo de empresa bilionária
+
+# OBJETIVO DO APP
+
+O PoupaMais deve ajudar usuários a:
+
+* controlar receitas
+* controlar despesas
+* economizar dinheiro
+* organizar finanças
+* atingir metas financeiras
+* receber análises inteligentes
+* melhorar educação financeira
+* usar IA financeira integrada
+
+# AUTENTICAÇÃO
+
+Criar sistema completo:
+
+* Login com email e senha
+* Login com Google
+* Login com número de WhatsApp
+* Cadastro
+* Recuperar senha
+* Verificação por código
+* Sessão segura
+* Lembrar login
+* Logout
+
+# ONBOARDING
+
+Na primeira entrada:
+
+* apresentação do aplicativo
+* explicação dos benefícios
+* configuração de moeda
+* definição de meta financeira inicial
+* escolha de categorias favoritas
+
+# DASHBOARD PRINCIPAL
+
+Criar dashboard moderno contendo:
+
+* saldo total
+* receitas do mês
+* despesas do mês
+* economia mensal
+* metas financeiras
+* gráficos interativos
+* resumo financeiro inteligente
+* alertas financeiros
+* últimas movimentações
+* comparativo mensal
+* botão flutuante para adicionar transações
+
+# RESPONSIVIDADE
+
+Corrigir automaticamente:
+
+* números grandes ultrapassando cards
+* textos quebrando layout
+* problemas mobile
+* adaptação para qualquer tamanho de tela
+
+Garantir:
+
+* experiência perfeita no celular
+* layout fluido
+* interface premium
+
+# FORMATAÇÃO DE DINHEIRO
+
+Todos os valores financeiros devem usar padrão monetário automaticamente.
+
+Exemplos:
+
+* R$ 1.000,00
+* R$ 15.450,90
+* R$ 250,75
+
+Regras:
+
+* ponto para milhar
+* vírgula para centavos
+* símbolo monetário automático
+* formatação enquanto digita
+* impedir erros monetários
+
+Aplicar em:
+
+* dashboard
+* receitas
+* despesas
+* cartões
+* metas
+* relatórios
+* transações recentes
+
+# RECEITAS E DESPESAS
+
+Permitir:
+
+* adicionar receita
+* adicionar despesa
+* editar transações
+* excluir transações
+* parcelamentos
+* recorrência mensal
+* anexar comprovantes
+* adicionar observações
+* selecionar data
+* selecionar horário
+
+# CATEGORIAS FINANCEIRAS
+
+Criar categorias:
+
+* Alimentação
+* Mercado
+* Farmácia
+* Transporte
+* Combustível
+* Uber
+* Moradia
+* Água
+* Energia
+* Internet
+* Streaming
+* Educação
+* Faculdade
+* Investimentos
+* Lazer
+* Viagens
+* Compras
+* Saúde
+* Academia
+* Assinaturas
+* Pets
+* Impostos
+* Cartão de crédito
+* Outros
+
+Permitir:
+
+* criar categorias personalizadas
+* escolher ícones
+* escolher cores
+
+# TRANSAÇÕES RECENTES
+
+Na área de transações recentes:
+
+* permitir edição completa
+* abrir modal elegante ao clicar
+
+Usuário deve conseguir:
+
+* alterar valor
+* alterar categoria
+* alterar descrição
+* alterar data
+* alterar horário
+* alterar receita/despesa
+* alterar recorrência
+* alterar parcelamento
+* anexar comprovantes
+* adicionar observações
+* excluir transação
+
+# EXPERIÊNCIA DAS TRANSAÇÕES
+
+* salvar automaticamente no banco de dados
+* atualizar dashboard em tempo real
+* atualizar saldo instantaneamente
+* atualizar gráficos automaticamente
+* animações suaves
+* experiência premium
+
+# CARTÃO DE CRÉDITO
+
+Criar sistema completo:
+
+* controle de limite
+* fatura atual
+* melhor dia de compra
+* parcelamentos
+* múltiplos cartões
+* histórico de gastos
+
+# METAS FINANCEIRAS
+
+Permitir:
+
+* meta de economia
+* meta de viagem
+* meta de emergência
+* meta de compra
+* barra de progresso
+* prazo da meta
+* valor mensal necessário
+
+# RELATÓRIOS E GRÁFICOS
+
+Criar gráficos modernos:
+
+* pizza
+* barras
+* linha
+* evolução financeira
+* gastos por categoria
+* economia acumulada
+* comparativos mensais
+
+# NOTIFICAÇÕES
+
+Enviar:
+
+* lembrete de contas
+* alerta de gastos excessivos
+* meta atingida
+* resumo semanal
+* resumo mensal
+
+# POUPAAI — IA FINANCEIRA PREMIUM
+
+Criar inteligência artificial integrada chamada PoupaAI.
+
+IMPORTANTE:
+
+* Disponível apenas no plano Premium
+* Usuários grátis podem visualizar a função, mas não usar
+
+Ao clicar:
+
+* mostrar tela premium elegante
+* exibir benefícios do plano
+
+# FUNÇÕES DA POUPAAI
+
+A IA deve:
+
+* responder perguntas financeiras
+* analisar gastos
+* ensinar educação financeira
+* sugerir economia
+* detectar excessos
+* ajudar no controle financeiro
+* prever problemas financeiros
+* gerar relatórios inteligentes
+* sugerir metas
+* responder em linguagem simples e amigável
+
+# EXEMPLOS DE USO
+
+Usuário pode perguntar:
+
+* “Como economizar mais?”
+* “Estou gastando demais?”
+* “Como sair das dívidas?”
+* “Quanto posso guardar?”
+* “Como organizar meu salário?”
+
+# INTERFACE DA POUPAAI
+
+Criar:
+
+* tela estilo chat moderno
+* animações suaves
+* histórico de conversas
+* nova conversa
+* sugestões rápidas
+* aparência premium preto e branco
+
+# PREMIUM / PAYWALL
+
+Plano Premium:
+
+* 7 dias grátis
+* R$9,90/mês
+* integração com Stripe
+
+Tela premium deve destacar:
+
+* PoupaAI
+* relatórios inteligentes
+* backup em nuvem
+* exportar PDF/Excel
+* análises avançadas
+* sincronização entre dispositivos
+
+Após término do teste:
+
+* bloquear recursos premium automaticamente
+
+# SUPORTE
+
+Criar tela de suporte:
+
+* chat de suporte
+* FAQ
+* email
+* WhatsApp
+* central de ajuda
+
+# CONFIGURAÇÕES
+
+Criar tela completa:
+
+* alterar nome
+* alterar email
+* alterar senha
+* trocar foto
+* exportar dados
+* apagar conta
+* tema escuro/claro
+* preferências
+* segurança
+* logout
+
+# GAMIFICAÇÃO
+
+Adicionar:
+
+* medalhas
+* conquistas
+* ranking de economia
+* frases motivacionais
+* metas concluídas
+* incentivos financeiros
+
+# SISTEMA GLOBAL DE IDIOMAS
+
+O aplicativo deve possuir suporte internacional completo com tradução dinâmica e funcionamento global.
+
+# IDIOMAS SUPORTADOS
+
+Adicionar suporte para:
+
+* Português Brasil
+* Inglês
+* Espanhol
+* Mandarim (Chinês Simplificado)
+* Russo
+* Hindi
+* Árabe
+* Francês
+* Alemão
+* Japonês
+* Coreano
+* Italiano
+* Turco
+* Indonésio
+* Vietnamita
+* Bengali
+* Urdu
+* Punjabi
+* Tailandês
+
+# FUNCIONALIDADES DE IDIOMA
+
+O usuário deve conseguir:
+
+* trocar idioma instantaneamente
+* alterar idioma nas configurações
+* salvar idioma na conta
+* sincronizar idioma entre dispositivos
+* detectar idioma automático do celular
+* alterar idioma sem reiniciar o app
+
+# TRADUÇÃO COMPLETA
+
+Traduzir:
+
+* login
+* cadastro
+* onboarding
+* dashboard
+* receitas
+* despesas
+* categorias
+* relatórios
+* gráficos
+* notificações
+* suporte
+* configurações
+* PoupaAI
+* mensagens automáticas
+* premium
+* assinaturas
+* alertas
+* menus
+* botões
+* metas
+* cartões
+* inteligência artificial
+
+# EXPERIÊNCIA GLOBAL
+
+Garantir:
+
+* textos adaptáveis
+* layouts responsivos em qualquer idioma
+* suporte total a caracteres internacionais
+* suporte RTL para árabe
+* ótima experiência mobile mundial
+
+# PADRÕES INTERNACIONAIS
+
+Adaptar automaticamente:
+
+* moeda
+* horário
+* formato de data
+* separadores monetários
+* localização do usuário
+* fuso horário
+
+# BACKEND INTERNACIONAL
+
+Criar:
+
+* sistema i18n escalável
+* arquivos de tradução organizados
+* cache inteligente
+* carregamento otimizado
+* suporte futuro para novos idiomas
+
+# POUPAAI MULTILÍNGUE
+
+A IA deve:
+
+* responder em todos os idiomas
+* detectar idioma automaticamente
+* adaptar conselhos financeiros por região
+* usar linguagem natural e fluida
+
+# BACKEND
+
+Criar backend profissional:
+
+* API organizada
+* banco de dados seguro
+* autenticação JWT
+* criptografia de dados
+* integração Stripe
+* integração Google Login
+* integração WhatsApp Login
+* salvamento em nuvem
+* arquitetura escalável
+
+# TECNOLOGIAS
+
+Usar tecnologias modernas de startup:
+
+* frontend moderno
+* backend escalável
+* banco robusto
+* arquitetura limpa
+* código organizado
+* performance otimizada
+
+# EXPERIÊNCIA FINAL
+
+O aplicativo deve:
+
+* parecer aplicativo bancário moderno
+* ser extremamente rápido
+* ter transições suaves
+* ser intuitivo
+* ser bonito
+* ser altamente profissional
+* ter experiência premium real
+* funcionar perfeitamente em dispositivos móveis
+
+# TELAS NECESSÁRIAS
+
+Criar:
+
+* Splash screen
+* Login
+* Cadastro
+* Recuperar senha
+* Onboarding
+* Dashboard
+* Receitas
+* Despesas
+* Relatórios
+* Metas
+* Cartões
+* Perfil
+* Configurações
+* Premium
+* PoupaAI
+* Suporte
+
+# IMPORTANTE
+
+* Não criar layout simples
+* Não criar aparência amadora
+* Criar experiência real de startup fintech
+* Aplicativo deve ser totalmente funcional
+* Código limpo e organizado
+* Estrutura pronta para crescimento SaaS
+* Priorizar experiência mobile
+* Priorizar segurança
+* Priorizar performance
+* Criar produto revolucionário chamado PoupaMais com aparência extremamente profissional e moderna.

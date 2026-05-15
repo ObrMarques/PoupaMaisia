@@ -1,0 +1,200 @@
+import { useState } from "react";
+import { useGetCards, useCreateCard, getGetCardsQueryKey } from "@workspace/api-client-react";
+import { formatCurrency } from "@/lib/format";
+import { useAuth } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { Card as UICard, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, CreditCard, Copy } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+
+export default function Cards() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { data: cards, isLoading } = useGetCards();
+  const createMutation = useCreateCard();
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [lastFourDigits, setLastFourDigits] = useState("");
+  const [limit, setLimit] = useState("");
+  const [brand, setBrand] = useState<"visa" | "mastercard" | "elo" | "amex" | "hipercard" | "other">("mastercard");
+  const [closingDay, setClosingDay] = useState("1");
+  const [dueDay, setDueDay] = useState("10");
+
+  const handleCreate = () => {
+    if (!name || !lastFourDigits || !limit) return;
+    createMutation.mutate(
+      { 
+        data: { 
+          name, 
+          lastFourDigits, 
+          brand, 
+          limit: parseFloat(limit),
+          closingDay: parseInt(closingDay),
+          dueDay: parseInt(dueDay)
+        } 
+      },
+      {
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
+          setIsOpen(false);
+          toast({ title: "Card added successfully" });
+        }
+      }
+    );
+  };
+
+  return (
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Credit Cards</h1>
+          <p className="text-muted-foreground">Manage your physical and virtual cards.</p>
+        </div>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 mr-2" /> Add Card
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Credit Card</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Card Name</Label>
+                <Input placeholder="Nubank Ultravioleta" value={name} onChange={e => setName(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Last 4 Digits</Label>
+                  <Input placeholder="1234" maxLength={4} value={lastFourDigits} onChange={e => setLastFourDigits(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Brand</Label>
+                  <Select value={brand} onValueChange={(v: any) => setBrand(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mastercard">Mastercard</SelectItem>
+                      <SelectItem value="visa">Visa</SelectItem>
+                      <SelectItem value="amex">Amex</SelectItem>
+                      <SelectItem value="elo">Elo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Credit Limit</Label>
+                <Input type="number" placeholder="5000" value={limit} onChange={e => setLimit(e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Closing Day</Label>
+                  <Input type="number" min="1" max="31" value={closingDay} onChange={e => setClosingDay(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Due Day</Label>
+                  <Input type="number" min="1" max="31" value={dueDay} onChange={e => setDueDay(e.target.value)} />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button onClick={handleCreate} disabled={createMutation.isPending}>Add Card</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {isLoading ? (
+          Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-2xl" />)
+        ) : cards?.length === 0 ? (
+          <div className="col-span-full text-center py-12 bg-card rounded-xl border border-border">
+            <CreditCard className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <h3 className="text-lg font-medium">No cards added</h3>
+            <p className="text-muted-foreground mt-1">Add your credit cards to track invoices.</p>
+          </div>
+        ) : (
+          cards?.map((card) => {
+            const utilization = Math.min(100, Math.round(((card.currentBalance || 0) / card.limit) * 100));
+            const cardBg = card.brand === 'mastercard' ? 'bg-gradient-to-br from-indigo-900 to-purple-900' :
+                           card.brand === 'visa' ? 'bg-gradient-to-br from-blue-900 to-blue-800' : 
+                           'bg-gradient-to-br from-gray-900 to-black';
+
+            return (
+              <div key={card.id} className="space-y-4">
+                {/* Visual Card */}
+                <div className={`relative h-56 rounded-2xl p-6 text-white shadow-xl flex flex-col justify-between overflow-hidden ${cardBg}`}>
+                  {/* Glass effect overlay */}
+                  <div className="absolute inset-0 bg-white/5 pointer-events-none" />
+                  
+                  <div className="flex justify-between items-start relative z-10">
+                    <span className="font-medium tracking-wider uppercase text-white/80">{card.name}</span>
+                    <div className="w-10 h-10 opacity-80 flex items-center justify-center text-2xl">
+                      {card.brand === 'mastercard' ? '◖◗' : card.brand}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex items-center gap-4 font-mono text-xl tracking-widest text-white/90">
+                      <span>••••</span>
+                      <span>••••</span>
+                      <span>••••</span>
+                      <span>{card.lastFourDigits}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-end">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-white/50 mb-1">Current Invoice</p>
+                        <p className="font-semibold text-lg">{formatCurrency(card.currentBalance || 0, user?.currency)}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] uppercase tracking-wider text-white/50 mb-1">Available Limit</p>
+                        <p className="font-medium">{formatCurrency(card.limit - (card.currentBalance || 0), user?.currency)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Card */}
+                <UICard className="bg-card">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span className="text-muted-foreground">Limit Utilization</span>
+                      <span className="font-medium">{utilization}%</span>
+                    </div>
+                    <div className="h-2 w-full bg-secondary rounded-full overflow-hidden mb-4">
+                      <div 
+                        className={`h-full transition-all ${utilization > 80 ? 'bg-destructive' : 'bg-primary'}`}
+                        style={{ width: `${utilization}%` }}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm border-t border-border pt-4">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Closes on</p>
+                        <p className="font-medium">Day {card.closingDay}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Due on</p>
+                        <p className="font-medium">Day {card.dueDay}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </UICard>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}

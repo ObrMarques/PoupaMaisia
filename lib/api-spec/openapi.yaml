@@ -3,20 +3,35 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: PoupaMais - Personal Finance API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User operations
+  - name: transactions
+    description: Transaction operations
+  - name: categories
+    description: Category operations
+  - name: goals
+    description: Financial goals
+  - name: cards
+    description: Credit cards
+  - name: dashboard
+    description: Dashboard summaries
+  - name: ai
+    description: PoupaAI operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,633 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /users/profile:
+    patch:
+      operationId: updateProfile
+      tags: [users]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/onboarding:
+    post:
+      operationId: completeOnboarding
+      tags: [users]
+      summary: Complete onboarding setup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OnboardingInput"
+      responses:
+        "200":
+          description: Onboarding completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /transactions:
+    get:
+      operationId: getTransactions
+      tags: [transactions]
+      summary: List all transactions
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [income, expense]
+        - name: categoryId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: month
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: year
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: limit
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: offset
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+    post:
+      operationId: createTransaction
+      tags: [transactions]
+      summary: Create a new transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionInput"
+      responses:
+        "201":
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}:
+    get:
+      operationId: getTransaction
+      tags: [transactions]
+      summary: Get a transaction by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+    patch:
+      operationId: updateTransaction
+      tags: [transactions]
+      summary: Update a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransactionUpdate"
+      responses:
+        "200":
+          description: Transaction updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+    delete:
+      operationId: deleteTransaction
+      tags: [transactions]
+      summary: Delete a transaction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [categories]
+      summary: List all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [categories]
+      summary: Create a custom category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [categories]
+      summary: Update a category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+    delete:
+      operationId: deleteCategory
+      tags: [categories]
+      summary: Delete a category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /goals:
+    get:
+      operationId: getGoals
+      tags: [goals]
+      summary: List all financial goals
+      responses:
+        "200":
+          description: List of goals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Goal"
+    post:
+      operationId: createGoal
+      tags: [goals]
+      summary: Create a financial goal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalInput"
+      responses:
+        "201":
+          description: Goal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /goals/{id}:
+    patch:
+      operationId: updateGoal
+      tags: [goals]
+      summary: Update a financial goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalUpdate"
+      responses:
+        "200":
+          description: Goal updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+    delete:
+      operationId: deleteGoal
+      tags: [goals]
+      summary: Delete a goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /goals/{id}/contribute:
+    post:
+      operationId: contributeToGoal
+      tags: [goals]
+      summary: Add contribution to a goal
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GoalContribution"
+      responses:
+        "200":
+          description: Contribution added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Goal"
+
+  /cards:
+    get:
+      operationId: getCards
+      tags: [cards]
+      summary: List all credit cards
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Card"
+    post:
+      operationId: createCard
+      tags: [cards]
+      summary: Add a credit card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardInput"
+      responses:
+        "201":
+          description: Card added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+  /cards/{id}:
+    patch:
+      operationId: updateCard
+      tags: [cards]
+      summary: Update a credit card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CardUpdate"
+      responses:
+        "200":
+          description: Card updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+    delete:
+      operationId: deleteCard
+      tags: [cards]
+      summary: Delete a credit card
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get monthly financial summary
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: year
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/spending-by-category:
+    get:
+      operationId: getSpendingByCategory
+      tags: [dashboard]
+      summary: Get spending breakdown by category
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: year
+          in: query
+          schema:
+            type: ["integer", "null"]
+      responses:
+        "200":
+          description: Spending by category
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CategorySpending"
+
+  /dashboard/monthly-trend:
+    get:
+      operationId: getMonthlyTrend
+      tags: [dashboard]
+      summary: Get income/expense trend for the last 6 months
+      responses:
+        "200":
+          description: Monthly trend
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyTrend"
+
+  /dashboard/recent-transactions:
+    get:
+      operationId: getRecentTransactions
+      tags: [dashboard]
+      summary: Get 10 most recent transactions
+      responses:
+        "200":
+          description: Recent transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  /ai/chat:
+    post:
+      operationId: chatWithAI
+      tags: [ai]
+      summary: Send a message to PoupaAI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIChatInput"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIChatResponse"
+
+  /ai/conversations:
+    get:
+      operationId: getAIConversations
+      tags: [ai]
+      summary: Get AI conversation history
+      responses:
+        "200":
+          description: List of conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AIConversation"
+    post:
+      operationId: createAIConversation
+      tags: [ai]
+      summary: Start a new AI conversation
+      responses:
+        "201":
+          description: New conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIConversation"
+
+  /ai/conversations/{id}/messages:
+    get:
+      operationId: getAIMessages
+      tags: [ai]
+      summary: Get messages in a conversation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AIMessage"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +676,525 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: ["string", "null"]
+      required:
+        - success
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 6
+        currency:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        rememberMe:
+          type: ["boolean", "null"]
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+
+    User:
+      type: object
+      required: [id, name, email, currency, language, isPremium, onboardingCompleted, createdAt]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        avatarUrl:
+          type: ["string", "null"]
+        currency:
+          type: string
+        language:
+          type: string
+        isPremium:
+          type: boolean
+        premiumExpiresAt:
+          type: ["string", "null"]
+        onboardingCompleted:
+          type: boolean
+        createdAt:
+          type: string
+
+    ProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        email:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        currency:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+
+    OnboardingInput:
+      type: object
+      required: [currency, initialGoalAmount, favoriteCategories]
+      properties:
+        currency:
+          type: string
+        initialGoalAmount:
+          type: number
+        initialGoalName:
+          type: ["string", "null"]
+        favoriteCategories:
+          type: array
+          items:
+            type: string
+
+    Transaction:
+      type: object
+      required: [id, userId, type, amount, description, date, categoryId, categoryName, categoryColor, categoryIcon, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        type:
+          type: string
+          enum: [income, expense]
+        amount:
+          type: number
+        description:
+          type: string
+        date:
+          type: string
+        time:
+          type: ["string", "null"]
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        isRecurring:
+          type: boolean
+        recurringPeriod:
+          type: ["string", "null"]
+        installments:
+          type: ["integer", "null"]
+        installmentNumber:
+          type: ["integer", "null"]
+        cardId:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TransactionInput:
+      type: object
+      required: [type, amount, description, date, categoryId]
+      properties:
+        type:
+          type: string
+          enum: [income, expense]
+        amount:
+          type: number
+          minimum: 0.01
+        description:
+          type: string
+          minLength: 1
+        date:
+          type: string
+        time:
+          type: ["string", "null"]
+        categoryId:
+          type: integer
+        isRecurring:
+          type: ["boolean", "null"]
+        recurringPeriod:
+          type: ["string", "null"]
+          enum: [weekly, monthly, yearly, null]
+        installments:
+          type: ["integer", "null"]
+        cardId:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+
+    TransactionUpdate:
+      type: object
+      properties:
+        type:
+          type: ["string", "null"]
+          enum: [income, expense, null]
+        amount:
+          type: ["number", "null"]
+        description:
+          type: ["string", "null"]
+        date:
+          type: ["string", "null"]
+        time:
+          type: ["string", "null"]
+        categoryId:
+          type: ["integer", "null"]
+        isRecurring:
+          type: ["boolean", "null"]
+        recurringPeriod:
+          type: ["string", "null"]
+        installments:
+          type: ["integer", "null"]
+        cardId:
+          type: ["integer", "null"]
+        notes:
+          type: ["string", "null"]
+
+    Category:
+      type: object
+      required: [id, name, icon, color, type, isDefault]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        type:
+          type: string
+          enum: [income, expense, both]
+        isDefault:
+          type: boolean
+        userId:
+          type: ["integer", "null"]
+
+    CategoryInput:
+      type: object
+      required: [name, icon, color, type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        icon:
+          type: string
+        color:
+          type: string
+        type:
+          type: string
+          enum: [income, expense, both]
+
+    CategoryUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        icon:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+
+    Goal:
+      type: object
+      required: [id, userId, name, targetAmount, currentAmount, type, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        targetAmount:
+          type: number
+        currentAmount:
+          type: number
+        type:
+          type: string
+          enum: [savings, travel, emergency, purchase, other]
+        deadline:
+          type: ["string", "null"]
+        monthlyContribution:
+          type: ["number", "null"]
+        icon:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+        isCompleted:
+          type: boolean
+        createdAt:
+          type: string
+
+    GoalInput:
+      type: object
+      required: [name, targetAmount, type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        targetAmount:
+          type: number
+          minimum: 1
+        currentAmount:
+          type: ["number", "null"]
+        type:
+          type: string
+          enum: [savings, travel, emergency, purchase, other]
+        deadline:
+          type: ["string", "null"]
+        monthlyContribution:
+          type: ["number", "null"]
+        icon:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+
+    GoalUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        targetAmount:
+          type: ["number", "null"]
+        currentAmount:
+          type: ["number", "null"]
+        type:
+          type: ["string", "null"]
+        deadline:
+          type: ["string", "null"]
+        monthlyContribution:
+          type: ["number", "null"]
+        icon:
+          type: ["string", "null"]
+        color:
+          type: ["string", "null"]
+
+    GoalContribution:
+      type: object
+      required: [amount]
+      properties:
+        amount:
+          type: number
+          minimum: 0.01
+
+    Card:
+      type: object
+      required: [id, userId, name, lastFourDigits, brand, limit, currentBalance, closingDay, dueDay, color, createdAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        lastFourDigits:
+          type: string
+        brand:
+          type: string
+          enum: [visa, mastercard, elo, amex, hipercard, other]
+        limit:
+          type: number
+        currentBalance:
+          type: number
+        closingDay:
+          type: integer
+        dueDay:
+          type: integer
+        color:
+          type: string
+        createdAt:
+          type: string
+
+    CardInput:
+      type: object
+      required: [name, lastFourDigits, brand, limit, closingDay, dueDay]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        lastFourDigits:
+          type: string
+          minLength: 4
+          maxLength: 4
+        brand:
+          type: string
+          enum: [visa, mastercard, elo, amex, hipercard, other]
+        limit:
+          type: number
+          minimum: 1
+        currentBalance:
+          type: ["number", "null"]
+        closingDay:
+          type: integer
+          minimum: 1
+          maximum: 31
+        dueDay:
+          type: integer
+          minimum: 1
+          maximum: 31
+        color:
+          type: ["string", "null"]
+
+    CardUpdate:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        limit:
+          type: ["number", "null"]
+        currentBalance:
+          type: ["number", "null"]
+        closingDay:
+          type: ["integer", "null"]
+        dueDay:
+          type: ["integer", "null"]
+        color:
+          type: ["string", "null"]
+
+    DashboardSummary:
+      type: object
+      required: [totalBalance, monthlyIncome, monthlyExpenses, monthlySavings, savingsRate, transactionCount]
+      properties:
+        totalBalance:
+          type: number
+        monthlyIncome:
+          type: number
+        monthlyExpenses:
+          type: number
+        monthlySavings:
+          type: number
+        savingsRate:
+          type: number
+        transactionCount:
+          type: integer
+        previousMonthExpenses:
+          type: ["number", "null"]
+        previousMonthIncome:
+          type: ["number", "null"]
+
+    CategorySpending:
+      type: object
+      required: [categoryId, categoryName, categoryColor, categoryIcon, amount, percentage, transactionCount]
+      properties:
+        categoryId:
+          type: integer
+        categoryName:
+          type: string
+        categoryColor:
+          type: string
+        categoryIcon:
+          type: string
+        amount:
+          type: number
+        percentage:
+          type: number
+        transactionCount:
+          type: integer
+
+    MonthlyTrend:
+      type: object
+      required: [month, year, income, expenses, savings]
+      properties:
+        month:
+          type: integer
+        year:
+          type: integer
+        income:
+          type: number
+        expenses:
+          type: number
+        savings:
+          type: number
+
+    AIChatInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          minLength: 1
+        conversationId:
+          type: ["integer", "null"]
+
+    AIChatResponse:
+      type: object
+      required: [message, conversationId]
+      properties:
+        message:
+          type: string
+        conversationId:
+          type: integer
+        suggestions:
+          type: array
+          items:
+            type: string
+
+    AIConversation:
+      type: object
+      required: [id, userId, title, createdAt, updatedAt]
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        title:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    AIMessage:
+      type: object
+      required: [id, conversationId, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        conversationId:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
