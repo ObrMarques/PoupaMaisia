@@ -10,6 +10,7 @@ router.get("/categories", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const cats = await db.select().from(categoriesTable)
     .where(or(eq(categoriesTable.isDefault, true), eq(categoriesTable.userId, user.id)));
+  res.set("Cache-Control", "public, max-age=300, stale-while-revalidate=600");
   res.json(cats.map(c => ({
     id: c.id,
     name: c.name,

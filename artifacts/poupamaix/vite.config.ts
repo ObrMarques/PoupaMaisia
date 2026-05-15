@@ -57,6 +57,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-charts": ["recharts"],
+          "vendor-router": ["wouter"],
+          "vendor-form": ["react-hook-form", "@hookform/resolvers", "zod"],
+        },
+      },
+    },
   },
   server: {
     port,
@@ -66,10 +78,16 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    warmup: {
+      clientFiles: ["./src/App.tsx", "./src/pages/dashboard.tsx"],
+    },
   },
   preview: {
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+  },
+  optimizeDeps: {
+    include: ["react", "react-dom", "@tanstack/react-query", "wouter", "recharts"],
   },
 });
