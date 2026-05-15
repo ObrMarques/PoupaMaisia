@@ -14,11 +14,26 @@ const ThemeContext = createContext<ThemeContextType>({
   isDark: false,
 });
 
+function applyThemeToDocument(theme: Theme) {
+  const html = document.documentElement;
+  if (theme === "dark") {
+    html.classList.add("dark");
+    html.style.colorScheme = "dark";
+  } else {
+    html.classList.remove("dark");
+    html.style.colorScheme = "light";
+  }
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     const saved = localStorage.getItem("theme");
     return (saved === "dark" ? "dark" : "light") as Theme;
   });
+
+  useEffect(() => {
+    applyThemeToDocument(theme);
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prev => {

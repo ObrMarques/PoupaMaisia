@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { AppLayout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ThemeProvider, useTheme } from "@/contexts/theme-context";
+import { ThemeProvider } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
 import { useSubscription } from "@/hooks/use-subscription";
 
@@ -113,27 +113,24 @@ function PublicRoute({ component: Component }: { component: React.ComponentType 
 }
 
 function ThemedApp() {
-  const { theme } = useTheme();
   return (
-    <div className={theme}>
-      <div className="min-h-[100dvh] bg-background text-foreground">
-        <Switch>
-          <Route path="/login"        component={() => <PublicRoute component={Login} />} />
-          <Route path="/register"     component={() => <PublicRoute component={Register} />} />
-          <Route path="/paywall"      component={() => <PaywallRoute />} />
-          <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
-          <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
-          <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
-          <Route path="/cards"        component={() => <ProtectedRoute component={Cards} />} />
-          <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
-          <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
-          <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
-          <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
-          <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
-          <Route path="/"             component={() => <ProtectedRoute component={Dashboard} />} />
-          <Route                      component={() => <ProtectedRoute component={Dashboard} />} />
-        </Switch>
-      </div>
+    <div className="min-h-[100dvh] bg-background text-foreground">
+      <Switch>
+        <Route path="/login"        component={() => <PublicRoute component={Login} />} />
+        <Route path="/register"     component={() => <PublicRoute component={Register} />} />
+        <Route path="/paywall"      component={() => <PaywallRoute />} />
+        <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
+        <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
+        <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
+        <Route path="/cards"        component={() => <ProtectedRoute component={Cards} />} />
+        <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
+        <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
+        <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
+        <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
+        <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
+        <Route path="/"             component={() => <ProtectedRoute component={Dashboard} />} />
+        <Route                      component={() => <ProtectedRoute component={Dashboard} />} />
+      </Switch>
     </div>
   );
 }

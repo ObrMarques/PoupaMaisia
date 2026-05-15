@@ -2,7 +2,11 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:where(.dark, .dark *));
+
+@media (prefers-color-scheme: dark) {
+  /* intentionally empty — the app controls its own theme independently of the OS */
+}
 
 @theme inline {
   --color-background: hsl(var(--background));
@@ -46,6 +50,7 @@
 
 /* ── LIGHT MODE (default) ────────────────────────────────── */
 :root {
+  color-scheme: light;
   --background: 0 0% 100%;       /* #FFFFFF */
   --foreground: 0 0% 7%;         /* #111111 */
   --border: 0 0% 88%;            /* #E0E0E0 */
@@ -83,6 +88,7 @@
 
 /* ── DARK MODE ───────────────────────────────────────────── */
 .dark {
+  color-scheme: dark;
   --background: 0 0% 0%;         /* #000000 */
   --foreground: 0 0% 100%;       /* #FFFFFF */
   --border: 0 0% 16%;            /* #2A2A2A */
