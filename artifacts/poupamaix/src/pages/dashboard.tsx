@@ -1,8 +1,9 @@
 import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/contexts/theme-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Target, Sparkles, Plus, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
@@ -12,6 +13,10 @@ const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Se
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isDark } = useTheme();
+  const tooltipStyle = isDark
+    ? { backgroundColor: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
+    : { backgroundColor: "#FFFFFF", borderColor: "#E0E0E0", color: "#111" };
   const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
   const { data: recentTransactions, isLoading: loadingTransactions } = useGetRecentTransactions();
   const { data: spending, isLoading: loadingSpending } = useGetSpendingByCategory();
@@ -121,7 +126,7 @@ export default function Dashboard() {
                     <BarChart data={trendData}>
                       <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${currency === 'BRL' ? 'R$' : '$'}${value}`} />
-                      <RechartsTooltip cursor={{fill: 'transparent'}} contentStyle={{backgroundColor: '#1A1A1A', borderColor: '#2A2A2A'}} />
+                      <RechartsTooltip cursor={{fill: 'transparent'}} contentStyle={tooltipStyle} />
                       <Bar dataKey="income" name="Receitas" fill="#00C851" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="expenses" name="Despesas" fill="#FF4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
@@ -149,18 +154,16 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground text-center py-4">Nenhuma transação ainda.</p>
                 ) : (
                   recentTransactions?.slice(0, 5).map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors" data-testid={`row-transaction-${t.id}`}>
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
-                          <span className="text-lg">{t.categoryIcon || '💸'}</span>
-                        </div>
-                        <div>
-                          <p className="font-medium">{t.description}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
-                        </div>
+                    <div key={t.id} className="flex items-center justify-between py-3 border-b border-border last:border-0" data-testid={`row-transaction-${t.id}`}>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm truncate">{t.description}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {(t as any).categoryName ? `${(t as any).categoryName} · ` : ""}
+                          {new Date(t.date).toLocaleDateString('pt-BR')}
+                        </p>
                       </div>
-                      <div className={`font-medium ${t.type === 'income' ? 'text-[#00C851]' : ''}`}>
-                        {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, currency)}
+                      <div className={`font-semibold text-sm ml-4 shrink-0 tabular-nums ${t.type === 'income' ? 'text-[#00C851]' : 'text-foreground'}`}>
+                        {t.type === 'income' ? '+' : '−'}{formatCurrency(t.amount, currency)}
                       </div>
                     </div>
                   ))
@@ -197,7 +200,7 @@ export default function Dashboard() {
                           <Cell key={`cell-${index}`} fill={entry.categoryColor || '#8884d8'} />
                         ))}
                       </Pie>
-                      <RechartsTooltip contentStyle={{backgroundColor: '#1A1A1A', borderColor: '#2A2A2A'}} />
+                      <RechartsTooltip contentStyle={tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
                 )}

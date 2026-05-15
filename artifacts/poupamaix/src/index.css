@@ -44,14 +44,52 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-:root, .dark {
-  --background: 0 0% 0%; /* #000000 */
-  --foreground: 0 0% 100%; /* #FFFFFF */
-  --border: 0 0% 16%; /* #2A2A2A */
+/* ── LIGHT MODE (default) ────────────────────────────────── */
+:root {
+  --background: 0 0% 100%;       /* #FFFFFF */
+  --foreground: 0 0% 7%;         /* #111111 */
+  --border: 0 0% 88%;            /* #E0E0E0 */
+  --input: 0 0% 92%;
+  --ring: 0 0% 7%;
+
+  --card: 0 0% 97%;              /* #F7F7F7 */
+  --card-foreground: 0 0% 7%;
+  --card-border: 0 0% 88%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 7%;
+  --popover-border: 0 0% 88%;
+
+  --primary: 0 0% 7%;            /* #111111 — botão preto no claro */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 0 0% 93%;         /* #EDEDED */
+  --secondary-foreground: 0 0% 7%;
+
+  --muted: 0 0% 90%;
+  --muted-foreground: 0 0% 45%;
+
+  --accent: 0 0% 90%;
+  --accent-foreground: 0 0% 7%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --app-font-sans: 'Inter', sans-serif;
+  --app-font-serif: Georgia, serif;
+  --app-font-mono: Menlo, monospace;
+  --radius: .5rem;
+}
+
+/* ── DARK MODE ───────────────────────────────────────────── */
+.dark {
+  --background: 0 0% 0%;         /* #000000 */
+  --foreground: 0 0% 100%;       /* #FFFFFF */
+  --border: 0 0% 16%;            /* #2A2A2A */
   --input: 0 0% 16%;
   --ring: 0 0% 100%;
 
-  --card: 0 0% 10%; /* #1A1A1A */
+  --card: 0 0% 10%;              /* #1A1A1A */
   --card-foreground: 0 0% 100%;
   --card-border: 0 0% 16%;
 
@@ -59,10 +97,10 @@
   --popover-foreground: 0 0% 100%;
   --popover-border: 0 0% 16%;
 
-  --primary: 0 0% 100%;
+  --primary: 0 0% 100%;          /* branco no escuro */
   --primary-foreground: 0 0% 0%;
 
-  --secondary: 0 0% 13%; /* #222222 */
+  --secondary: 0 0% 13%;         /* #222222 */
   --secondary-foreground: 0 0% 100%;
 
   --muted: 0 0% 16%;
@@ -71,7 +109,7 @@
   --accent: 0 0% 16%;
   --accent-foreground: 0 0% 100%;
 
-  --destructive: 0 100% 64%; /* #FF4444 */
+  --destructive: 0 100% 64%;     /* #FF4444 */
   --destructive-foreground: 0 0% 100%;
 
   --app-font-sans: 'Inter', sans-serif;

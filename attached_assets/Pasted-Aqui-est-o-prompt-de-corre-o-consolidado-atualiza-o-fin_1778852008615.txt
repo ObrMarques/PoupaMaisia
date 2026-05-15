@@ -1,0 +1,161 @@
+Aqui está o **prompt de correção consolidado (atualização final do PoupaMais)** para você colar no Replit:
+
+---
+
+# CORREÇÃO GERAL DO APLICATIVO POUPAMAIS (URGENTE)
+
+Aplicar estas correções e ajustes no aplicativo **PoupaMais**, mantendo padrão fintech premium, performance alta e consistência visual.
+
+---
+
+# 1. SUPORTE (CORRIGIR E ADICIONAR NO LOCAL CERTO)
+
+## PROBLEMA
+
+Não existe acesso claro ao suporte dentro das configurações.
+
+## CORREÇÃO OBRIGATÓRIA
+
+Adicionar corretamente na tela:
+
+## CONFIGURAÇÕES → OPÇÃO “SUPORTE”
+
+Quando o usuário abrir configurações, deve existir uma seção chamada:
+
+* **Suporte**
+
+## DENTRO DO SUPORTE DEVE TER:
+
+* Central de ajuda (FAQ)
+* Perguntas frequentes
+* Chat de suporte
+* Contato por email
+* Contato por WhatsApp
+
+## UX
+
+* visual limpo
+* estilo fintech preto e branco
+* fácil acesso
+* botão visível e organizado dentro de configurações
+
+---
+
+# 2. MODO ESCURO / MODO CLARO (CORRIGIR 100%)
+
+## PROBLEMA
+
+O tema não está funcionando corretamente.
+
+## CORREÇÃO OBRIGATÓRIA
+
+Implementar sistema REAL de tema global:
+
+## REGRAS
+
+* botão único: **Ativar/Desativar modo escuro**
+* sem múltiplas opções complicadas
+* funcionamento global no app inteiro
+
+## MODOS
+
+### MODO CLARO
+
+* fundo branco
+* textos pretos
+* aparência limpa
+
+### MODO ESCURO
+
+* fundo preto/cinza escuro
+* textos brancos
+* estilo premium fintech
+
+## APLICAÇÃO OBRIGATÓRIA EM:
+
+* dashboard
+* transações
+* categorias
+* relatórios
+* configurações
+* suporte
+* modais
+* todas as telas
+
+## IMPORTANTE
+
+* troca instantânea
+* salvar preferência do usuário
+* manter após reiniciar app
+
+---
+
+# 3. TRANSAÇÕES RECENTES (REMOVER ELEMENTOS INDESEJADOS)
+
+## PROBLEMA
+
+Está poluído com elementos visuais desnecessários.
+
+## CORREÇÕES
+
+### REMOVER COMPLETAMENTE:
+
+* fotos de perfil nas transações
+* avatares de usuário
+
+### REMOVER TAMBÉM:
+
+* emojis nas transações recentes
+
+---
+
+## NOVO FORMATO LIMPO DAS TRANSAÇÕES
+
+Exibir apenas:
+
+* Nome da transação
+* Categoria
+* Data
+* Valor (formatado em R$)
+
+---
+
+## EXEMPLO CORRETO
+
+Salário
+Categoria: Trabalho
+Data: 15/05/2026
+Valor: R$ 3.500,00
+
+---
+
+## EXEMPLO ERRADO (REMOVER)
+
+❌ 👤 Salário
+❌ 🍔 Alimentação
+❌ 🚗 Transporte
+
+---
+
+# 4. EXPERIÊNCIA FINAL ESPERADA
+
+Após correção:
+
+* suporte acessível dentro de configurações
+* modo claro/escuro funcionando perfeitamente no app inteiro
+* apenas botão simples de ativar/desativar tema
+* transações limpas, sem emojis e sem fotos
+* interface mais profissional, minimalista e fintech premium
+* melhor legibilidade e organização
+
+---
+
+# IMPORTANTE
+
+* não quebrar estrutura do app
+* manter performance alta
+* garantir consistência visual em todo o PoupaMais
+* remover qualquer poluição visual
+* deixar o app com aparência de banco digital moderno e profissional
+
+---
