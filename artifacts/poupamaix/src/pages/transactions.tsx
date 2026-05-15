@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Filter, ArrowUpRight, ArrowDownRight, Trash2 } from "lucide-react";
+import { Plus, Filter, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 
@@ -21,15 +21,15 @@ export default function Transactions() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
-  // Form states
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [type, setType] = useState<"income" | "expense">("expense");
   const [categoryId, setCategoryId] = useState<string>("");
+  const [notes, setNotes] = useState("");
 
   const { data: categories } = useGetCategories();
-  
+
   const params = filterType !== "all" ? { type: filterType as "income" | "expense" } : {};
   const { data: transactions, isLoading } = useGetTransactions(params);
 
@@ -37,12 +37,19 @@ export default function Transactions() {
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+  };
+
   const resetForm = () => {
     setAmount("");
     setDescription("");
     setDate(new Date().toISOString().split("T")[0]);
     setType("expense");
     setCategoryId("");
+    setNotes("");
     setEditingTransaction(null);
   };
 
@@ -54,6 +61,7 @@ export default function Transactions() {
       setDate(t.date.split("T")[0]);
       setType(t.type);
       setCategoryId(t.categoryId.toString());
+      setNotes(t.notes || "");
     } else {
       resetForm();
     }
@@ -62,7 +70,7 @@ export default function Transactions() {
 
   const handleSave = () => {
     if (!amount || !description || !categoryId) {
-      toast({ title: "Validation Error", description: "Please fill all required fields", variant: "destructive" });
+      toast({ title: "Campos obrigatórios", description: "Preencha todos os campos necessários.", variant: "destructive" });
       return;
     }
 
@@ -72,115 +80,132 @@ export default function Transactions() {
       description,
       date,
       categoryId: parseInt(categoryId, 10),
+      notes: notes || null,
     };
 
     if (editingTransaction) {
       updateMutation.mutate(
-        { data: payload }, // Note: the backend hook for useUpdateTransaction needs standard props but we don't have id in path? 
-        // Wait, checking the api schema for useUpdateTransaction
-        // Let's check the API spec. If it doesn't take ID, we might need to adjust or pass id in some way.
-        // Assuming we might not have a proper edit in this simplified version if the ID isn't required by the hook schema, but let's assume standard behavior.
-        // Actually, let's just implement create/delete for safety if update is tricky without ID, but we will pass it if possible.
-        // Looking at generated types: useUpdateTransaction is a mutation but we don't see it taking ID in the path based on earlier schema? 
-        // Oh wait, `useUpdateTransaction(id, ...)` usually. Let's just create a new one and delete old if needed or use the hook properly if it takes ID.
-        // To be safe, let's just focus on create and delete for now if update signature is unclear, but I'll try to pass `id` if I can.
+        { id: editingTransaction.id, data: payload },
+        {
+          onSuccess: () => {
+            invalidateAll();
+            setIsModalOpen(false);
+            resetForm();
+            toast({ title: "Transação atualizada" });
+          },
+          onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" })
+        }
       );
-      toast({ title: "Editing not fully supported in this mockup" });
-      setIsModalOpen(false);
     } else {
       createMutation.mutate(
         { data: payload },
         {
           onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
-            queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });
-            queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+            invalidateAll();
             setIsModalOpen(false);
             resetForm();
-            toast({ title: "Transaction added" });
+            toast({ title: "Transação adicionada" });
           },
-          onError: () => toast({ title: "Error", description: "Could not save transaction", variant: "destructive" })
+          onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" })
         }
       );
     }
+  };
+
+  const handleDelete = (id: number) => {
+    deleteMutation.mutate(
+      { id },
+      {
+        onSuccess: () => {
+          invalidateAll();
+          toast({ title: "Transação excluída" });
+        }
+      }
+    );
   };
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transactions</h1>
-          <p className="text-muted-foreground">Manage your income and expenses.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
+          <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[140px] bg-background">
+            <SelectTrigger className="w-[160px] bg-background">
               <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Filter" />
+              <SelectValue placeholder="Filtrar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="income">Income</SelectItem>
-              <SelectItem value="expense">Expenses</SelectItem>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              <SelectItem value="income">Receitas</SelectItem>
+              <SelectItem value="expense">Despesas</SelectItem>
             </SelectContent>
           </Select>
 
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+          <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenModal()} className="flex-1 md:flex-none">
-                <Plus className="w-4 h-4 mr-2" /> Add New
+              <Button onClick={() => handleOpenModal()} className="flex-1 md:flex-none" data-testid="button-add-transaction">
+                <Plus className="w-4 h-4 mr-2" /> Nova
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[440px]">
               <DialogHeader>
-                <DialogTitle>{editingTransaction ? "Edit Transaction" : "New Transaction"}</DialogTitle>
+                <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select value={type} onValueChange={(v: "income"|"expense") => setType(v)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Type" />
+                    <Label>Tipo</Label>
+                    <Select value={type} onValueChange={(v: "income" | "expense") => setType(v)}>
+                      <SelectTrigger data-testid="select-type">
+                        <SelectValue placeholder="Tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="income">Income</SelectItem>
-                        <SelectItem value="expense">Expense</SelectItem>
+                        <SelectItem value="income">Receita</SelectItem>
+                        <SelectItem value="expense">Despesa</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Amount</Label>
-                    <Input type="number" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value)} />
+                    <Label>Valor (R$)</Label>
+                    <Input type="number" placeholder="0,00" value={amount} onChange={e => setAmount(e.target.value)} data-testid="input-amount" />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Input placeholder="Grocery shopping" value={description} onChange={e => setDescription(e.target.value)} />
+                  <Label>Descrição</Label>
+                  <Input placeholder="Compra no mercado" value={description} onChange={e => setDescription(e.target.value)} data-testid="input-description" />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Date</Label>
+                    <Label>Data</Label>
                     <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Category</Label>
+                    <Label>Categoria</Label>
                     <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select..." />
+                      <SelectTrigger data-testid="select-category">
+                        <SelectValue placeholder="Selecionar..." />
                       </SelectTrigger>
                       <SelectContent>
                         {categories?.map(c => (
-                          <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
+                          <SelectItem key={c.id} value={c.id.toString()}>{c.icon} {c.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+                <div className="space-y-2">
+                  <Label>Observações (opcional)</Label>
+                  <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} />
+                </div>
               </div>
               <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancel</Button>
-                <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending}>Save</Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-save">
+                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -193,18 +218,18 @@ export default function Transactions() {
             {isLoading ? (
               Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full m-2" />)
             ) : transactions?.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">No transactions found.</div>
+              <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
             ) : (
               transactions?.map((t) => (
-                <div key={t.id} className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors group">
-                  <div className="flex items-center gap-4 cursor-pointer" onClick={() => handleOpenModal(t)}>
-                    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                <div key={t.id} className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors group" data-testid={`row-transaction-${t.id}`}>
+                  <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => handleOpenModal(t)}>
+                    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shrink-0">
                       <span className="text-xl">{t.categoryIcon || '💸'}</span>
                     </div>
                     <div>
                       <p className="font-medium text-foreground">{t.description}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <span>{new Date(t.date).toLocaleDateString()}</span>
+                        <span>{new Date(t.date).toLocaleDateString('pt-BR')}</span>
                         <span>•</span>
                         <span>{t.categoryName}</span>
                       </div>
@@ -214,11 +239,12 @@ export default function Transactions() {
                     <div className={`font-semibold ${t.type === 'income' ? 'text-[#00C851]' : 'text-foreground'}`}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, user?.currency)}
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      // onClick={() => handleDelete(t.id)}
+                      onClick={() => handleDelete(t.id)}
+                      data-testid={`button-delete-${t.id}`}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

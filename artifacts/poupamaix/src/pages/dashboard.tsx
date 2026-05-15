@@ -2,11 +2,13 @@ import { useGetDashboardSummary, useGetRecentTransactions, useGetSpendingByCateg
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Target, CreditCard, Sparkles, Plus, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Target, Sparkles, Plus, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, LineChart, Line } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -18,47 +20,52 @@ export default function Dashboard() {
 
   const currency = user?.currency || 'BRL';
 
+  const trendData = trend?.map(t => ({
+    ...t,
+    name: MONTH_NAMES[(t.month - 1) % 12],
+  }));
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Overview</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+          <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
+          <p className="text-muted-foreground">Olá, {user?.name}</p>
         </div>
         <div className="flex gap-2">
           <Link href="/transactions">
-            <Button variant="outline" className="bg-background">
+            <Button variant="outline" className="bg-background" data-testid="button-add-transaction">
               <Plus className="w-4 h-4 mr-2" />
-              Add Transaction
+              Nova Transação
             </Button>
           </Link>
           <Link href="/ai">
             <Button className="bg-primary text-primary-foreground">
               <Sparkles className="w-4 h-4 mr-2" />
-              Ask PoupaAI
+              Perguntar ao PoupaAI
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Cartões de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Balance</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {loadingSummary ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <div className="text-2xl font-bold">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
+              <div className="text-2xl font-bold" data-testid="text-total-balance">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
             )}
           </CardContent>
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Income</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Receitas do Mês</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
           </CardHeader>
           <CardContent>
@@ -71,7 +78,7 @@ export default function Dashboard() {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Monthly Expenses</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Despesas do Mês</CardTitle>
             <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
           </CardHeader>
           <CardContent>
@@ -84,7 +91,7 @@ export default function Dashboard() {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Savings Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Economia</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -98,12 +105,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Charts Area */}
+        {/* Área dos Gráficos */}
         <div className="lg:col-span-2 space-y-8">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Cash Flow Trend</CardTitle>
-              <CardDescription>Income vs Expenses over time</CardDescription>
+              <CardTitle>Fluxo de Caixa</CardTitle>
+              <CardDescription>Receitas x Despesas ao longo do tempo</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -111,12 +118,12 @@ export default function Dashboard() {
                   <Skeleton className="h-full w-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trend}>
-                      <XAxis dataKey="month" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                    <BarChart data={trendData}>
+                      <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${currency === 'BRL' ? 'R$' : '$'}${value}`} />
                       <RechartsTooltip cursor={{fill: 'transparent'}} contentStyle={{backgroundColor: '#1A1A1A', borderColor: '#2A2A2A'}} />
-                      <Bar dataKey="income" fill="#00C851" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expenses" fill="#FF4444" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="income" name="Receitas" fill="#00C851" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" name="Despesas" fill="#FF4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -127,11 +134,11 @@ export default function Dashboard() {
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
               <div>
-                <CardTitle>Recent Transactions</CardTitle>
-                <CardDescription>Your latest financial activities</CardDescription>
+                <CardTitle>Transações Recentes</CardTitle>
+                <CardDescription>Suas últimas movimentações financeiras</CardDescription>
               </div>
               <Link href="/transactions">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">View All</Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Ver todas</Button>
               </Link>
             </CardHeader>
             <CardContent>
@@ -139,17 +146,17 @@ export default function Dashboard() {
                 {loadingTransactions ? (
                   Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)
                 ) : recentTransactions?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No transactions yet.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma transação ainda.</p>
                 ) : (
                   recentTransactions?.slice(0, 5).map((t) => (
-                    <div key={t.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors">
+                    <div key={t.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-secondary/50 transition-colors" data-testid={`row-transaction-${t.id}`}>
                       <div className="flex items-center gap-4">
                         <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
                           <span className="text-lg">{t.categoryIcon || '💸'}</span>
                         </div>
                         <div>
                           <p className="font-medium">{t.description}</p>
-                          <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString()}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString('pt-BR')}</p>
                         </div>
                       </div>
                       <div className={`font-medium ${t.type === 'income' ? 'text-[#00C851]' : ''}`}>
@@ -163,11 +170,11 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Sidebar Area */}
+        {/* Área Lateral */}
         <div className="space-y-8">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Spending by Category</CardTitle>
+              <CardTitle>Gastos por Categoria</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[200px]">
@@ -211,9 +218,9 @@ export default function Dashboard() {
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Goals Progress</CardTitle>
+              <CardTitle>Progresso das Metas</CardTitle>
               <Link href="/goals">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">View All</Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Ver todas</Button>
               </Link>
             </CardHeader>
             <CardContent>
@@ -221,7 +228,7 @@ export default function Dashboard() {
                 {loadingGoals ? (
                   Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)
                 ) : goals?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">No active goals.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma meta ativa.</p>
                 ) : (
                   goals?.slice(0, 3).map((g) => {
                     const progress = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
@@ -232,8 +239,8 @@ export default function Dashboard() {
                           <span className="text-muted-foreground">{progress}%</span>
                         </div>
                         <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary transition-all duration-500" 
+                          <div
+                            className="h-full bg-primary transition-all duration-500"
                             style={{ width: `${progress}%`, backgroundColor: g.color || 'var(--primary)' }}
                           />
                         </div>

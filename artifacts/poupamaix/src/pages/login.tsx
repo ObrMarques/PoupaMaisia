@@ -10,8 +10,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 
 export default function Login() {
@@ -37,11 +37,11 @@ export default function Login() {
             setLocation("/onboarding");
           }
         },
-        onError: (error) => {
+        onError: () => {
           toast({
             variant: "destructive",
-            title: "Login failed",
-            description: error.error || "Please check your credentials.",
+            title: "Falha no login",
+            description: "Verifique seu e-mail e senha.",
           });
         },
       }
@@ -55,8 +55,8 @@ export default function Login() {
           <div className="w-12 h-12 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-2xl mx-auto mb-4">
             $
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-          <p className="text-muted-foreground mt-2">Enter your credentials to access your account</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Bem-vindo de volta</h1>
+          <p className="text-muted-foreground mt-2">Entre com suas credenciais para acessar sua conta</p>
         </div>
 
         <Form {...form}>
@@ -66,9 +66,9 @@ export default function Login() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>E-mail</FormLabel>
                   <FormControl>
-                    <Input placeholder="you@example.com" {...field} className="bg-card" />
+                    <Input placeholder="voce@exemplo.com" {...field} className="bg-card" data-testid="input-email" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -79,16 +79,16 @@ export default function Login() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} className="bg-card" />
+                    <Input type="password" placeholder="••••••••" {...field} className="bg-card" data-testid="input-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-              {loginMutation.isPending ? "Signing in..." : "Sign in"}
+            <Button type="submit" className="w-full" disabled={loginMutation.isPending} data-testid="button-login">
+              {loginMutation.isPending ? "Entrando..." : "Entrar"}
             </Button>
           </form>
         </Form>
@@ -98,7 +98,7 @@ export default function Login() {
             <span className="w-full border-t border-border" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">Or</span>
+            <span className="bg-background px-2 text-muted-foreground">Ou</span>
           </div>
         </div>
 
@@ -107,18 +107,18 @@ export default function Login() {
           className="w-full bg-card"
           onClick={() => {
             toast({
-              title: "Coming soon",
-              description: "Google authentication is not yet available.",
+              title: "Em breve",
+              description: "Login com Google ainda não está disponível.",
             });
           }}
         >
-          Continue with Google
+          Continuar com Google
         </Button>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Não tem uma conta?{" "}
           <Link href="/register">
-            <span className="text-primary hover:underline cursor-pointer">Register</span>
+            <span className="text-primary hover:underline cursor-pointer">Cadastre-se</span>
           </Link>
         </p>
       </div>

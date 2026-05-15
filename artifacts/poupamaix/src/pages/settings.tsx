@@ -25,10 +25,10 @@ export default function Settings() {
       {
         onSuccess: (updatedUser) => {
           updateUser(updatedUser);
-          toast({ title: "Profile updated successfully" });
+          toast({ title: "Perfil atualizado com sucesso" });
         },
         onError: () => {
-          toast({ title: "Error updating profile", variant: "destructive" });
+          toast({ title: "Erro ao atualizar perfil", variant: "destructive" });
         }
       }
     );
@@ -37,15 +37,15 @@ export default function Settings() {
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-8 animate-in fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground">Manage your account and preferences.</p>
+        <h1 className="text-3xl font-bold tracking-tight">Configurações</h1>
+        <p className="text-muted-foreground">Gerencie sua conta e preferências.</p>
       </div>
 
       <div className="grid gap-8">
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Update your personal information.</CardDescription>
+            <CardTitle>Perfil</CardTitle>
+            <CardDescription>Atualize suas informações pessoais.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-6 mb-6">
@@ -56,33 +56,33 @@ export default function Settings() {
                   user?.name.charAt(0)
                 )}
               </div>
-              <Button variant="outline" className="bg-background">Change Avatar</Button>
+              <Button variant="outline" className="bg-background">Alterar Foto</Button>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} />
+                <Label>Nome completo</Label>
+                <Input value={name} onChange={e => setName(e.target.value)} data-testid="input-name" />
               </div>
               <div className="space-y-2">
-                <Label>Email</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} />
+                <Label>E-mail</Label>
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} data-testid="input-email" />
               </div>
             </div>
-            <Button onClick={handleSaveProfile} disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            <Button onClick={handleSaveProfile} disabled={updateMutation.isPending} data-testid="button-save-profile">
+              {updateMutation.isPending ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </CardContent>
         </Card>
 
         <Card className="bg-card">
           <CardHeader>
-            <CardTitle>Preferences</CardTitle>
-            <CardDescription>Customize your experience.</CardDescription>
+            <CardTitle>Preferências</CardTitle>
+            <CardDescription>Personalize sua experiência.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Primary Currency</Label>
+                <Label>Moeda principal</Label>
                 <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -93,41 +93,42 @@ export default function Settings() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Language</Label>
+                <Label>Idioma</Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
                     <SelectItem value="en-US">English</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div className="flex items-center justify-between pt-4 border-t border-border">
               <div>
-                <p className="font-medium">Dark Mode</p>
-                <p className="text-sm text-muted-foreground">PoupaMais is natively dark, but you can toggle.</p>
+                <p className="font-medium">Modo Escuro</p>
+                <p className="text-sm text-muted-foreground">O PoupaMais é nativo dark, mas você pode alternar.</p>
               </div>
               <Switch checked={true} disabled />
             </div>
             <div className="flex justify-end">
-              <Button onClick={handleSaveProfile} disabled={updateMutation.isPending}>Save Preferences</Button>
+              <Button onClick={handleSaveProfile} disabled={updateMutation.isPending}>Salvar Preferências</Button>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-destructive bg-destructive/5">
           <CardHeader>
-            <CardTitle className="text-destructive">Danger Zone</CardTitle>
-            <CardDescription>Permanent actions for your account.</CardDescription>
+            <CardTitle className="text-destructive">Zona de Perigo</CardTitle>
+            <CardDescription>Ações permanentes para sua conta.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Delete Account</p>
-                <p className="text-sm text-muted-foreground">Once you delete your account, there is no going back.</p>
+                <p className="font-medium">Excluir Conta</p>
+                <p className="text-sm text-muted-foreground">Depois de excluir sua conta, não há como voltar atrás.</p>
               </div>
-              <Button variant="destructive">Delete Account</Button>
+              <Button variant="destructive">Excluir Conta</Button>
             </div>
           </CardContent>
         </Card>

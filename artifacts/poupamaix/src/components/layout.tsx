@@ -4,14 +4,22 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-  { href: "/transactions", icon: Receipt, label: "Transactions" },
-  { href: "/goals", icon: Target, label: "Goals" },
-  { href: "/cards", icon: CreditCard, label: "Cards" },
-  { href: "/reports", icon: PieChart, label: "Reports" },
+  { href: "/dashboard", icon: LayoutDashboard, label: "Painel" },
+  { href: "/transactions", icon: Receipt, label: "Transações" },
+  { href: "/goals", icon: Target, label: "Metas" },
+  { href: "/cards", icon: CreditCard, label: "Cartões" },
+  { href: "/reports", icon: PieChart, label: "Relatórios" },
   { href: "/ai", icon: Sparkles, label: "PoupaAI" },
   { href: "/premium", icon: Sparkles, label: "Premium" },
-  { href: "/settings", icon: Settings, label: "Settings" },
+  { href: "/settings", icon: Settings, label: "Configurações" },
+];
+
+const mobileNavItems = [
+  { href: "/dashboard", icon: LayoutDashboard, label: "Início" },
+  { href: "/transactions", icon: Receipt, label: "Transações" },
+  { href: "/goals", icon: Target, label: "Metas" },
+  { href: "/ai", icon: Sparkles, label: "PoupaAI" },
+  { href: "/settings", icon: Settings, label: "Config." },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +28,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
-      {/* Desktop Sidebar */}
+      {/* Barra lateral (desktop) */}
       <aside className="hidden md:flex flex-col w-64 border-r border-border bg-card">
         <div className="p-6">
           <Link href="/dashboard" className="flex items-center gap-2 font-bold text-xl tracking-tighter">
@@ -30,15 +38,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             PoupaMais
           </Link>
         </div>
-        
-        <nav className="flex-1 px-4 space-y-2 overflow-y-auto">
+
+        <nav className="flex-1 px-4 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = location === item.href || location.startsWith(`${item.href}/`);
             return (
               <Link key={item.href} href={item.href}>
                 <div className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${
                   isActive ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
-                }`}>
+                }`} data-testid={`nav-${item.href.replace('/', '')}`}>
                   <item.icon className="w-5 h-5" />
                   {item.label}
                 </div>
@@ -61,29 +69,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
-          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={logout}>
+          <Button variant="ghost" className="w-full justify-start text-muted-foreground hover:text-foreground" onClick={logout} data-testid="button-logout">
             <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            Sair
           </Button>
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Conteúdo Principal */}
       <main className="flex-1 flex flex-col relative overflow-hidden pb-16 md:pb-0">
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
       </main>
 
-      {/* Mobile Tab Bar */}
+      {/* Barra de navegação (mobile) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-border bg-card/90 backdrop-blur-md z-50 px-2 pb-safe pt-2 flex items-center justify-around">
-        {[
-          { href: "/dashboard", icon: LayoutDashboard, label: "Home" },
-          { href: "/transactions", icon: Receipt, label: "Trans" },
-          { href: "/goals", icon: Target, label: "Goals" },
-          { href: "/ai", icon: Sparkles, label: "AI" },
-          { href: "/settings", icon: Settings, label: "Settings" }
-        ].map((item) => {
+        {mobileNavItems.map((item) => {
           const isActive = location === item.href;
           return (
             <Link key={item.href} href={item.href}>

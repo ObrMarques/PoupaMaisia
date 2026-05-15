@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(6),
+  name: z.string().min(2, "Mínimo 2 caracteres"),
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 
 export default function Register() {
@@ -34,11 +34,11 @@ export default function Register() {
           login(data.user, data.token);
           setLocation("/onboarding");
         },
-        onError: (error) => {
+        onError: () => {
           toast({
             variant: "destructive",
-            title: "Registration failed",
-            description: error.error || "An error occurred during registration.",
+            title: "Falha no cadastro",
+            description: "Ocorreu um erro durante o cadastro. Tente novamente.",
           });
         },
       }
@@ -52,8 +52,8 @@ export default function Register() {
           <div className="w-12 h-12 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-2xl mx-auto mb-4">
             $
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Create an account</h1>
-          <p className="text-muted-foreground mt-2">Start your journey with PoupaMais</p>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Criar conta</h1>
+          <p className="text-muted-foreground mt-2">Comece sua jornada com o PoupaMais</p>
         </div>
 
         <Form {...form}>
@@ -63,9 +63,9 @@ export default function Register() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Nome completo</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} className="bg-card" />
+                    <Input placeholder="João Silva" {...field} className="bg-card" data-testid="input-name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -76,9 +76,9 @@ export default function Register() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>E-mail</FormLabel>
                   <FormControl>
-                    <Input placeholder="you@example.com" {...field} className="bg-card" />
+                    <Input placeholder="voce@exemplo.com" {...field} className="bg-card" data-testid="input-email" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -89,24 +89,24 @@ export default function Register() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} className="bg-card" />
+                    <Input type="password" placeholder="••••••••" {...field} className="bg-card" data-testid="input-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
-              {registerMutation.isPending ? "Creating account..." : "Create account"}
+            <Button type="submit" className="w-full" disabled={registerMutation.isPending} data-testid="button-register">
+              {registerMutation.isPending ? "Criando conta..." : "Criar conta"}
             </Button>
           </form>
         </Form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Já tem uma conta?{" "}
           <Link href="/login">
-            <span className="text-primary hover:underline cursor-pointer">Sign in</span>
+            <span className="text-primary hover:underline cursor-pointer">Entrar</span>
           </Link>
         </p>
       </div>

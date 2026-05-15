@@ -8,15 +8,15 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 
 const CURRENCIES = [
-  { id: "BRL", symbol: "R$", name: "Brazilian Real" },
-  { id: "USD", symbol: "$", name: "US Dollar" },
+  { id: "BRL", symbol: "R$", name: "Real Brasileiro" },
+  { id: "USD", symbol: "$", name: "Dólar Americano" },
   { id: "EUR", symbol: "€", name: "Euro" },
 ];
 
 const CATEGORIES = [
-  "Alimentação", "Mercado", "Farmácia", "Transporte", "Combustível", 
-  "Uber", "Moradia", "Água", "Energia", "Internet", "Streaming", 
-  "Educação", "Faculdade", "Investimentos", "Lazer", "Viagens", 
+  "Alimentação", "Mercado", "Farmácia", "Transporte", "Combustível",
+  "Uber", "Moradia", "Água", "Energia", "Internet", "Streaming",
+  "Educação", "Faculdade", "Investimentos", "Lazer", "Viagens",
   "Compras", "Saúde", "Academia", "Assinaturas"
 ];
 
@@ -28,12 +28,12 @@ export default function Onboarding() {
   const completeMutation = useCompleteOnboarding();
 
   const [currency, setCurrency] = useState("BRL");
-  const [goalName, setGoalName] = useState("Emergency Fund");
+  const [goalName, setGoalName] = useState("Reserva de Emergência");
   const [goalAmount, setGoalAmount] = useState("10000");
   const [favoriteCategories, setFavoriteCategories] = useState<string[]>([]);
 
   const toggleCategory = (cat: string) => {
-    setFavoriteCategories(prev => 
+    setFavoriteCategories(prev =>
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
     );
   };
@@ -56,8 +56,8 @@ export default function Onboarding() {
         onError: () => {
           toast({
             variant: "destructive",
-            title: "Error",
-            description: "Failed to complete onboarding. Please try again.",
+            title: "Erro",
+            description: "Não foi possível concluir o cadastro. Tente novamente.",
           });
         }
       }
@@ -80,18 +80,18 @@ export default function Onboarding() {
                 <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center text-3xl mx-auto mb-6">
                   👋
                 </div>
-                <h2 className="text-2xl font-bold mb-2">Welcome to PoupaMais</h2>
-                <p className="text-muted-foreground">Your premium financial companion. Let's set up your cockpit for financial success.</p>
+                <h2 className="text-2xl font-bold mb-2">Bem-vindo ao PoupaMais</h2>
+                <p className="text-muted-foreground">Seu assistente financeiro premium. Vamos configurar seu painel para o sucesso financeiro.</p>
               </div>
-              <Button className="w-full" onClick={() => setStep(2)}>Get Started</Button>
+              <Button className="w-full" onClick={() => setStep(2)} data-testid="button-get-started">Começar</Button>
             </div>
           )}
 
           {step === 2 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold">Choose your currency</h2>
-                <p className="text-sm text-muted-foreground mt-1">This will be your primary currency for all tracking.</p>
+                <h2 className="text-xl font-bold">Escolha sua moeda</h2>
+                <p className="text-sm text-muted-foreground mt-1">Essa será a moeda principal para todos os registros.</p>
               </div>
               <div className="space-y-3">
                 {CURRENCIES.map(c => (
@@ -113,8 +113,8 @@ export default function Onboarding() {
                 ))}
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(1)}>Back</Button>
-                <Button className="flex-1" onClick={() => setStep(3)}>Continue</Button>
+                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(1)}>Voltar</Button>
+                <Button className="flex-1" onClick={() => setStep(3)}>Continuar</Button>
               </div>
             </div>
           )}
@@ -122,22 +122,22 @@ export default function Onboarding() {
           {step === 3 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold">Set your first goal</h2>
-                <p className="text-sm text-muted-foreground mt-1">What are you saving for?</p>
+                <h2 className="text-xl font-bold">Defina sua primeira meta</h2>
+                <p className="text-sm text-muted-foreground mt-1">Para o que você está economizando?</p>
               </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Goal Name</Label>
-                  <Input value={goalName} onChange={e => setGoalName(e.target.value)} placeholder="e.g. Emergency Fund, Vacation" className="bg-background" />
+                  <Label>Nome da meta</Label>
+                  <Input value={goalName} onChange={e => setGoalName(e.target.value)} placeholder="ex: Reserva de Emergência, Viagem" className="bg-background" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Target Amount</Label>
+                  <Label>Valor alvo</Label>
                   <Input type="number" value={goalAmount} onChange={e => setGoalAmount(e.target.value)} placeholder="10000" className="bg-background" />
                 </div>
               </div>
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(2)}>Back</Button>
-                <Button className="flex-1" onClick={() => setStep(4)}>Continue</Button>
+                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(2)}>Voltar</Button>
+                <Button className="flex-1" onClick={() => setStep(4)}>Continuar</Button>
               </div>
             </div>
           )}
@@ -145,8 +145,8 @@ export default function Onboarding() {
           {step === 4 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="text-center mb-6">
-                <h2 className="text-xl font-bold">Quick Categories</h2>
-                <p className="text-sm text-muted-foreground mt-1">Select the ones you use most often.</p>
+                <h2 className="text-xl font-bold">Categorias favoritas</h2>
+                <p className="text-sm text-muted-foreground mt-1">Selecione as que você usa com mais frequência.</p>
               </div>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map(cat => (
@@ -164,9 +164,9 @@ export default function Onboarding() {
                 ))}
               </div>
               <div className="flex gap-3 mt-6">
-                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(3)}>Back</Button>
+                <Button variant="outline" className="flex-1 bg-background" onClick={() => setStep(3)}>Voltar</Button>
                 <Button className="flex-1" onClick={handleComplete} disabled={completeMutation.isPending}>
-                  {completeMutation.isPending ? "Finishing..." : "Complete"}
+                  {completeMutation.isPending ? "Finalizando..." : "Concluir"}
                 </Button>
               </div>
             </div>
