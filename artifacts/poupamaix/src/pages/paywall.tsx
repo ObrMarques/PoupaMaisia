@@ -5,6 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Check, Lock, Sparkles, Shield, TrendingUp, MessageCircle, BarChart3, Loader2 } from "lucide-react";
 
+const DEFAULT_PRICE_ID = "price_1TXNhyDNf06AuejqvQ9wLcYh";
+const DEFAULT_PRICE_LABEL = "R$ 9,90/mês";
+
 const FEATURES = [
   { icon: TrendingUp,    label: "Dashboard financeiro completo" },
   { icon: BarChart3,     label: "Relatórios e gráficos avançados" },
@@ -43,9 +46,15 @@ export default function Paywall() {
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
   const [products, setProducts] = useState<StripeProduct[]>([]);
-  const [selectedPrice, setSelectedPrice] = useState<StripePrice | null>(null);
+  // Default to the known price ID immediately — no loading spinner needed
+  const [selectedPrice, setSelectedPrice] = useState<StripePrice>({
+    id: DEFAULT_PRICE_ID,
+    unitAmount: 990,
+    currency: "brl",
+    recurring: { interval: "month" },
+  });
 
-  // Load Stripe products on mount
+  // Load Stripe products on mount to enrich the display (optional)
   useEffect(() => {
     const token = localStorage.getItem("token");
     fetch("/api/stripe/products", {
@@ -55,15 +64,15 @@ export default function Paywall() {
       .then((data) => {
         const prods: StripeProduct[] = data.data ?? [];
         setProducts(prods);
-        // Auto-select first monthly price
+        // Override with the authoritative price from Stripe if found
         for (const p of prods) {
-          const monthly = p.prices.find(
-            (pr) => pr.recurring?.interval === "month"
-          );
+          const match = p.prices.find((pr) => pr.id === DEFAULT_PRICE_ID);
+          if (match) { setSelectedPrice(match); break; }
+          const monthly = p.prices.find((pr) => pr.recurring?.interval === "month");
           if (monthly) { setSelectedPrice(monthly); break; }
         }
       })
-      .catch(() => {});
+      .catch(() => {/* keep default */});
   }, []);
 
   // Check if returning from successful checkout
@@ -191,19 +200,10 @@ export default function Paywall() {
               </p>
             </div>
             <div className="text-right">
-              {selectedPrice ? (
-                <>
-                  <p className="text-2xl font-black">
-                    {formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}
-                  </p>
-                  <p className="text-xs text-white/50">/mês</p>
-                </>
-              ) : (
-                <div className="flex items-center gap-2 text-white/40 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Carregando…
-                </div>
-              )}
+              <p className="text-2xl font-black">
+                {formatPrice(selectedPrice.unitAmount, selectedPrice.currency)}
+              </p>
+              <p className="text-xs text-white/50">/mês</p>
             </div>
           </div>
 
@@ -226,7 +226,7 @@ export default function Paywall() {
           <Button
             className="w-full h-12 text-base font-bold bg-white text-black hover:bg-white/90 rounded-xl"
             onClick={handleSubscribe}
-            disabled={loading || restoring || !selectedPrice}
+            disabled={loading || restoring}
           >
             {loading ? (
               <span className="flex items-center gap-2">
