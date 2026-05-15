@@ -96,8 +96,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card shrink-0">
         <div className="p-5 pb-4">
           <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-lg tracking-tight">
-            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-              P
+            <div className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+              $
             </div>
             PoupaMais
           </Link>
