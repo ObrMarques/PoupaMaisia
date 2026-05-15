@@ -1,0 +1,134 @@
+# CORREÇÃO CRÍTICA — ATUALIZAÇÃO INSTANTÂNEA DO DASHBOARD
+
+## PROBLEMA
+
+Ao adicionar uma nova:
+
+* receita
+  ou
+* despesa
+
+o dashboard do PoupaMais demora para atualizar ou não atualiza imediatamente.
+
+Isso prejudica a experiência do usuário e faz o app parecer lento/inconsistente.
+
+---
+
+# OBJETIVO
+
+Quero atualização TOTALMENTE instantânea em tempo real.
+
+Assim que:
+
+* adicionar transação
+* editar transação
+* excluir transação
+
+o dashboard deve atualizar automaticamente SEM precisar:
+
+* recarregar tela
+* fechar app
+* esperar sincronização lenta
+
+---
+
+# ITENS QUE DEVEM ATUALIZAR IMEDIATAMENTE
+
+## Dashboard
+
+* saldo total
+* receitas
+* despesas
+* taxa de economia
+* gráficos
+* metas
+* histórico recente
+
+---
+
+# SOLUÇÃO TÉCNICA OBRIGATÓRIA
+
+## 1. ESTADO GLOBAL REATIVO
+
+Implementar gerenciamento de estado global real:
+
+Exemplos:
+
+* Zustand
+* Redux
+* Context API otimizado
+* MobX
+* sistema reativo equivalente
+
+---
+
+## 2. UPDATE OTIMISTA (OBRIGATÓRIO)
+
+Ao adicionar transação:
+
+* atualizar interface IMEDIATAMENTE
+* sem esperar resposta do backend
+* salvar no backend em segundo plano
+
+---
+
+## 3. SINCRONIZAÇÃO AUTOMÁTICA
+
+Após salvar:
+
+* sincronizar com banco automaticamente
+* manter consistência dos dados
+* corrigir rollback se der erro
+
+---
+
+## 4. RECÁLCULO INSTANTÂNEO
+
+Sempre recalcular automaticamente:
+
+### SALDO TOTAL
+
+Saldo = Receitas − Despesas
+
+### TAXA DE ECONOMIA
+
+\text{Taxa de economia} = \frac{\text{Receitas} - \text{Despesas}}{\text{Receitas}} \times 100
+
+---
+
+# 5. PERFORMANCE
+
+Garantir:
+
+* zero travamentos
+* atualização abaixo de 100ms
+* sem flickering
+* sem delay visual
+* sem loading desnecessário
+
+---
+
+# 6. EXPERIÊNCIA FINAL
+
+Quero sensação de aplicativo bancário moderno:
+
+* adicionou transação → atualizou instantaneamente
+* removeu transação → recalculou na hora
+* editou → dashboard muda imediatamente
+
+Tudo deve parecer:
+
+* rápido
+* fluido
+* premium
+* profissional
+
+---
+
+# IMPORTANTE
+
+* eliminar qualquer atraso de sincronização
+* evitar múltiplos fetches desnecessários
+* otimizar re-renderização
+* manter performance alta mesmo com muitos dados
+* garantir consistência total entre dashboard e transações no PoupaMais

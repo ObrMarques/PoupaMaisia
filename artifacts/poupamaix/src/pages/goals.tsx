@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetGoals, useCreateGoal, useContributeToGoal, getGetGoalsQueryKey } from "@workspace/api-client-react";
+import { useGetGoals, useCreateGoal, useContributeToGoal, getGetGoalsQueryKey, getGetDashboardSummaryQueryKey } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -64,6 +64,7 @@ export default function Goals() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
           setIsNewGoalOpen(false);
           setName(""); setTargetAmount(""); setType("savings");
           toast({ title: "Meta criada com sucesso" });
@@ -80,6 +81,7 @@ export default function Goals() {
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
+          queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
           setIsContributeOpen(false);
           setContributeAmount("");
           toast({ title: "Contribuição adicionada!" });

@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
+  getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
   useGetCategories
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
@@ -49,6 +50,9 @@ export default function Transactions() {
     queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
   };
 
   const resetForm = () => {
