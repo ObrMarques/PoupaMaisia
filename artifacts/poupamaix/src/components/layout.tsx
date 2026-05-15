@@ -1,11 +1,26 @@
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, Receipt, Target, CreditCard, PieChart,
-  Sparkles, Settings, LogOut, HelpCircle
+  Sparkles, Settings, LogOut, HelpCircle, ArrowLeft
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/contexts/i18n-context";
 import { Button } from "@/components/ui/button";
+
+const PAGE_TITLES: Record<string, string> = {
+  "/dashboard":    "Painel",
+  "/":             "Painel",
+  "/transactions": "Transações",
+  "/goals":        "Metas",
+  "/cards":        "Cartões",
+  "/reports":      "Relatórios",
+  "/ai":           "PoupaAI",
+  "/premium":      "Premium",
+  "/settings":     "Configurações",
+  "/support":      "Suporte",
+};
+
+const HOME_ROUTES = new Set(["/", "/dashboard"]);
 
 function useNavItems() {
   const { t } = useI18n();
@@ -66,6 +81,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const bottomItems = useBottomItems();
   const mobileItems = useMobileItems();
 
+  const isHome    = HOME_ROUTES.has(location);
+  const pageTitle = PAGE_TITLES[location] ?? "PoupaMais";
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      window.history.back();
+    }
+  };
+
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Sidebar — desktop */}
@@ -119,8 +143,49 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col relative overflow-hidden pb-16 md:pb-0 min-w-0">
-        <div className="flex-1 overflow-y-auto">
+      <main className="flex-1 flex flex-col relative overflow-hidden min-w-0">
+        {/* Top bar — mobile header with back button */}
+        <div className="md:hidden sticky top-0 z-40 flex items-center gap-2 px-3 py-3 bg-background/95 backdrop-blur-sm border-b border-border shrink-0">
+          {isHome ? (
+            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+              P
+            </div>
+          ) : (
+            <button
+              onClick={handleBack}
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-secondary transition-colors"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          )}
+          <span className="font-semibold text-sm flex-1">{isHome ? "PoupaMais" : pageTitle}</span>
+          {isHome && (
+            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
+              {user?.avatarUrl ? (
+                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="font-medium text-xs">{user?.name?.charAt(0).toUpperCase()}</span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Desktop back button — top-left corner on non-home pages */}
+        {!isHome && (
+          <div className="hidden md:block absolute top-4 left-4 z-30">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-xs font-medium"
+              aria-label="Voltar"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Voltar
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto pb-16 md:pb-0">
           {children}
         </div>
       </main>

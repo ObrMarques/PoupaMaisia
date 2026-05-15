@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink } from "lucide-react";
+import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import type { Language } from "@/i18n/translations";
 
@@ -39,7 +39,7 @@ function resizeImageToBase64(file: File, maxSize = 200): Promise<string> {
 }
 
 export default function Settings() {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t, languages } = useI18n();
   const { toast } = useToast();
@@ -260,13 +260,13 @@ export default function Settings() {
                 </div>
               </div>
             </Link>
-            <a href="mailto:suporte@poupamaix.com.br">
+            <a href="mailto:poupamaisia@gmail.com">
               <div className="flex items-center justify-between p-3 rounded-lg border border-border hover:border-primary/50 hover:bg-secondary/50 transition-all cursor-pointer group">
                 <div className="flex items-center gap-3">
                   <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                   <div>
                     <p className="text-sm font-medium">E-mail</p>
-                    <p className="text-xs text-muted-foreground">suporte@poupamaix.com.br</p>
+                    <p className="text-xs text-muted-foreground">poupamaisia@gmail.com</p>
                   </div>
                 </div>
                 <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
@@ -287,19 +287,30 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* ── Zona de Perigo ─────────────────────────── */}
-        <Card className="border-destructive bg-destructive/5">
+        {/* ── Sair da Conta ──────────────────────────── */}
+        <Card className="bg-card">
           <CardHeader>
-            <CardTitle className="text-destructive">{t("settings.danger")}</CardTitle>
-            <CardDescription>Ações permanentes para sua conta.</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <LogOut className="w-5 h-5" />
+              {t("auth.logout")}
+            </CardTitle>
+            <CardDescription>Encerrar a sessão atual e voltar à tela de login.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">{t("settings.deleteAccount")}</p>
-                <p className="text-sm text-muted-foreground">Depois de excluir sua conta, não há como voltar atrás.</p>
+                <p className="font-medium">Sair da conta</p>
+                <p className="text-sm text-muted-foreground">Seus dados permanecem salvos com segurança.</p>
               </div>
-              <Button variant="destructive">{t("settings.deleteAccount")}</Button>
+              <Button
+                variant="outline"
+                className="bg-background gap-2"
+                onClick={logout}
+                data-testid="button-logout-settings"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
             </div>
           </CardContent>
         </Card>
