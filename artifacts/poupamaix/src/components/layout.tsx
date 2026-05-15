@@ -147,8 +147,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Top bar — mobile header with back button */}
         <div className="md:hidden sticky top-0 z-40 flex items-center gap-2 px-3 py-3 bg-background/95 backdrop-blur-sm border-b border-border shrink-0">
           {isHome ? (
-            <div className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-              P
+            <div className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+              $
             </div>
           ) : (
             <button
