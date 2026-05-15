@@ -18,6 +18,7 @@ const Reports = lazy(() => import("@/pages/reports"));
 const AI = lazy(() => import("@/pages/ai"));
 const Premium = lazy(() => import("@/pages/premium"));
 const Settings = lazy(() => import("@/pages/settings"));
+const Support = lazy(() => import("@/pages/support"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -92,6 +93,7 @@ function Router() {
       <Route path="/ai" component={() => <ProtectedRoute component={AI} />} />
       <Route path="/premium" component={() => <ProtectedRoute component={Premium} />} />
       <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
+      <Route path="/support" component={() => <ProtectedRoute component={Support} />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route component={() => <ProtectedRoute component={Dashboard} />} />
     </Switch>

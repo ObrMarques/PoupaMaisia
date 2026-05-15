@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@workspace/api-client-react/src/generated/api.schemas';
+import { User } from '@workspace/api-client-react';
 import { useLocation } from 'wouter';
 
 interface AuthContextType {

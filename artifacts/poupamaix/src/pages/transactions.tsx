@@ -6,12 +6,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Filter, Trash2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/currency-input";
+import { Plus, Filter, Trash2, Pencil } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { Badge } from "@/components/ui/badge";
 
 export default function Transactions() {
   const { user } = useAuth();
@@ -28,7 +30,7 @@ export default function Transactions() {
   const [categoryId, setCategoryId] = useState<string>("");
   const [notes, setNotes] = useState("");
 
-  const { data: categories } = useGetCategories();
+  const { data: categories, isLoading: loadingCategories } = useGetCategories();
 
   const params = filterType !== "all" ? { type: filterType as "income" | "expense" } : {};
   const { data: transactions, isLoading } = useGetTransactions(params);
@@ -56,7 +58,7 @@ export default function Transactions() {
   const handleOpenModal = (t?: any) => {
     if (t) {
       setEditingTransaction(t);
-      setAmount(t.amount.toString());
+      setAmount(t.amount.toFixed(2));
       setDescription(t.description);
       setDate(t.date.split("T")[0]);
       setType(t.type);
@@ -87,12 +89,7 @@ export default function Transactions() {
       updateMutation.mutate(
         { id: editingTransaction.id, data: payload },
         {
-          onSuccess: () => {
-            invalidateAll();
-            setIsModalOpen(false);
-            resetForm();
-            toast({ title: "Transação atualizada" });
-          },
+          onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação atualizada" }); },
           onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" })
         }
       );
@@ -100,12 +97,7 @@ export default function Transactions() {
       createMutation.mutate(
         { data: payload },
         {
-          onSuccess: () => {
-            invalidateAll();
-            setIsModalOpen(false);
-            resetForm();
-            toast({ title: "Transação adicionada" });
-          },
+          onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação adicionada" }); },
           onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" })
         }
       );
@@ -113,16 +105,14 @@ export default function Transactions() {
   };
 
   const handleDelete = (id: number) => {
-    deleteMutation.mutate(
-      { id },
-      {
-        onSuccess: () => {
-          invalidateAll();
-          toast({ title: "Transação excluída" });
-        }
-      }
-    );
+    deleteMutation.mutate({ id }, {
+      onSuccess: () => { invalidateAll(); toast({ title: "Transação excluída" }); }
+    });
   };
+
+  const filteredCategories = categories?.filter(c =>
+    c.type === "both" || c.type === type
+  );
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
@@ -156,52 +146,79 @@ export default function Transactions() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Tipo</Label>
-                    <Select value={type} onValueChange={(v: "income" | "expense") => setType(v)}>
-                      <SelectTrigger data-testid="select-type">
-                        <SelectValue placeholder="Tipo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="income">Receita</SelectItem>
-                        <SelectItem value="expense">Despesa</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Valor (R$)</Label>
-                    <Input type="number" placeholder="0,00" value={amount} onChange={e => setAmount(e.target.value)} data-testid="input-amount" />
-                  </div>
+                  <Button
+                    variant={type === "expense" ? "default" : "outline"}
+                    className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
+                    onClick={() => { setType("expense"); setCategoryId(""); }}
+                  >
+                    Despesa
+                  </Button>
+                  <Button
+                    variant={type === "income" ? "default" : "outline"}
+                    className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
+                    onClick={() => { setType("income"); setCategoryId(""); }}
+                  >
+                    Receita
+                  </Button>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Valor</Label>
+                  <CurrencyInput
+                    value={amount}
+                    onValueChange={setAmount}
+                    className="bg-background text-lg font-semibold h-12"
+                    data-testid="input-amount"
+                  />
+                </div>
+
                 <div className="space-y-2">
                   <Label>Descrição</Label>
-                  <Input placeholder="Compra no mercado" value={description} onChange={e => setDescription(e.target.value)} data-testid="input-description" />
+                  <Input
+                    placeholder="Ex: Supermercado Extra"
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    className="bg-background"
+                    data-testid="input-description"
+                  />
                 </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Data</Label>
-                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} />
+                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
                   </div>
                   <div className="space-y-2">
                     <Label>Categoria</Label>
                     <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger data-testid="select-category">
-                        <SelectValue placeholder="Selecionar..." />
+                      <SelectTrigger className="bg-background" data-testid="select-category">
+                        <SelectValue placeholder={loadingCategories ? "Carregando..." : "Selecionar..."} />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories?.map(c => (
-                          <SelectItem key={c.id} value={c.id.toString()}>{c.icon} {c.name}</SelectItem>
+                        {filteredCategories?.map(c => (
+                          <SelectItem key={c.id} value={c.id.toString()}>
+                            <span className="flex items-center gap-2">
+                              <span>{c.icon}</span>
+                              <span>{c.name}</span>
+                            </span>
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
+
                 <div className="space-y-2">
-                  <Label>Observações (opcional)</Label>
-                  <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} />
+                  <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input
+                    placeholder="Notas adicionais..."
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    className="bg-background"
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-2 mt-4">
+              <div className="flex justify-end gap-2">
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
                 <Button onClick={handleSave} disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-save">
                   {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
@@ -218,36 +235,45 @@ export default function Transactions() {
             {isLoading ? (
               Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full m-2" />)
             ) : transactions?.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground">Nenhuma transação encontrada.</div>
+              <div className="p-12 text-center">
+                <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
+                <Button variant="outline" className="mt-4 bg-background" onClick={() => handleOpenModal()}>
+                  <Plus className="w-4 h-4 mr-2" /> Adicionar primeira transação
+                </Button>
+              </div>
             ) : (
               transactions?.map((t) => (
-                <div key={t.id} className="flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors group" data-testid={`row-transaction-${t.id}`}>
-                  <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => handleOpenModal(t)}>
-                    <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center shrink-0">
-                      <span className="text-xl">{t.categoryIcon || '💸'}</span>
+                <div key={t.id} className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors group" data-testid={`row-transaction-${t.id}`}>
+                  <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => handleOpenModal(t)}>
+                    <div
+                      className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 text-xl"
+                      style={{ backgroundColor: `${t.categoryColor}20` }}
+                    >
+                      {t.categoryIcon || '💸'}
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{t.description}</p>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-                        <span>{new Date(t.date).toLocaleDateString('pt-BR')}</span>
-                        <span>•</span>
-                        <span>{t.categoryName}</span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground truncate">{t.description}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString('pt-BR')}</span>
+                        <span className="text-xs text-muted-foreground">·</span>
+                        <Badge variant="outline" className="text-xs py-0 px-1.5 border-border">
+                          {t.categoryIcon} {t.categoryName}
+                        </Badge>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className={`font-semibold ${t.type === 'income' ? 'text-[#00C851]' : 'text-foreground'}`}>
+                  <div className="flex items-center gap-3 ml-4 shrink-0">
+                    <div className={`font-semibold text-right ${t.type === 'income' ? 'text-[#00C851]' : 'text-foreground'}`}>
                       {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount, user?.currency)}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(t.id)}
-                      data-testid={`button-delete-${t.id}`}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
+                        <Pencil className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))

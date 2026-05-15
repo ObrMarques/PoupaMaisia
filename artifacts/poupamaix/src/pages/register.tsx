@@ -34,7 +34,7 @@ export default function Register() {
         onSuccess: (data) => {
           login(data.user, data.token);
           onboardingMutation.mutate(
-            { data: { currency: "BRL", initialGoalName: null, initialGoalAmount: null, favoriteCategories: [] } },
+            { data: { currency: "BRL", initialGoalName: undefined, initialGoalAmount: 0, favoriteCategories: [] } },
             {
               onSettled: () => {
                 setLocation("/dashboard");
