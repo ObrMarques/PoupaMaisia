@@ -1,0 +1,145 @@
+Perfeito — adicionando o **módulo de suporte completo** junto com o pacote anterior:
+
+---
+
+# PACOTE ÚNICO FINAL DE CORREÇÕES (IDIOMAS + TEMA + PERFIL + SUPORTE)
+
+## 1. SISTEMA DE IDIOMAS (i18n GLOBAL)
+
+* troca de idioma em tempo real (sem reiniciar app)
+* salvar idioma no perfil do usuário
+* aplicar em TODAS as telas
+* persistência após login/logout
+* fallback automático para português
+
+### Idiomas:
+
+* Português (Brasil)
+* Inglês
+* Espanhol
+* Mandarim
+* Russo
+* Hindi
+* Árabe
+* Francês
+* Alemão
+* Japonês
+* Coreano
+
+---
+
+## 2. MODO ESCURO (THEME GLOBAL CORRIGIDO)
+
+* alternância instantânea claro/escuro
+* aplicar em todo o aplicativo
+* salvar preferência do usuário
+* carregar automaticamente ao iniciar
+
+### Deve cobrir:
+
+* dashboard
+* transações
+* gráficos
+* formulários
+* configurações
+* suporte
+* modais
+
+---
+
+## 3. FOTO DE PERFIL (SISTEMA DE USUÁRIO)
+
+* upload de foto
+* câmera e galeria
+* edição/corte de imagem
+* salvar no backend
+* sincronização entre dispositivos
+* exibir no perfil e configurações
+
+---
+
+## 4. SUPORTE — MODO COMPLETO DE AJUDA
+
+Adicionar um sistema completo de suporte dentro do PoupaMais.
+
+## FUNCIONALIDADES DO SUPORTE
+
+### 1. CENTRAL DE AJUDA
+
+* lista de dúvidas frequentes (FAQ)
+* categorias de ajuda:
+
+  * contas e login
+  * transações
+  * categorias
+  * metas
+  * pagamentos
+  * PoupaAI
+  * assinatura premium
+
+---
+
+### 2. CHAT DE SUPORTE
+
+* chat interno dentro do app
+* envio de mensagens em tempo real
+* respostas automáticas (FAQ inteligente)
+* histórico de conversas
+* status “online / offline”
+
+---
+
+### 3. CONTATO EXTERNO
+
+* botão de email de suporte
+* botão de WhatsApp suporte
+* formulário de contato
+
+---
+
+### 4. EXPERIÊNCIA DO SUPORTE
+
+* interface limpa e premium
+* estilo fintech (preto e branco)
+* respostas rápidas sugeridas
+* busca por dúvidas
+
+---
+
+## 5. SINCRONIZAÇÃO GLOBAL OBRIGATÓRIA
+
+Garantir que:
+
+* idioma
+* tema escuro/claro
+* foto de perfil
+* suporte (histórico de chat)
+
+sejam:
+
+* salvos no backend
+* sincronizados entre dispositivos
+* persistentes após login/logout
+* atualizados em tempo real
+
+---
+
+## 6. EXPERIÊNCIA FINAL
+
+Após implementação:
+
+* app totalmente internacional
+* tema funcionando 100%
+* perfil completo com foto
+* suporte profissional integrado
+* experiência de aplicativo bancário premium global
+* sistema estável, rápido e escalável
+
+---
+
+## IMPORTANTE
+
+* manter performance alta
+* garantir consistência visual em todo o app
+* evitar bugs de estado global
+* garantir UX fluida e moderna no PoupaMais

@@ -7,6 +7,8 @@ import { AuthProvider, useAuth } from "./hooks/use-auth";
 import { useEffect } from "react";
 import { AppLayout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ThemeProvider, useTheme } from "@/contexts/theme-context";
+import { I18nProvider } from "@/contexts/i18n-context";
 
 const Login = lazy(() => import("@/pages/login"));
 const Register = lazy(() => import("@/pages/register"));
@@ -52,9 +54,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!token) {
-      setLocation("/login");
-    }
+    if (!token) setLocation("/login");
   }, [token, setLocation]);
 
   if (!token) return null;
@@ -80,23 +80,28 @@ function PublicRoute({ component: Component }: { component: React.ComponentType 
   );
 }
 
-function Router() {
+function ThemedApp() {
+  const { theme } = useTheme();
   return (
-    <Switch>
-      <Route path="/login" component={() => <PublicRoute component={Login} />} />
-      <Route path="/register" component={() => <PublicRoute component={Register} />} />
-      <Route path="/dashboard" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
-      <Route path="/goals" component={() => <ProtectedRoute component={Goals} />} />
-      <Route path="/cards" component={() => <ProtectedRoute component={Cards} />} />
-      <Route path="/reports" component={() => <ProtectedRoute component={Reports} />} />
-      <Route path="/ai" component={() => <ProtectedRoute component={AI} />} />
-      <Route path="/premium" component={() => <ProtectedRoute component={Premium} />} />
-      <Route path="/settings" component={() => <ProtectedRoute component={Settings} />} />
-      <Route path="/support" component={() => <ProtectedRoute component={Support} />} />
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
-      <Route component={() => <ProtectedRoute component={Dashboard} />} />
-    </Switch>
+    <div className={theme}>
+      <div className="min-h-[100dvh] bg-background text-foreground">
+        <Switch>
+          <Route path="/login"        component={() => <PublicRoute component={Login} />} />
+          <Route path="/register"     component={() => <PublicRoute component={Register} />} />
+          <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
+          <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
+          <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
+          <Route path="/cards"        component={() => <ProtectedRoute component={Cards} />} />
+          <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
+          <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
+          <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
+          <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
+          <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
+          <Route path="/"             component={() => <ProtectedRoute component={Dashboard} />} />
+          <Route                      component={() => <ProtectedRoute component={Dashboard} />} />
+        </Switch>
+      </div>
+    </div>
   );
 }
 
@@ -104,15 +109,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
-          <AuthProvider>
-            <div className="dark">
-              <div className="min-h-[100dvh] bg-background text-foreground">
-                <Router />
-              </div>
-            </div>
-          </AuthProvider>
-        </WouterRouter>
+        <ThemeProvider>
+          <I18nProvider>
+            <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
+              <AuthProvider>
+                <ThemedApp />
+              </AuthProvider>
+            </WouterRouter>
+          </I18nProvider>
+        </ThemeProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
