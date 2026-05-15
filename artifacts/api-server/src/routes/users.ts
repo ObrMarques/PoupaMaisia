@@ -38,6 +38,18 @@ router.patch("/users/profile", authMiddleware, async (req, res) => {
   res.json(serializeUser(updated));
 });
 
+router.post("/users/subscribe", authMiddleware, async (req, res) => {
+  const user = getUser(req);
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+  const [updated] = await db
+    .update(usersTable)
+    .set({ isPremium: true, premiumExpiresAt: expiresAt })
+    .where(eq(usersTable.id, user.id))
+    .returning();
+  res.json(serializeUser(updated));
+});
+
 router.post("/users/onboarding", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const parsed = CompleteOnboardingBody.safeParse(req.body);

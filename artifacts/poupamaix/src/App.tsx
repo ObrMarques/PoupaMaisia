@@ -1,35 +1,36 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
-import { useEffect } from "react";
 import { AppLayout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeProvider, useTheme } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
+import { useSubscription } from "@/hooks/use-subscription";
 
-const Login = lazy(() => import("@/pages/login"));
-const Register = lazy(() => import("@/pages/register"));
-const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Login        = lazy(() => import("@/pages/login"));
+const Register     = lazy(() => import("@/pages/register"));
+const Dashboard    = lazy(() => import("@/pages/dashboard"));
 const Transactions = lazy(() => import("@/pages/transactions"));
-const Goals = lazy(() => import("@/pages/goals"));
-const Cards = lazy(() => import("@/pages/cards"));
-const Reports = lazy(() => import("@/pages/reports"));
-const AI = lazy(() => import("@/pages/ai"));
-const Premium = lazy(() => import("@/pages/premium"));
-const Settings = lazy(() => import("@/pages/settings"));
-const Support = lazy(() => import("@/pages/support"));
+const Goals        = lazy(() => import("@/pages/goals"));
+const Cards        = lazy(() => import("@/pages/cards"));
+const Reports      = lazy(() => import("@/pages/reports"));
+const AI           = lazy(() => import("@/pages/ai"));
+const Premium      = lazy(() => import("@/pages/premium"));
+const Settings     = lazy(() => import("@/pages/settings"));
+const Support      = lazy(() => import("@/pages/support"));
+const Paywall      = lazy(() => import("@/pages/paywall"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 2,
-      gcTime: 1000 * 60 * 10,
+      gcTime:    1000 * 60 * 10,
       retry: 1,
       refetchOnWindowFocus: false,
-      refetchOnReconnect: false,
+      refetchOnReconnect:   false,
     },
   },
 });
@@ -49,13 +50,29 @@ function PageSkeleton() {
   );
 }
 
+function SpinnerLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
+
+/** Routes that remain accessible even after the trial expires, so users can
+ *  manage their account and subscribe. */
+const OPEN_ROUTES = new Set(["/settings", "/support", "/paywall"]);
+
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { token } = useAuth();
-  const [, setLocation] = useLocation();
+  const { token }            = useAuth();
+  const { hasAccess }        = useSubscription();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!token) setLocation("/login");
-  }, [token, setLocation]);
+    if (!token) { setLocation("/login"); return; }
+    if (!hasAccess && !OPEN_ROUTES.has(location)) {
+      setLocation("/paywall");
+    }
+  }, [token, hasAccess, location, setLocation]);
 
   if (!token) return null;
 
@@ -68,13 +85,28 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+function PaywallRoute() {
+  const { token }     = useAuth();
+  const { hasAccess } = useSubscription();
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (!token)    { setLocation("/login");    return; }
+    if (hasAccess) { setLocation("/dashboard"); }
+  }, [token, hasAccess, setLocation]);
+
+  if (!token || hasAccess) return null;
+
+  return (
+    <Suspense fallback={<SpinnerLoader />}>
+      <Paywall />
+    </Suspense>
+  );
+}
+
 function PublicRoute({ component: Component }: { component: React.ComponentType }) {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
+    <Suspense fallback={<SpinnerLoader />}>
       <Component />
     </Suspense>
   );
@@ -88,6 +120,7 @@ function ThemedApp() {
         <Switch>
           <Route path="/login"        component={() => <PublicRoute component={Login} />} />
           <Route path="/register"     component={() => <PublicRoute component={Register} />} />
+          <Route path="/paywall"      component={() => <PaywallRoute />} />
           <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
           <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
           <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />

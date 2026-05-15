@@ -1,0 +1,124 @@
+Entendi o que você quer, mas vou ajustar uma coisa importante para isso não dar problema no app nem na loja: esse tipo de regra precisa ser implementado como **assinatura com período de teste (trial)**, não como “app pago bloqueado após 7 dias” de forma manual simples.
+
+Aqui está o **prompt correto e profissional para o Replit**:
+
+---
+
+# CORREÇÃO DO MODELO DE MONETIZAÇÃO DO POUPAMAIS
+
+## OBJETIVO
+
+Transformar o aplicativo **PoupaMais** em um app **100% Premium (SaaS)** com:
+
+* 7 dias de teste grátis (trial)
+* após isso, assinatura obrigatória para continuar usando
+
+---
+
+# 1. ESTRUTURA DE PAGAMENTO (OBRIGATÓRIO)
+
+## MODELO
+
+* App inteiro é Premium
+* Nenhuma funcionalidade deve ser gratuita após o trial
+
+---
+
+## TRIAL (TESTE GRÁTIS)
+
+* 7 dias grátis ao criar conta
+* acesso total a TODAS as funções:
+
+  * dashboard
+  * transações
+  * categorias
+  * metas
+  * relatórios
+  * suporte
+  * PoupaAI
+  * tudo
+
+---
+
+## APÓS 7 DIAS
+
+Bloquear automaticamente o app inteiro com:
+
+* tela de paywall obrigatória
+* sem acesso ao dashboard
+* sem acesso a transações
+* sem acesso a nenhuma função
+
+---
+
+# 2. ASSINATURA PREMIUM
+
+## PLANO ÚNICO
+
+* Nome: **PoupaMais Premium**
+* Preço: **R$9,90/mês**
+* Renovação automática
+
+---
+
+## DESBLOQUEIO
+
+Após pagamento:
+
+* liberar app completo novamente
+* manter acesso contínuo enquanto assinatura estiver ativa
+
+---
+
+# 3. VERIFICAÇÃO DE ACESSO
+
+Implementar controle global:
+
+* verificar status da assinatura ao abrir o app
+* verificar expiração do trial
+* bloquear acesso se não estiver ativo
+
+---
+
+# 4. PAYWALL (TELA DE BLOQUEIO)
+
+Quando o usuário não tiver assinatura:
+
+Mostrar tela:
+
+* título: “Seu período grátis acabou”
+* mensagem explicando bloqueio
+* botão: “Assinar Premium”
+* botão: “Restaurar compra”
+
+---
+
+# 5. REGRAS IMPORTANTES
+
+* nenhuma função pode ficar gratuita após o trial
+* PoupaAI continua sendo 100% Premium
+* todos os módulos seguem o mesmo bloqueio
+* manter experiência fluida e profissional
+
+---
+
+# 6. EXPERIÊNCIA DO USUÁRIO
+
+* onboarding simples
+* uso livre por 7 dias
+* bloqueio elegante (sem travar app)
+* sensação de produto SaaS real
+* estilo fintech premium
+
+---
+
+# IMPORTANTE
+
+* usar sistema de assinatura real (Stripe ou equivalente)
+* não fazer bloqueio manual simples sem verificação
+* garantir segurança contra bypass
+* manter performance e UX de aplicativo bancário moderno
+
+---
+
+Se quiser, posso também te montar o **prompt completo final do PoupaMais já com monetização perfeita estilo App Store/Stripe (pronto pra produção mesmo)**.
