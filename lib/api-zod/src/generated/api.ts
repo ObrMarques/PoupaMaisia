@@ -516,6 +516,7 @@ export const UpdateCardParams = zod.object({
 
 export const UpdateCardBody = zod.object({
   "name": zod.string().nullish(),
+  "brand": zod.union([zod.literal('visa'),zod.literal('mastercard'),zod.literal('elo'),zod.literal('amex'),zod.literal('hipercard'),zod.literal('other'),zod.literal(null)]).nullish(),
   "limit": zod.number().nullish(),
   "currentBalance": zod.number().nullish(),
   "closingDay": zod.number().nullish(),

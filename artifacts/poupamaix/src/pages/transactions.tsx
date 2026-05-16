@@ -3,7 +3,7 @@ import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
-  useGetCategories
+  useGetCategories, useGetCards, getGetCardsQueryKey,
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,10 +16,73 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
-import { Plus, Filter, Trash2, Pencil, ChevronRight } from "lucide-react";
+import { Plus, Filter, Trash2, Pencil, ChevronRight, CreditCard, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+
+const CARD_BRAND_LABEL: Record<string, string> = {
+  mastercard: "Mastercard", visa: "Visa", amex: "Amex",
+  elo: "Elo", hipercard: "Hipercard", other: "Outro",
+};
+
+function CardSelector({
+  cards, value, onChange,
+}: {
+  cards: any[];
+  value: number | null;
+  onChange: (id: number | null) => void;
+}) {
+  if (!cards.length) return null;
+  return (
+    <div className="space-y-2">
+      <Label className="flex items-center gap-1.5">
+        <CreditCard className="w-3.5 h-3.5" />
+        Cartão <span className="text-muted-foreground text-xs">(opcional)</span>
+      </Label>
+      <div className="space-y-1.5">
+        {/* "Nenhum" option */}
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm transition-colors ${
+            value === null
+              ? "border-foreground bg-secondary font-medium"
+              : "border-border hover:border-foreground/30 hover:bg-secondary/50"
+          }`}
+        >
+          <span className="text-muted-foreground">Sem cartão</span>
+          {value === null && <div className="w-4 h-4 rounded-full bg-foreground flex items-center justify-center"><X className="w-2.5 h-2.5 text-background" /></div>}
+        </button>
+        {cards.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            onClick={() => onChange(c.id)}
+            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
+              value === c.id
+                ? "border-foreground bg-secondary font-medium"
+                : "border-border hover:border-foreground/30 hover:bg-secondary/50"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div
+                className="w-6 h-4 rounded-sm shrink-0"
+                style={{ backgroundColor: c.color || "#0A0A0A" }}
+              />
+              <span>{c.name}</span>
+              <span className="text-muted-foreground font-mono text-xs">•••• {c.lastFourDigits}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{CARD_BRAND_LABEL[c.brand] ?? "Cartão"}</span>
+              {value === c.id && <div className="w-4 h-4 rounded-full bg-foreground flex items-center justify-center"><div className="w-1.5 h-1.5 rounded-full bg-background" /></div>}
+            </div>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function Transactions() {
   const { user } = useAuth();
@@ -30,15 +93,17 @@ export default function Transactions() {
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
-  const [amount, setAmount] = useState("");
+  const [amount, setAmount]           = useState("");
   const [description, setDescription] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [type, setType] = useState<"income" | "expense">("expense");
-  const [categoryId, setCategoryId] = useState("");
+  const [date, setDate]               = useState(new Date().toISOString().split("T")[0]);
+  const [type, setType]               = useState<"income" | "expense">("expense");
+  const [categoryId, setCategoryId]   = useState("");
   const [categoryName, setCategoryName] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes]             = useState("");
+  const [cardId, setCardId]           = useState<number | null>(null);
 
   const { data: categories } = useGetCategories();
+  const { data: cards } = useGetCards();
   const params = filterType !== "all" ? { type: filterType as "income" | "expense" } : {};
   const { data: transactions, isLoading } = useGetTransactions(params);
 
@@ -53,12 +118,13 @@ export default function Transactions() {
     queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
   };
 
   const resetForm = () => {
     setAmount(""); setDescription(""); setDate(new Date().toISOString().split("T")[0]);
     setType("expense"); setCategoryId(""); setCategoryName(""); setNotes("");
-    setEditingTransaction(null);
+    setCardId(null); setEditingTransaction(null);
   };
 
   const handleOpenModal = (t?: any) => {
@@ -71,6 +137,7 @@ export default function Transactions() {
       setCategoryId(t.categoryId.toString());
       setCategoryName(t.categoryName || "");
       setNotes(t.notes || "");
+      setCardId(t.cardId ?? null);
     } else {
       resetForm();
     }
@@ -89,25 +156,28 @@ export default function Transactions() {
       date,
       categoryId: parseInt(categoryId, 10),
       notes: notes || null,
+      cardId: type === "expense" ? (cardId ?? null) : null,
     };
     if (editingTransaction) {
       updateMutation.mutate({ id: editingTransaction.id, data: payload }, {
         onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação atualizada" }); },
-        onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" })
+        onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
       });
     } else {
       createMutation.mutate({ data: payload }, {
         onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação adicionada" }); },
-        onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" })
+        onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" }),
       });
     }
   };
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate({ id }, {
-      onSuccess: () => { invalidateAll(); toast({ title: "Transação excluída" }); }
+      onSuccess: () => { invalidateAll(); toast({ title: "Transação excluída" }); },
     });
   };
+
+  const expenseCards = cards ?? [];
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
@@ -135,7 +205,7 @@ export default function Transactions() {
                 <Plus className="w-4 h-4 mr-2" /> Nova
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[440px]">
+            <DialogContent className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
               </DialogHeader>
@@ -151,7 +221,7 @@ export default function Transactions() {
                   <Button
                     variant={type === "income" ? "default" : "outline"}
                     className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
-                    onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
+                    onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); setCardId(null); }}
                   >
                     Receita
                   </Button>
@@ -199,6 +269,10 @@ export default function Transactions() {
                   </div>
                 </div>
 
+                {type === "expense" && expenseCards.length > 0 && (
+                  <CardSelector cards={expenseCards} value={cardId} onChange={setCardId} />
+                )}
+
                 <div className="space-y-2">
                   <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                   <Input
@@ -224,7 +298,6 @@ export default function Transactions() {
         </div>
       </div>
 
-      {/* Category picker rendered outside the main dialog so it stacks properly */}
       <CategoryPicker
         open={isCategoryPickerOpen}
         onOpenChange={setIsCategoryPickerOpen}
@@ -246,49 +319,61 @@ export default function Transactions() {
                 </Button>
               </div>
             ) : (
-              transactions?.map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors group"
-                  data-testid={`row-transaction-${t.id}`}
-                >
-                  <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
-                    <div
-                      className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-xs"
-                      style={{ backgroundColor: `${t.categoryColor || "#6C5CE7"}20`, color: t.categoryColor || "#6C5CE7" }}
-                    >
-                      {(t.categoryName || "?").charAt(0).toUpperCase()}
+              transactions?.map((t) => {
+                const linkedCard = t.cardId ? (cards ?? []).find(c => c.id === t.cardId) : null;
+                return (
+                  <div
+                    key={t.id}
+                    className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors group"
+                    data-testid={`row-transaction-${t.id}`}
+                  >
+                    <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
+                      <div
+                        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-xs"
+                        style={{ backgroundColor: `${t.categoryColor || "#6C5CE7"}20`, color: t.categoryColor || "#6C5CE7" }}
+                      >
+                        {(t.categoryName || "?").charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-foreground truncate">{t.description}</p>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</span>
+                          {t.categoryName && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">
+                                {t.categoryName}
+                              </Badge>
+                            </>
+                          )}
+                          {linkedCard && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <div className="w-3 h-2 rounded-sm" style={{ backgroundColor: linkedCard.color || "#0A0A0A" }} />
+                                {linkedCard.name} •{linkedCard.lastFourDigits}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">{t.description}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</span>
-                        {t.categoryName && (
-                          <>
-                            <span className="text-xs text-muted-foreground">·</span>
-                            <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">
-                              {t.categoryName}
-                            </Badge>
-                          </>
-                        )}
+                    <div className="flex items-center gap-3 ml-4 shrink-0">
+                      <div className={`font-semibold text-right tabular-nums ${t.type === "income" ? "text-[#00C851]" : "text-foreground"}`}>
+                        {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <div className={`font-semibold text-right tabular-nums ${t.type === "income" ? "text-[#00C851]" : "text-foreground"}`}>
-                      {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
-                    </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>

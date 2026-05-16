@@ -17,6 +17,7 @@ export * from './cardBrand';
 export * from './cardInput';
 export * from './cardInputBrand';
 export * from './cardUpdate';
+export * from './cardUpdateBrand';
 export * from './category';
 export * from './categoryInput';
 export * from './categoryInputType';

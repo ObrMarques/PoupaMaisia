@@ -88,6 +88,7 @@ router.patch("/cards/:id", authMiddleware, async (req, res) => {
   const updates: any = {};
   const d = parsed.data;
   if (d.name !== undefined && d.name !== null) updates.name = d.name;
+  if (d.brand !== undefined && d.brand !== null) updates.brand = d.brand;
   if (d.limit !== undefined && d.limit !== null) updates.limit = String(d.limit);
   if (d.currentBalance !== undefined && d.currentBalance !== null) updates.currentBalance = String(d.currentBalance);
   if (d.closingDay !== undefined && d.closingDay !== null) updates.closingDay = d.closingDay;

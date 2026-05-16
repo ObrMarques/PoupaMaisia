@@ -388,9 +388,26 @@ export interface CardInput {
   color?: string | null;
 }
 
+/**
+ * @nullable
+ */
+export type CardUpdateBrand = typeof CardUpdateBrand[keyof typeof CardUpdateBrand] | null;
+
+
+export const CardUpdateBrand = {
+  visa: 'visa',
+  mastercard: 'mastercard',
+  elo: 'elo',
+  amex: 'amex',
+  hipercard: 'hipercard',
+  other: 'other',
+} as const;
+
 export interface CardUpdate {
   /** @nullable */
   name?: string | null;
+  /** @nullable */
+  brand?: CardUpdateBrand;
   /** @nullable */
   limit?: number | null;
   /** @nullable */

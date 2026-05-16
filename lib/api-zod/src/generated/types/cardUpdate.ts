@@ -5,10 +5,13 @@
  * PoupaMais - Personal Finance API
  * OpenAPI spec version: 0.1.0
  */
+import type { CardUpdateBrand } from './cardUpdateBrand';
 
 export interface CardUpdate {
   /** @nullable */
   name?: string | null;
+  /** @nullable */
+  brand?: CardUpdateBrand;
   /** @nullable */
   limit?: number | null;
   /** @nullable */

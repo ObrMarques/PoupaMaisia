@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, transactionsTable, categoriesTable } from "@workspace/db";
+import { db, transactionsTable, categoriesTable, cardsTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateTransactionBody, UpdateTransactionBody, GetTransactionsQueryParams } from "@workspace/api-zod";
@@ -29,13 +29,23 @@ async function serializeTransaction(tx: any, cat: any) {
   };
 }
 
+async function recalculateCardBalance(cardId: number, userId: number) {
+  const [{ total }] = await db
+    .select({ total: sql<string>`COALESCE(SUM(${transactionsTable.amount}), 0)` })
+    .from(transactionsTable)
+    .where(and(
+      eq(transactionsTable.cardId, cardId),
+      eq(transactionsTable.userId, userId),
+      eq(transactionsTable.type, "expense"),
+    ));
+  await db.update(cardsTable)
+    .set({ currentBalance: String(parseFloat(total)) })
+    .where(and(eq(cardsTable.id, cardId), eq(cardsTable.userId, userId)));
+}
+
 router.get("/transactions", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const params = GetTransactionsQueryParams.safeParse(req.query);
-  
-  let query = db.select().from(transactionsTable)
-    .where(eq(transactionsTable.userId, user.id))
-    .$dynamic();
 
   const conditions = [eq(transactionsTable.userId, user.id)];
 
@@ -87,6 +97,11 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     cardId: parsed.data.cardId ?? null,
     notes: parsed.data.notes ?? null,
   }).returning();
+
+  if (tx.cardId && parsed.data.type === "expense") {
+    await recalculateCardBalance(tx.cardId, user.id);
+  }
+
   const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1);
   res.status(201).json(await serializeTransaction(tx, cats[0]));
 });
@@ -134,6 +149,14 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   if (d.notes !== undefined) updates.notes = d.notes;
 
   const [tx] = await db.update(transactionsTable).set(updates).where(eq(transactionsTable.id, id)).returning();
+
+  const affectedCards = new Set<number>();
+  if (existing[0].cardId) affectedCards.add(existing[0].cardId);
+  if (tx.cardId) affectedCards.add(tx.cardId);
+  for (const cid of affectedCards) {
+    await recalculateCardBalance(cid, user.id);
+  }
+
   const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1);
   res.json(await serializeTransaction(tx, cats[0]));
 });
@@ -147,7 +170,13 @@ router.delete("/transactions/:id", authMiddleware, async (req, res) => {
     res.status(404).json({ error: "Transaction not found" });
     return;
   }
+  const oldCardId = existing[0].cardId;
   await db.delete(transactionsTable).where(eq(transactionsTable.id, id));
+
+  if (oldCardId) {
+    await recalculateCardBalance(oldCardId, user.id);
+  }
+
   res.json({ success: true, message: "Deleted" });
 });
 
