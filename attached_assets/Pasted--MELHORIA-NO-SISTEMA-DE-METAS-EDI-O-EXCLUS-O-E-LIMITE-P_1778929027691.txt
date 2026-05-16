@@ -1,0 +1,152 @@
+# MELHORIA NO SISTEMA DE METAS — EDIÇÃO, EXCLUSÃO E LIMITE PREMIUM
+
+## OBJETIVO
+
+Melhorar completamente o sistema de metas do aplicativo PoupaMais, adicionando:
+
+* edição de metas
+* exclusão de metas
+* limite no plano gratuito
+* metas ilimitadas no Premium
+
+---
+
+# 1. EDITAR META
+
+## PROBLEMA
+
+Atualmente não existe opção para editar metas criadas.
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+Adicionar botão:
+
+## “Editar Meta”
+
+O usuário deve conseguir alterar:
+
+* nome da meta
+* valor objetivo
+* valor atual
+* data
+* categoria
+* descrição
+* cor da meta
+* tipo da meta
+
+---
+
+# EXPERIÊNCIA
+
+* abrir modal/tela de edição
+* salvar instantaneamente
+* atualização em tempo real
+* animação suave
+
+---
+
+# 2. EXCLUIR META
+
+## PROBLEMA
+
+Não existe opção para remover metas.
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+Adicionar botão:
+
+## “Excluir Meta”
+
+---
+
+# CONFIRMAÇÃO
+
+Antes de excluir:
+Mostrar confirmação:
+
+> “Tem certeza que deseja excluir esta meta?”
+
+Botões:
+
+* Cancelar
+* Excluir
+
+---
+
+# IMPORTANTE
+
+* remover meta corretamente do banco
+* atualizar dashboard instantaneamente
+* não deixar dados órfãos
+
+---
+
+# 3. LIMITE DE METAS NO PLANO GRATUITO
+
+## USUÁRIO GRATUITO
+
+Permitir criar:
+
+* no máximo 3 metas
+
+---
+
+# AO TENTAR CRIAR A 4ª META
+
+Bloquear criação e mostrar modal Premium.
+
+---
+
+# MODAL PREMIUM
+
+Mensagem:
+
+## “Desbloqueie metas ilimitadas com PoupaMais Premium”
+
+Benefícios:
+
+* metas ilimitadas
+* organização avançada
+* acompanhamento completo
+* experiência premium
+
+Botões:
+
+* “Assinar Premium”
+* “Agora não”
+* botão X para fechar
+
+---
+
+# 4. USUÁRIO PREMIUM
+
+Usuários Premium devem ter:
+
+* metas ilimitadas
+* sem restrições
+
+---
+
+# 5. EXPERIÊNCIA FINAL
+
+Quero:
+
+* sistema de metas profissional
+* edição fácil
+* exclusão segura
+* bloqueio elegante no plano grátis
+* UX estilo fintech moderna
+
+---
+
+# IMPORTANTE FINAL
+
+* validar limite no frontend e backend
+* manter sincronização instantânea
+* manter alta performance
+* manter padrão premium do PoupaMais
+* não quebrar metas já existentes
