@@ -29,5 +29,7 @@ export interface TransactionUpdate {
   /** @nullable */
   cardId?: number | null;
   /** @nullable */
+  walletId?: number | null;
+  /** @nullable */
   notes?: string | null;
 }

@@ -16,6 +16,7 @@ export const transactionsTable = pgTable("transactions", {
   installments: integer("installments"),
   installmentNumber: integer("installment_number"),
   cardId: integer("card_id"),
+  walletId: integer("wallet_id"),
   notes: text("notes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [

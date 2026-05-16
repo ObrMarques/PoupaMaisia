@@ -1,12 +1,13 @@
 import { Router } from "express";
-import { db, transactionsTable, categoriesTable, cardsTable } from "@workspace/db";
+import { db, transactionsTable, categoriesTable, cardsTable, walletsTable } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateTransactionBody, UpdateTransactionBody, GetTransactionsQueryParams } from "@workspace/api-zod";
 
 const router = Router();
 
-async function serializeTransaction(tx: any, cat: any) {
+async function serializeTransaction(tx: any, cat: any, walletMap: Map<number, any> = new Map()) {
+  const wallet = tx.walletId ? walletMap.get(tx.walletId) : null;
   return {
     id: tx.id,
     userId: tx.userId,
@@ -24,6 +25,9 @@ async function serializeTransaction(tx: any, cat: any) {
     installments: tx.installments ?? null,
     installmentNumber: tx.installmentNumber ?? null,
     cardId: tx.cardId ?? null,
+    walletId: tx.walletId ?? null,
+    walletName: wallet?.name ?? null,
+    walletColor: wallet?.color ?? null,
     notes: tx.notes ?? null,
     createdAt: tx.createdAt.toISOString(),
   };
@@ -69,10 +73,14 @@ router.get("/transactions", authMiddleware, async (req, res) => {
     .limit(params.success && params.data.limit ? Number(params.data.limit) : 100)
     .offset(params.success && params.data.offset ? Number(params.data.offset) : 0);
 
-  const cats = await db.select().from(categoriesTable);
-  const catMap = new Map(cats.map(c => [c.id, c]));
+  const [cats, wallets] = await Promise.all([
+    db.select().from(categoriesTable),
+    db.select().from(walletsTable).where(eq(walletsTable.userId, user.id)),
+  ]);
+  const catMap    = new Map(cats.map(c => [c.id, c]));
+  const walletMap = new Map(wallets.map(w => [w.id, w]));
 
-  const result = await Promise.all(txs.map(tx => serializeTransaction(tx, catMap.get(tx.categoryId))));
+  const result = await Promise.all(txs.map(tx => serializeTransaction(tx, catMap.get(tx.categoryId), walletMap)));
   res.json(result);
 });
 
@@ -95,6 +103,7 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     recurringPeriod: parsed.data.recurringPeriod ?? null,
     installments: parsed.data.installments ?? null,
     cardId: parsed.data.cardId ?? null,
+    walletId: (parsed.data as any).walletId ?? null,
     notes: parsed.data.notes ?? null,
   }).returning();
 
@@ -102,8 +111,12 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     await recalculateCardBalance(tx.cardId, user.id);
   }
 
-  const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1);
-  res.status(201).json(await serializeTransaction(tx, cats[0]));
+  const [cats, wallets] = await Promise.all([
+    db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1),
+    tx.walletId ? db.select().from(walletsTable).where(eq(walletsTable.id, tx.walletId)).limit(1) : Promise.resolve([]),
+  ]);
+  const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
+  res.status(201).json(await serializeTransaction(tx, cats[0], walletMap));
 });
 
 router.get("/transactions/:id", authMiddleware, async (req, res) => {
@@ -116,8 +129,13 @@ router.get("/transactions/:id", authMiddleware, async (req, res) => {
     res.status(404).json({ error: "Transaction not found" });
     return;
   }
-  const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.id, txs[0].categoryId)).limit(1);
-  res.json(await serializeTransaction(txs[0], cats[0]));
+  const tx = txs[0];
+  const [cats, wallets] = await Promise.all([
+    db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1),
+    tx.walletId ? db.select().from(walletsTable).where(eq(walletsTable.id, tx.walletId)).limit(1) : Promise.resolve([]),
+  ]);
+  const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
+  res.json(await serializeTransaction(tx, cats[0], walletMap));
 });
 
 router.patch("/transactions/:id", authMiddleware, async (req, res) => {
@@ -146,6 +164,7 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   if (d.recurringPeriod !== undefined) updates.recurringPeriod = d.recurringPeriod;
   if (d.installments !== undefined) updates.installments = d.installments;
   if (d.cardId !== undefined) updates.cardId = d.cardId;
+  if ((d as any).walletId !== undefined) updates.walletId = (d as any).walletId;
   if (d.notes !== undefined) updates.notes = d.notes;
 
   const [tx] = await db.update(transactionsTable).set(updates).where(eq(transactionsTable.id, id)).returning();
@@ -157,8 +176,12 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
     await recalculateCardBalance(cid, user.id);
   }
 
-  const cats = await db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1);
-  res.json(await serializeTransaction(tx, cats[0]));
+  const [cats, wallets] = await Promise.all([
+    db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1),
+    tx.walletId ? db.select().from(walletsTable).where(eq(walletsTable.id, tx.walletId)).limit(1) : Promise.resolve([]),
+  ]);
+  const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
+  res.json(await serializeTransaction(tx, cats[0], walletMap));
 });
 
 router.delete("/transactions/:id", authMiddleware, async (req, res) => {

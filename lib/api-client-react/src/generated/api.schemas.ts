@@ -110,6 +110,12 @@ export interface Transaction {
   /** @nullable */
   cardId?: number | null;
   /** @nullable */
+  walletId?: number | null;
+  /** @nullable */
+  walletName?: string | null;
+  /** @nullable */
+  walletColor?: string | null;
+  /** @nullable */
   notes?: string | null;
   createdAt: string;
 }
@@ -153,6 +159,8 @@ export interface TransactionInput {
   /** @nullable */
   cardId?: number | null;
   /** @nullable */
+  walletId?: number | null;
+  /** @nullable */
   notes?: string | null;
 }
 
@@ -188,6 +196,8 @@ export interface TransactionUpdate {
   installments?: number | null;
   /** @nullable */
   cardId?: number | null;
+  /** @nullable */
+  walletId?: number | null;
   /** @nullable */
   notes?: string | null;
 }
@@ -418,6 +428,34 @@ export interface CardUpdate {
   dueDay?: number | null;
   /** @nullable */
   color?: string | null;
+}
+
+export interface Wallet {
+  id: number;
+  userId: number;
+  name: string;
+  color: string;
+  icon: string;
+  balance: number;
+  createdAt: string;
+}
+
+export interface WalletInput {
+  /** @minLength 1 */
+  name: string;
+  /** @nullable */
+  color?: string | null;
+  /** @nullable */
+  icon?: string | null;
+}
+
+export interface WalletUpdate {
+  /** @nullable */
+  name?: string | null;
+  /** @nullable */
+  color?: string | null;
+  /** @nullable */
+  icon?: string | null;
 }
 
 export interface DashboardSummary {

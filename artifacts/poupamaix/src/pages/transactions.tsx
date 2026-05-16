@@ -3,7 +3,7 @@ import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
-  useGetCategories,
+  getGetWalletsQueryKey, useGetCategories,
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
@@ -16,7 +16,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
-import { Plus, Filter, Trash2, Pencil, ChevronRight } from "lucide-react";
+import { WalletPicker } from "@/components/wallet-picker";
+import { Plus, Filter, Trash2, Pencil, ChevronRight, Wallet } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
@@ -27,6 +28,7 @@ export default function Transactions() {
   const [filterType, setFilterType] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
+  const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
   const [amount, setAmount]           = useState("");
@@ -35,6 +37,9 @@ export default function Transactions() {
   const [type, setType]               = useState<"income" | "expense">("expense");
   const [categoryId, setCategoryId]   = useState("");
   const [categoryName, setCategoryName] = useState("");
+  const [walletId, setWalletId]       = useState<number | null>(null);
+  const [walletName, setWalletName]   = useState<string | null>(null);
+  const [walletColor, setWalletColor] = useState<string | null>(null);
   const [notes, setNotes]             = useState("");
 
   const { data: categories } = useGetCategories();
@@ -52,12 +57,14 @@ export default function Transactions() {
     queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),    refetchType: 'all' });
     queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),          refetchType: 'all' });
     queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                 refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),               refetchType: 'all' });
   };
 
   const resetForm = () => {
     setAmount(""); setDescription(""); setDate(new Date().toISOString().split("T")[0]);
-    setType("expense"); setCategoryId(""); setCategoryName(""); setNotes("");
-    setEditingTransaction(null);
+    setType("expense"); setCategoryId(""); setCategoryName("");
+    setWalletId(null); setWalletName(null); setWalletColor(null);
+    setNotes(""); setEditingTransaction(null);
   };
 
   const handleOpenModal = (t?: any) => {
@@ -69,6 +76,9 @@ export default function Transactions() {
       setType(t.type);
       setCategoryId(t.categoryId.toString());
       setCategoryName(t.categoryName || "");
+      setWalletId(t.walletId ?? null);
+      setWalletName(t.walletName ?? null);
+      setWalletColor(t.walletColor ?? null);
       setNotes(t.notes || "");
     } else {
       resetForm();
@@ -86,13 +96,15 @@ export default function Transactions() {
     const currentCategoryId = parseInt(categoryId, 10);
     const currentCategoryName = categoryName;
     const currentNotes = notes || null;
+    const currentWalletId = walletId ?? null;
 
-    const payload = {
+    const payload: any = {
       type: currentType,
       amount: parsedAmount,
       description: currentDescription,
       date: currentDate,
       categoryId: currentCategoryId,
+      walletId: currentWalletId,
       notes: currentNotes,
     };
 
@@ -128,6 +140,9 @@ export default function Transactions() {
       categoryName: currentCategoryName || "",
       categoryColor: category?.color || "#6C5CE7",
       categoryIcon: category?.icon || "",
+      walletId: currentWalletId,
+      walletName: walletName,
+      walletColor: walletColor,
       cardId: null,
       notes: currentNotes,
       createdAt: new Date().toISOString(),
@@ -144,8 +159,7 @@ export default function Transactions() {
     const txDate = new Date(currentDate + "T12:00:00");
     const now = new Date();
     const isCurrentMonth =
-      txDate.getMonth() === now.getMonth() &&
-      txDate.getFullYear() === now.getFullYear();
+      txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
 
     queryClient.setQueryData(summaryQueryKey, (old: any) => {
       if (!old) return old;
@@ -195,8 +209,7 @@ export default function Transactions() {
       const txDate = new Date(txToDelete.date);
       const now = new Date();
       const isCurrentMonth =
-        txDate.getMonth() === now.getMonth() &&
-        txDate.getFullYear() === now.getFullYear();
+        txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
 
       queryClient.setQueryData(summaryQueryKey, (old: any) => {
         if (!old) return old;
@@ -316,6 +329,28 @@ export default function Transactions() {
                 </div>
 
                 <div className="space-y-2">
+                  <Label>Carteira <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <button
+                    type="button"
+                    onClick={() => setIsWalletPickerOpen(true)}
+                    className="w-full flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
+                  >
+                    {walletId !== null && walletColor ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                        <span className="flex-1 text-left text-foreground">{walletName}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="flex-1 text-left text-muted-foreground">Sem carteira</span>
+                      </>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
                   <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                   <Input
                     placeholder="Notas adicionais..."
@@ -346,6 +381,12 @@ export default function Transactions() {
         value={categoryId}
         type={type}
         onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }}
+      />
+      <WalletPicker
+        open={isWalletPickerOpen}
+        onOpenChange={setIsWalletPickerOpen}
+        value={walletId}
+        onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); }}
       />
 
       <Card className="bg-card border-border">
@@ -384,6 +425,15 @@ export default function Transactions() {
                             <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">
                               {t.categoryName}
                             </Badge>
+                          </>
+                        )}
+                        {t.walletName && (
+                          <>
+                            <span className="text-xs text-muted-foreground">·</span>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.walletColor || "#6B7280" }} />
+                              {t.walletName}
+                            </span>
                           </>
                         )}
                       </div>

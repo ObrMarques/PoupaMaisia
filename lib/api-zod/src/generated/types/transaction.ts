@@ -30,6 +30,12 @@ export interface Transaction {
   /** @nullable */
   cardId?: number | null;
   /** @nullable */
+  walletId?: number | null;
+  /** @nullable */
+  walletName?: string | null;
+  /** @nullable */
+  walletColor?: string | null;
+  /** @nullable */
   notes?: string | null;
   createdAt: string;
 }

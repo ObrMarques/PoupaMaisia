@@ -164,6 +164,9 @@ export const GetTransactionsResponseItem = zod.object({
   "installments": zod.number().nullish(),
   "installmentNumber": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -188,6 +191,7 @@ export const CreateTransactionBody = zod.object({
   "recurringPeriod": zod.union([zod.literal('weekly'),zod.literal('monthly'),zod.literal('yearly'),zod.literal(null)]).nullish(),
   "installments": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
   "notes": zod.string().nullish()
 })
 
@@ -216,6 +220,9 @@ export const GetTransactionResponse = zod.object({
   "installments": zod.number().nullish(),
   "installmentNumber": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -239,6 +246,7 @@ export const UpdateTransactionBody = zod.object({
   "recurringPeriod": zod.string().nullish(),
   "installments": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
   "notes": zod.string().nullish()
 })
 
@@ -259,6 +267,9 @@ export const UpdateTransactionResponse = zod.object({
   "installments": zod.number().nullish(),
   "installmentNumber": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })
@@ -552,6 +563,71 @@ export const DeleteCardResponse = zod.object({
 
 
 /**
+ * @summary List all wallets
+ */
+export const GetWalletsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "icon": zod.string(),
+  "balance": zod.number(),
+  "createdAt": zod.string()
+})
+export const GetWalletsResponse = zod.array(GetWalletsResponseItem)
+
+
+/**
+ * @summary Create a wallet
+ */
+
+
+
+export const CreateWalletBody = zod.object({
+  "name": zod.string().min(1),
+  "color": zod.string().nullish(),
+  "icon": zod.string().nullish()
+})
+
+
+/**
+ * @summary Update a wallet
+ */
+export const UpdateWalletParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateWalletBody = zod.object({
+  "name": zod.string().nullish(),
+  "color": zod.string().nullish(),
+  "icon": zod.string().nullish()
+})
+
+export const UpdateWalletResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "icon": zod.string(),
+  "balance": zod.number(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a wallet
+ */
+export const DeleteWalletParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteWalletResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().nullish()
+})
+
+
+/**
  * @summary Get monthly financial summary
  */
 export const GetDashboardSummaryQueryParams = zod.object({
@@ -624,6 +700,9 @@ export const GetRecentTransactionsResponseItem = zod.object({
   "installments": zod.number().nullish(),
   "installmentNumber": zod.number().nullish(),
   "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
   "createdAt": zod.string()
 })

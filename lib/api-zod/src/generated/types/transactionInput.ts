@@ -27,5 +27,7 @@ export interface TransactionInput {
   /** @nullable */
   cardId?: number | null;
   /** @nullable */
+  walletId?: number | null;
+  /** @nullable */
   notes?: string | null;
 }

@@ -51,3 +51,6 @@ export * from './transactionType';
 export * from './transactionUpdate';
 export * from './transactionUpdateType';
 export * from './user';
+export * from './wallet';
+export * from './walletInput';
+export * from './walletUpdate';

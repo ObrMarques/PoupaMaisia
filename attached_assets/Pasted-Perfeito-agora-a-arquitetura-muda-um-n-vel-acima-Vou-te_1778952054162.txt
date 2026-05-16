@@ -1,0 +1,194 @@
+Perfeito — agora a arquitetura muda um nível acima. Vou te passar o prompt já adaptado para **PostgreSQL + carteiras + transações em tempo real (via polling/WS no Replit ou backend)**.
+
+---
+
+# IMPLEMENTAÇÃO — SISTEMA DE CARTEIRAS INTEGRADO AO POSTGRESQL (POUPAMAIS)
+
+## OBJETIVO
+
+Adicionar um sistema completo de **carteiras personalizadas**, integrado ao **PostgreSQL**, permitindo controle financeiro real com transações vinculadas a carteiras ou modo “sem carteira”.
+
+---
+
+# 1. BANCO DE DADOS — POSTGRESQL
+
+## CRIAR TABELAS
+
+### USERS
+
+* id (uuid)
+* name
+* email
+* password_hash
+* created_at
+
+---
+
+### WALLETS (CARTEIRAS)
+
+* id (uuid)
+* user_id (fk)
+* name (string)
+* balance (numeric)
+* color (string)
+* created_at
+
+---
+
+### TRANSACTIONS
+
+* id (uuid)
+* user_id (fk)
+* wallet_id (nullable fk)
+* type (income | expense)
+* amount (numeric)
+* category (string)
+* description (nullable)
+* created_at
+
+---
+
+# 2. SISTEMA DE CARTEIRAS
+
+## FUNCIONALIDADE
+
+O usuário pode:
+
+* criar carteiras personalizadas
+* editar carteiras
+* excluir carteiras
+* visualizar saldo por carteira
+
+---
+
+## EXEMPLOS DE CARTEIRAS
+
+* Conta Corrente
+* Cofrinho
+* Dinheiro em espécie
+* Investimentos
+* Carteira personalizada
+
+---
+
+# 3. NOVA TRANSAÇÃO
+
+Ao criar transação:
+
+## CAMPO OBRIGATÓRIO:
+
+* tipo (receita/despesa)
+* valor
+* categoria
+
+## CAMPO NOVO:
+
+* carteira (opcional)
+
+Opções:
+
+* selecionar carteira existente
+* OU “Sem carteira”
+
+---
+
+# 4. REGRA DE SALDO
+
+### Se tiver carteira:
+
+* atualizar saldo da carteira no PostgreSQL
+
+### Se NÃO tiver carteira:
+
+* entrar no saldo geral do usuário
+
+---
+
+# 5. DASHBOARD EM TEMPO REAL
+
+Como é PostgreSQL:
+
+## OPÇÃO 1 (RECOMENDADO)
+
+* WebSocket (ideal para tempo real)
+
+## OPÇÃO 2 (REPLIT SIMPLES)
+
+* polling a cada 1–3 segundos
+
+---
+
+## REGRA
+
+Dashboard deve sempre:
+
+* buscar transações atualizadas
+* recalcular receitas/despesas/saldo automaticamente
+* refletir mudanças instantaneamente
+
+---
+
+# 6. LÓGICA DO DASHBOARD
+
+* receitas = SUM(amount WHERE type = income)
+* despesas = SUM(amount WHERE type = expense)
+* saldo = receitas - despesas
+
+---
+
+# 7. CARTEIRA NO DASHBOARD
+
+Adicionar:
+
+* filtro por carteira
+* visão geral (todas carteiras)
+* saldo por carteira individual
+
+---
+
+# 8. TRANSAÇÕES
+
+Cada transação deve mostrar:
+
+* valor
+* categoria
+* data
+* carteira (ou “Sem carteira”)
+
+---
+
+# 9. REGRAS IMPORTANTES
+
+* NÃO permitir inconsistência entre saldo e transações
+* sempre recalcular saldo a partir do banco
+* nunca depender só de estado local
+* manter integridade do PostgreSQL
+
+---
+
+# 10. UX
+
+* estilo fintech preto e branco
+* seleção rápida de carteira na criação de transação
+* opção clara “Sem carteira”
+* mobile-first
+* carregamento rápido
+
+---
+
+# RESULTADO FINAL
+
+Com isso o PoupaMais terá:
+
+✔ banco de dados profissional (PostgreSQL)
+✔ carteiras reais com saldo
+✔ transações vinculadas
+✔ opção sem carteira
+✔ dashboard dinâmico
+✔ estrutura de fintech real
+
+---
+
+Se quiser o próximo nível, posso te montar:
+
+👉 arquitetura completa com **Node.js + Prisma + PostgreSQL + WebSocket em tempo real (igual banco de verdade mesmo)**

@@ -51,7 +51,10 @@ import type {
   Transaction,
   TransactionInput,
   TransactionUpdate,
-  User
+  User,
+  Wallet,
+  WalletInput,
+  WalletUpdate
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -1888,6 +1891,296 @@ export const useDeleteCard = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeleteCardMutationOptions(options));
+    }
+
+export const getGetWalletsUrl = () => {
+
+
+
+
+  return `/api/wallets`
+}
+
+/**
+ * @summary List all wallets
+ */
+export const getWallets = async ( options?: RequestInit): Promise<Wallet[]> => {
+
+  return customFetch<Wallet[]>(getGetWalletsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWalletsQueryKey = () => {
+    return [
+    `/api/wallets`
+    ] as const;
+    }
+
+
+export const getGetWalletsQueryOptions = <TData = Awaited<ReturnType<typeof getWallets>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWallets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWalletsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWallets>>> = ({ signal }) => getWallets({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWallets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWalletsQueryResult = NonNullable<Awaited<ReturnType<typeof getWallets>>>
+export type GetWalletsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all wallets
+ */
+
+export function useGetWallets<TData = Awaited<ReturnType<typeof getWallets>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWallets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWalletsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateWalletUrl = () => {
+
+
+
+
+  return `/api/wallets`
+}
+
+/**
+ * @summary Create a wallet
+ */
+export const createWallet = async (walletInput: WalletInput, options?: RequestInit): Promise<Wallet> => {
+
+  return customFetch<Wallet>(getCreateWalletUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      walletInput,)
+  }
+);}
+
+
+
+
+export const getCreateWalletMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWallet>>, TError,{data: BodyType<WalletInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createWallet>>, TError,{data: BodyType<WalletInput>}, TContext> => {
+
+const mutationKey = ['createWallet'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createWallet>>, {data: BodyType<WalletInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createWallet(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateWalletMutationResult = NonNullable<Awaited<ReturnType<typeof createWallet>>>
+    export type CreateWalletMutationBody = BodyType<WalletInput>
+    export type CreateWalletMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a wallet
+ */
+export const useCreateWallet = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createWallet>>, TError,{data: BodyType<WalletInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createWallet>>,
+        TError,
+        {data: BodyType<WalletInput>},
+        TContext
+      > => {
+      return useMutation(getCreateWalletMutationOptions(options));
+    }
+
+export const getUpdateWalletUrl = (id: number,) => {
+
+
+
+
+  return `/api/wallets/${id}`
+}
+
+/**
+ * @summary Update a wallet
+ */
+export const updateWallet = async (id: number,
+    walletUpdate: WalletUpdate, options?: RequestInit): Promise<Wallet> => {
+
+  return customFetch<Wallet>(getUpdateWalletUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      walletUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateWalletMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWallet>>, TError,{id: number;data: BodyType<WalletUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateWallet>>, TError,{id: number;data: BodyType<WalletUpdate>}, TContext> => {
+
+const mutationKey = ['updateWallet'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateWallet>>, {id: number;data: BodyType<WalletUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateWallet(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateWalletMutationResult = NonNullable<Awaited<ReturnType<typeof updateWallet>>>
+    export type UpdateWalletMutationBody = BodyType<WalletUpdate>
+    export type UpdateWalletMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Update a wallet
+ */
+export const useUpdateWallet = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateWallet>>, TError,{id: number;data: BodyType<WalletUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateWallet>>,
+        TError,
+        {id: number;data: BodyType<WalletUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateWalletMutationOptions(options));
+    }
+
+export const getDeleteWalletUrl = (id: number,) => {
+
+
+
+
+  return `/api/wallets/${id}`
+}
+
+/**
+ * @summary Delete a wallet
+ */
+export const deleteWallet = async (id: number, options?: RequestInit): Promise<SuccessResponse> => {
+
+  return customFetch<SuccessResponse>(getDeleteWalletUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteWalletMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWallet>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteWallet>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteWallet'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteWallet>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteWallet(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteWalletMutationResult = NonNullable<Awaited<ReturnType<typeof deleteWallet>>>
+
+    export type DeleteWalletMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete a wallet
+ */
+export const useDeleteWallet = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWallet>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteWallet>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteWalletMutationOptions(options));
     }
 
 export const getGetDashboardSummaryUrl = (params?: GetDashboardSummaryParams,) => {
