@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
-  LayoutDashboard, Receipt, Target, Wallet, PieChart,
+  LayoutDashboard, Receipt, Target, PieChart,
   Sparkles, Settings, LogOut, HelpCircle, ArrowLeft, Menu, X
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,7 +29,6 @@ function useNavItems() {
     { href: "/dashboard",    icon: LayoutDashboard, label: t("nav.dashboard") },
     { href: "/transactions", icon: Receipt,          label: t("nav.transactions") },
     { href: "/goals",        icon: Target,           label: t("nav.goals") },
-    { href: "/wallets",      icon: Wallet,           label: t("nav.wallets") },
     { href: "/reports",      icon: PieChart,         label: t("nav.reports") },
     { href: "/ai",           icon: Sparkles,         label: t("nav.ai") },
     { href: "/premium",      icon: Sparkles,         label: t("nav.premium") },
