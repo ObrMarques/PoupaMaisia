@@ -1,0 +1,77 @@
+✅ PROMPT PARA REPLIT — SINCRONIZAÇÃO TOTAL DO PAINEL
+
+Corrigir o sistema financeiro para garantir sincronização automática e instantânea entre todas as transações e o painel principal.
+
+🎯 OBJETIVO:
+
+Todas as mudanças em transações (adicionar, editar ou excluir) devem atualizar automaticamente:
+
+Saldo total do mês
+Total de receitas do mês
+Total de despesas do mês
+Taxa de economia
+⚠️ REGRA PRINCIPAL (OBRIGATÓRIA):
+
+O painel NÃO pode usar valores separados salvos manualmente.
+
+👉 O painel deve SEMPRE ser calculado a partir de:
+
+transactions[]
+🔧 IMPLEMENTAÇÃO OBRIGATÓRIA:
+
+Criar uma função central de sincronização:
+
+function calculateDashboard(transactions) {
+  const receitas = transactions
+    .filter(t => t.type === "income")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  const despesas = transactions
+    .filter(t => t.type === "expense")
+    .reduce((acc, t) => acc + Number(t.amount), 0);
+
+  const saldo = receitas - despesas;
+
+  const economia = receitas > 0 ? (saldo / receitas) * 100 : 0;
+
+  return {
+    receitas,
+    despesas,
+    saldo,
+    economia
+  };
+}
+🔁 SINCRONIZAÇÃO OBRIGATÓRIA:
+
+Sempre que acontecer qualquer ação:
+
+adicionar transação
+editar transação
+excluir transação
+
+Executar automaticamente:
+
+const dashboard = calculateDashboard(updatedTransactions);
+
+setTransactions(updatedTransactions);
+setTotalReceitas(dashboard.receitas);
+setTotalDespesas(dashboard.despesas);
+setSaldoTotal(dashboard.saldo);
+setTaxaEconomia(dashboard.economia);
+💾 LOCALSTORAGE (persistência):
+
+Após cada alteração:
+
+localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
+⚡ REGRA IMPORTANTE:
+O painel NÃO pode depender de valores antigos salvos manualmente
+O painel deve SEMPRE recalcular tudo automaticamente
+A fonte única de verdade é: transactions[]
+🎯 RESULTADO ESPERADO:
+Adicionou transação → painel atualiza na hora
+Removeu transação → painel atualiza na hora
+Editou valor → painel atualiza instantaneamente
+Receita, despesa, saldo e taxa sempre corretos
+Sem delay
+Sem inconsistência
+Sem valores desatualizados
