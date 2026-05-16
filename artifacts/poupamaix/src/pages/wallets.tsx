@@ -20,7 +20,7 @@ const PRESET_COLORS = [
   "#06B6D4", "#6B7280",
 ];
 
-const PRESET_ICONS = ["💰", "🏦", "💼", "🐷", "✈️", "📱", "🎓", "🛒", "💊"];
+const PRESET_ICONS = ["💰", "🏦", "💼", "🐷", "✈️", "📱", "🎓", "🛒"];
 
 interface WalletFormState {
   name: string;
