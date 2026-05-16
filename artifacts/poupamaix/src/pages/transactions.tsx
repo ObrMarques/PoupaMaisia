@@ -50,14 +50,16 @@ export default function Transactions() {
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
-  const invalidateAll = () => {
+  const invalidateAll = (hasWallet = false) => {
     queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),          refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),    refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),      refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),    refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),          refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                 refetchType: 'all' });
     queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),               refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                 refetchType: 'all' });
+    if (!hasWallet) {
+      queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),    refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),      refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),    refetchType: 'all' });
+      queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),          refetchType: 'all' });
+    }
   };
 
   const resetForm = () => {
@@ -113,7 +115,7 @@ export default function Transactions() {
       setIsModalOpen(false);
       resetForm();
       updateMutation.mutate({ id: prevId, data: payload }, {
-        onSettled: () => { invalidateAll(); },
+        onSettled: () => { invalidateAll(currentWalletId !== null); },
       });
       return;
     }
@@ -122,10 +124,9 @@ export default function Transactions() {
     const summaryQueryKey = getGetDashboardSummaryQueryKey();
 
     await queryClient.cancelQueries({ queryKey: txQueryKey });
-    await queryClient.cancelQueries({ queryKey: summaryQueryKey });
 
     const previousTransactions = queryClient.getQueryData(txQueryKey);
-    const previousSummary = queryClient.getQueryData(summaryQueryKey);
+    let previousSummary: unknown;
 
     const category = (categories ?? []).find(c => c.id === currentCategoryId);
 
@@ -156,26 +157,31 @@ export default function Transactions() {
       });
     }
 
-    const txDate = new Date(currentDate + "T12:00:00");
-    const now = new Date();
-    const isCurrentMonth =
-      txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+    if (currentWalletId === null) {
+      await queryClient.cancelQueries({ queryKey: summaryQueryKey });
+      previousSummary = queryClient.getQueryData(summaryQueryKey);
 
-    queryClient.setQueryData(summaryQueryKey, (old: any) => {
-      if (!old) return old;
-      let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
-      if (currentType === "income") {
-        totalBalance += parsedAmount;
-        if (isCurrentMonth) monthlyIncome += parsedAmount;
-      } else {
-        totalBalance -= parsedAmount;
-        if (isCurrentMonth) monthlyExpenses += parsedAmount;
-      }
-      const savingsRate = monthlyIncome > 0
-        ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
-        : 0;
-      return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
-    });
+      const txDate = new Date(currentDate + "T12:00:00");
+      const now = new Date();
+      const isCurrentMonth =
+        txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
+
+      queryClient.setQueryData(summaryQueryKey, (old: any) => {
+        if (!old) return old;
+        let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
+        if (currentType === "income") {
+          totalBalance += parsedAmount;
+          if (isCurrentMonth) monthlyIncome += parsedAmount;
+        } else {
+          totalBalance -= parsedAmount;
+          if (isCurrentMonth) monthlyExpenses += parsedAmount;
+        }
+        const savingsRate = monthlyIncome > 0
+          ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
+          : 0;
+        return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
+      });
+    }
 
     setIsModalOpen(false);
     resetForm();
@@ -183,9 +189,11 @@ export default function Transactions() {
     createMutation.mutate({ data: payload }, {
       onError: () => {
         queryClient.setQueryData(txQueryKey, previousTransactions);
-        queryClient.setQueryData(summaryQueryKey, previousSummary);
+        if (currentWalletId === null && previousSummary !== undefined) {
+          queryClient.setQueryData(summaryQueryKey, previousSummary);
+        }
       },
-      onSettled: () => { invalidateAll(); },
+      onSettled: () => { invalidateAll(currentWalletId !== null); },
     });
   };
 
@@ -195,6 +203,7 @@ export default function Transactions() {
 
     const allTx = queryClient.getQueryData(txQueryKey) as any[] | undefined;
     const txToDelete = allTx?.find((t: any) => t.id === id);
+    const txHasWallet = !!(txToDelete?.walletId);
 
     const previousTransactions = queryClient.getQueryData(txQueryKey);
     const previousSummary = queryClient.getQueryData(summaryQueryKey);
@@ -204,7 +213,7 @@ export default function Transactions() {
       return old.filter((t: any) => t.id !== id);
     });
 
-    if (txToDelete) {
+    if (txToDelete && !txHasWallet) {
       const amount = Number(txToDelete.amount);
       const txDate = new Date(txToDelete.date);
       const now = new Date();
@@ -232,9 +241,11 @@ export default function Transactions() {
     deleteMutation.mutate({ id }, {
       onError: () => {
         queryClient.setQueryData(txQueryKey, previousTransactions);
-        queryClient.setQueryData(summaryQueryKey, previousSummary);
+        if (!txHasWallet) {
+          queryClient.setQueryData(summaryQueryKey, previousSummary);
+        }
       },
-      onSettled: () => { invalidateAll(); },
+      onSettled: () => { invalidateAll(txHasWallet); },
     });
   };
 
