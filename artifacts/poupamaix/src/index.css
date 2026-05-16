@@ -135,3 +135,14 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@layer clerk {
+  [data-localization-key="badge__dev"] {
+    display: none !important;
+  }
+}
+
+/* Hide Clerk development mode banner */
+div:has(> a[href*="clerk.com/docs/deployments"]) {
+  display: none !important;
+}

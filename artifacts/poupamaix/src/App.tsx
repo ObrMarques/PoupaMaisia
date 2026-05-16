@@ -111,6 +111,8 @@ const clerkAppearance = {
     otpCodeFieldInput: "border-[#e0e0e0] bg-[#f2f2f2]",
     formFieldRow: "",
     main: "",
+    badge: "!hidden",
+    cardBoxFooter: "!hidden",
   },
 };
 
@@ -204,7 +206,34 @@ function HomeRedirect() {
   return isSignedIn ? <Redirect to="/dashboard" /> : <Redirect to="/sign-in" />;
 }
 
+function useHideClerkDevBanner() {
+  useEffect(() => {
+    const CLERK_DEV_STRINGS = ["development mode", "modo de desenvolvimento", "modo desenvolvimento"];
+    const remove = () => {
+      document.querySelectorAll<HTMLElement>("[class*='cl-']").forEach((el) => {
+        const text = el.textContent?.toLowerCase().trim() ?? "";
+        if (CLERK_DEV_STRINGS.some((s) => text === s || text.startsWith(s))) {
+          let target: HTMLElement = el;
+          while (
+            target.parentElement &&
+            target.parentElement !== document.body &&
+            target.parentElement.children.length === 1
+          ) {
+            target = target.parentElement as HTMLElement;
+          }
+          target.style.setProperty("display", "none", "important");
+        }
+      });
+    };
+    remove();
+    const observer = new MutationObserver(remove);
+    observer.observe(document.body, { childList: true, subtree: true });
+    return () => observer.disconnect();
+  }, []);
+}
+
 function SignInPage() {
+  useHideClerkDevBanner();
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
       <SignIn
@@ -218,6 +247,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  useHideClerkDevBanner();
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
       <SignUp
