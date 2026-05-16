@@ -74,7 +74,7 @@ export function CategoryPicker({ open, onOpenChange, value, onSelect, type }: Ca
     e.stopPropagation();
     setDeletingId(null);
     setEditingId(cat.id);
-    setEditingName(cat.name);
+    setEditingName(cat.name ?? "");
   };
 
   const handleSaveEdit = (e: React.MouseEvent) => {
