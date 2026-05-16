@@ -1,7 +1,8 @@
 import { useState } from "react";
 import {
   useGetWallets, useCreateWallet, useUpdateWallet, useDeleteWallet,
-  getGetWalletsQueryKey,
+  getGetWalletsQueryKey, getGetDashboardSummaryQueryKey,
+  getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -47,7 +48,10 @@ export default function Wallets() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(), refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),    refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(), refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),        refetchType: 'all' });
   };
 
   const openCreate = () => {

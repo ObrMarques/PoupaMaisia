@@ -5,8 +5,8 @@ import { authMiddleware, getUser } from "../lib/auth";
 
 const router = Router();
 
-const CACHE_SHORT  = "public, max-age=30, stale-while-revalidate=60";
-const CACHE_MEDIUM = "public, max-age=120, stale-while-revalidate=300";
+const CACHE_SHORT  = "no-cache, no-store, must-revalidate";
+const CACHE_MEDIUM = "no-cache, no-store, must-revalidate";
 
 router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   const user = getUser(req);
