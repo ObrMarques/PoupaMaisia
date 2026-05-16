@@ -52,25 +52,73 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
     queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!amount || !description || !categoryId) {
       toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
+
+    const parsedAmount = parseFloat(amount);
+    const txDate = new Date(date + "T12:00:00");
+    const now = new Date();
+    const isCurrentMonth =
+      txDate.getMonth() === now.getMonth() &&
+      txDate.getFullYear() === now.getFullYear();
+
+    const currentType = type;
+    const currentDescription = description;
+    const currentDate = date;
+    const currentCategoryId = parseInt(categoryId, 10);
+    const currentCardId = type === "expense" ? (cardId ?? null) : null;
+
+    await queryClient.cancelQueries({ queryKey: getGetDashboardSummaryQueryKey() });
+    const previousSummary = queryClient.getQueryData(getGetDashboardSummaryQueryKey());
+
+    queryClient.setQueryData(getGetDashboardSummaryQueryKey(), (old: any) => {
+      if (!old) return old;
+      let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
+
+      if (currentType === "income") {
+        totalBalance += parsedAmount;
+        if (isCurrentMonth) monthlyIncome += parsedAmount;
+      } else {
+        totalBalance -= parsedAmount;
+        if (isCurrentMonth) monthlyExpenses += parsedAmount;
+      }
+
+      const savingsRate =
+        monthlyIncome > 0
+          ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
+          : 0;
+
+      return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
+    });
+
+    setOpen(false);
+    reset();
+
     createMutation.mutate(
       {
         data: {
-          type, amount: parseFloat(amount), description, date,
-          categoryId: parseInt(categoryId, 10),
-          cardId: type === "expense" ? (cardId ?? null) : null,
+          type: currentType,
+          amount: parsedAmount,
+          description: currentDescription,
+          date: currentDate,
+          categoryId: currentCategoryId,
+          cardId: currentCardId,
         },
       },
       {
-        onSuccess: () => {
-          invalidateAll(); setOpen(false); reset();
-          toast({ title: type === "expense" ? "Despesa adicionada" : "Receita adicionada" });
+        onError: () => {
+          queryClient.setQueryData(getGetDashboardSummaryQueryKey(), previousSummary);
+          toast({ title: "Erro ao salvar transação", variant: "destructive" });
         },
-        onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" }),
+        onSuccess: () => {
+          toast({ title: currentType === "expense" ? "Despesa adicionada" : "Receita adicionada" });
+        },
+        onSettled: () => {
+          invalidateAll();
+        },
       }
     );
   };
