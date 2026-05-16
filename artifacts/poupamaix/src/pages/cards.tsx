@@ -96,16 +96,6 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (v: string)
           />
         ))}
       </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="color"
-          value={value}
-          onChange={e => onChange(e.target.value)}
-          className="w-8 h-8 rounded cursor-pointer border border-input bg-background p-0.5"
-        />
-        <span className="text-xs text-muted-foreground">Cor personalizada</span>
-        <span className="text-xs font-mono text-muted-foreground ml-auto">{value}</span>
-      </div>
     </div>
   );
 }
