@@ -1,0 +1,109 @@
+Isso não é problema de “reset mensal” — é **problema de atualização de estado (state)** no seu painel. Hoje seu app provavelmente está usando `localStorage`, mas o painel **não está reagindo às mudanças em tempo real**, então ele só atualiza depois de reload ou tempo.
+
+Vou te entregar um **prompt pronto para o Replit corrigir isso de forma definitiva (tempo real instantâneo)**.
+
+---
+
+## ✅ PROMPT PARA REPLIT (CORREÇÃO DE ATUALIZAÇÃO INSTANTÂNEA DO PAINEL)
+
+Corrigir o painel financeiro para que todas as atualizações de receitas, despesas e transações apareçam **instantaneamente no dashboard**, sem precisar atualizar a página.
+
+---
+
+### 🎯 PROBLEMA ATUAL:
+
+* O usuário adiciona receita/despesa/transação
+* Os dados são salvos no `localStorage`
+* Porém o painel (saldo total, receitas do mês, despesas do mês, taxa de economia) NÃO atualiza em tempo real
+* Só atualiza depois de reload ou atraso
+
+---
+
+### ✅ SOLUÇÃO OBRIGATÓRIA:
+
+Implementar atualização reativa imediata usando estado global ou sincronização de estado.
+
+---
+
+### 🔧 REGRAS DE CORREÇÃO:
+
+1. O dashboard deve usar `useState` ou estado global para:
+
+   * saldoTotal
+   * totalReceitas
+   * totalDespesas
+   * transactions
+
+2. Sempre que uma nova transação for criada:
+
+   * atualizar o state imediatamente
+   * atualizar localStorage junto
+
+3. Criar uma função central:
+
+```javascript
+function updateFinanceData(newData) {
+  setTransactions(newData.transactions);
+  setTotalReceitas(newData.totalReceitas);
+  setTotalDespesas(newData.totalDespesas);
+  setSaldoTotal(newData.saldoTotal);
+
+  localStorage.setItem("transactions", JSON.stringify(newData.transactions));
+  localStorage.setItem("totalReceitas", String(newData.totalReceitas));
+  localStorage.setItem("totalDespesas", String(newData.totalDespesas));
+  localStorage.setItem("saldoTotal", String(newData.saldoTotal));
+}
+```
+
+---
+
+### ⚡ IMPORTANTE (REGRA PRINCIPAL):
+
+* NÃO depender apenas de localStorage para renderização do painel
+* O painel deve renderizar APENAS com state (React state ou equivalente)
+* localStorage serve só para persistência, não para UI
+
+---
+
+### 🔁 SINCRONIZAÇÃO OBRIGATÓRIA:
+
+Adicionar listener para sincronização entre abas:
+
+```javascript
+window.addEventListener("storage", () => {
+  carregarDadosDoLocalStorageNoState();
+});
+```
+
+---
+
+### 🎯 RESULTADO ESPERADO:
+
+* Ao adicionar receita/despesa:
+
+  * o saldo atualiza na hora
+  * receitas do mês atualizam na hora
+  * despesas atualizam na hora
+  * taxa de economia atualiza na hora
+
+* Sem reload
+
+* Sem delay
+
+* Sem “sumir e voltar”
+
+---
+
+### 🚀 EXTRA (IMPORTANTE):
+
+Garantir que o cálculo do painel seja sempre baseado em state atualizado, não em leitura direta do localStorage no render.
+
+---
+
+Se quiser, posso te mandar o próximo upgrade que deixa isso nível **app bancário real (tipo Nubank)** com:
+
+
+
+
+
+Só me fala.
