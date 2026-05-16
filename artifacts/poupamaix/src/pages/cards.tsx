@@ -59,7 +59,6 @@ function PremiumWalletModal({ open, onClose }: { open: boolean; onClose: () => v
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-
       <div className="relative w-full max-w-md bg-background border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
         <button
           onClick={onClose}
@@ -72,9 +71,7 @@ function PremiumWalletModal({ open, onClose }: { open: boolean; onClose: () => v
           <div className="w-10 h-10 rounded-xl bg-background/15 flex items-center justify-center mb-4">
             <Sparkles className="w-5 h-5 text-background" />
           </div>
-          <h2 className="text-xl font-bold leading-tight">
-            Desbloqueie carteiras ilimitadas
-          </h2>
+          <h2 className="text-xl font-bold leading-tight">Desbloqueie cartões ilimitadas</h2>
           <p className="text-background/70 text-sm mt-1.5">
             com <span className="font-semibold text-background">PoupaMais Premium</span>
           </p>
@@ -83,7 +80,7 @@ function PremiumWalletModal({ open, onClose }: { open: boolean; onClose: () => v
         <div className="px-6 py-5 space-y-5">
           <div className="p-3 bg-secondary/60 rounded-xl border border-border">
             <p className="text-xs text-muted-foreground text-center">
-              Você atingiu o limite de <span className="font-semibold text-foreground">{FREE_WALLET_LIMIT} carteiras</span> do plano gratuito
+              Você atingiu o limite de <span className="font-semibold text-foreground">{FREE_WALLET_LIMIT} cartões</span> do plano gratuito
             </p>
           </div>
 
@@ -181,7 +178,6 @@ export default function Cards() {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
       <PremiumWalletModal open={showPremiumModal} onClose={() => setShowPremiumModal(false)} />
-
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Cartões de Crédito</h1>
@@ -191,7 +187,7 @@ export default function Cards() {
         <div className="flex items-center gap-3">
           {!isPremium && (
             <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full border border-border">
-              {cardCount}/{FREE_WALLET_LIMIT} carteiras
+              {cardCount}/{FREE_WALLET_LIMIT} cartões
             </span>
           )}
           <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) resetForm(); }}>
@@ -267,7 +263,6 @@ export default function Cards() {
           </Dialog>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {isLoading ? (
           Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-2xl" />)
