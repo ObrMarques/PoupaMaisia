@@ -1,0 +1,145 @@
+# CORREÇÃO DE UI — ÍCONES DE EDIÇÃO NAS METAS E TRANSAÇÕES (MOBILE E DESKTOP)
+
+## OBJETIVO
+
+Corrigir e garantir que os ícones de ação fiquem sempre visíveis no aplicativo PoupaMais:
+
+* lápis de edição ✏️
+* lixeira (excluir) 🗑️
+
+Tanto em:
+
+* Metas
+* Transações (receitas e despesas)
+
+---
+
+# 1. PROBLEMA ATUAL
+
+Os ícones de:
+
+* editar
+* excluir
+
+estão:
+
+* invisíveis no mobile
+* dependendo de hover
+* sumindo em alguns layouts
+* possivelmente com opacity 0 ou z-index incorreto
+
+---
+
+# 2. CORREÇÃO OBRIGATÓRIA (METAS)
+
+## ÍCONES DE METAS
+
+Cada meta deve ter sempre visível:
+
+* ✏️ botão de editar meta
+* 🗑️ botão de excluir meta
+
+## REGRA:
+
+* NÃO depender de hover
+* NÃO esconder no mobile
+* sempre visível
+
+---
+
+# 3. CORREÇÃO OBRIGATÓRIA (TRANSAÇÕES)
+
+Cada transação (receita/despesa) deve ter:
+
+* ✏️ editar transação
+* 🗑️ excluir transação
+
+## REGRA:
+
+* visível sempre
+* funcionando no mobile e desktop
+* sem depender de interação prévia
+
+---
+
+# 4. IMPLEMENTAÇÃO VISUAL
+
+Os ícones devem:
+
+* ficar no canto direito de cada card
+* ter tamanho adequado para mobile
+* ser clicáveis facilmente
+* não sobrepor texto
+* ter espaçamento correto
+
+---
+
+# 5. CORREÇÃO CSS OBRIGATÓRIA
+
+## FORÇAR VISIBILIDADE:
+
+```css
+.action-icon {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+  z-index: 999;
+}
+```
+
+---
+
+## POSICIONAMENTO:
+
+```css
+.action-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+```
+
+---
+
+## MOBILE:
+
+```css
+@media (max-width: 768px) {
+  .action-icon {
+    opacity: 1 !important;
+    display: flex !important;
+  }
+}
+```
+
+---
+
+# 6. REGRA IMPORTANTE
+
+* NÃO usar hover para mostrar ícones
+* ícones devem estar sempre visíveis
+* garantir compatibilidade total com mobile
+* evitar que fiquem escondidos por tema claro/escuro
+
+---
+
+# 7. EXPERIÊNCIA FINAL
+
+Quero:
+
+* app estilo fintech profissional
+* ações claras em cada item
+* edição e exclusão fáceis
+* interface limpa e intuitiva
+* funcionamento perfeito no mobile
+
+---
+
+# RESULTADO ESPERADO
+
+✔ metas com editar e excluir visíveis
+✔ transações com editar e excluir visíveis
+✔ funcionamento no mobile e desktop
+✔ sem ícones invisíveis
+✔ sem depender de hover
+✔ UX profissional tipo app bancário real

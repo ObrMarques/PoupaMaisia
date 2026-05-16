@@ -409,7 +409,7 @@ export default function Transactions() {
                 return (
                   <div
                     key={t.id}
-                    className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors group"
+                    className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
                     data-testid={`row-transaction-${t.id}`}
                   >
                     <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
@@ -447,7 +447,7 @@ export default function Transactions() {
                       <div className={`font-semibold text-right tabular-nums ${t.type === "income" ? "text-[#00C851]" : "text-foreground"}`}>
                         {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
                       </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>

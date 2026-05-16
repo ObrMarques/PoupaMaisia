@@ -476,7 +476,7 @@ export default function Goals() {
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={() => openEdit(g)}
-                        className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors opacity-0 group-hover:opacity-100"
+                        className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
                         aria-label="Editar meta"
                       >
                         <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
