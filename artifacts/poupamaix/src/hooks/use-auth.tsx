@@ -1,48 +1,56 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User } from '@workspace/api-client-react';
-import { useLocation } from 'wouter';
+import React, { createContext, useContext } from 'react';
+import { useUser, useClerk } from '@clerk/react';
+import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
+
+export interface AppUser {
+  id: number;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  currency: string;
+  language: string;
+  isPremium: boolean;
+  premiumExpiresAt?: string | null;
+  onboardingCompleted: boolean;
+  createdAt: string;
+}
 
 interface AuthContextType {
-  user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
+  user: AppUser | null;
+  isLoaded: boolean;
+  isSignedIn: boolean;
+  updateUser: (user: AppUser) => void;
   logout: () => void;
-  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
-  
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
-  const [, setLocation] = useLocation();
+  const { isLoaded: clerkLoaded, isSignedIn } = useUser();
+  const { signOut } = useClerk();
 
-  const login = (newUser: User, newToken: string) => {
-    setUser(newUser);
-    setToken(newToken);
-    localStorage.setItem('user', JSON.stringify(newUser));
-    localStorage.setItem('token', newToken);
+  const { data: dbUser, isLoading } = useGetMe({
+    query: { queryKey: getGetMeQueryKey(), enabled: !!isSignedIn, retry: 1 },
+  });
+
+  const updateUser = (_user: AppUser) => {
+    // no-op: user data comes from server via react-query invalidation
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    setLocation('/login');
+    signOut({ redirectUrl: '/' });
   };
 
-  const updateUser = (newUser: User) => {
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
-  };
+  const isLoaded = clerkLoaded && (!isSignedIn || !isLoading);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUser }}>
+    <AuthContext.Provider value={{
+      user: (dbUser as AppUser | undefined) ?? null,
+      isLoaded,
+      isSignedIn: !!isSignedIn,
+      updateUser,
+      logout,
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,6 +1,9 @@
-import { lazy, Suspense, useEffect } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
+import { publishableKeyFromHost } from "@clerk/react/internal";
+import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
@@ -14,9 +17,6 @@ import {
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
 } from "@workspace/api-client-react";
 
-
-const Login        = lazy(() => import("@/pages/login"));
-const Register     = lazy(() => import("@/pages/register"));
 const Dashboard    = lazy(() => import("@/pages/dashboard"));
 const Transactions = lazy(() => import("@/pages/transactions"));
 const Goals        = lazy(() => import("@/pages/goals"));
@@ -41,6 +41,78 @@ const queryClient = new QueryClient({
   },
 });
 
+// REQUIRED — copy verbatim
+const clerkPubKey = publishableKeyFromHost(
+  window.location.hostname,
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+);
+
+// REQUIRED — copy verbatim. Empty in dev, auto-set in prod.
+const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+
+const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+
+function stripBase(path: string): string {
+  return basePath && path.startsWith(basePath)
+    ? path.slice(basePath.length) || "/"
+    : path;
+}
+
+if (!clerkPubKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+}
+
+const clerkAppearance = {
+  theme: shadcn,
+  cssLayerName: "clerk",
+  options: {
+    logoPlacement: "inside" as const,
+    logoLinkUrl: basePath || "/",
+    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    socialButtonsPlacement: "top" as const,
+    socialButtonsVariant: "blockButton" as const,
+  },
+  variables: {
+    colorPrimary: "#111111",
+    colorForeground: "#111111",
+    colorMutedForeground: "#737373",
+    colorDanger: "#ef4444",
+    colorBackground: "#ffffff",
+    colorInput: "#f2f2f2",
+    colorInputForeground: "#111111",
+    colorNeutral: "#e0e0e0",
+    fontFamily: "Inter, sans-serif",
+    borderRadius: "0.5rem",
+  },
+  elements: {
+    rootBox: "w-full flex justify-center",
+    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
+    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    headerTitle: "text-[#111111] font-bold",
+    headerSubtitle: "text-[#737373]",
+    socialButtonsBlockButtonText: "text-[#111111] font-medium",
+    formFieldLabel: "text-[#111111] font-medium",
+    footerActionLink: "text-[#111111] font-semibold hover:underline",
+    footerActionText: "text-[#737373]",
+    dividerText: "text-[#737373]",
+    identityPreviewEditButton: "text-[#111111]",
+    formFieldSuccessText: "text-green-600",
+    alertText: "text-[#111111]",
+    logoBox: "flex justify-center",
+    logoImage: "w-10 h-10",
+    socialButtonsBlockButton: "border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5]",
+    formButtonPrimary: "bg-[#111111] hover:bg-[#333333] text-white",
+    formFieldInput: "bg-[#f2f2f2] border-[#e0e0e0] text-[#111111]",
+    footerAction: "bg-transparent",
+    dividerLine: "bg-[#e0e0e0]",
+    alert: "bg-[#fef2f2]",
+    otpCodeFieldInput: "border-[#e0e0e0] bg-[#f2f2f2]",
+    formFieldRow: "",
+    main: "",
+  },
+};
+
 function PageSkeleton() {
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -64,37 +136,37 @@ function SpinnerLoader() {
   );
 }
 
-/** Routes that remain accessible even after the trial expires, so users can
- *  manage their account and subscribe. */
 const OPEN_ROUTES = new Set(["/settings", "/support", "/paywall"]);
 
 function DashboardPrefetcher() {
-  const { token } = useAuth();
+  const { isSignedIn } = useAuth();
   const qc = useQueryClient();
 
   useEffect(() => {
-    if (!token) return;
-    qc.prefetchQuery({ queryKey: getGetDashboardSummaryQueryKey(),    queryFn: () => getDashboardSummary() });
-    qc.prefetchQuery({ queryKey: getGetSpendingByCategoryQueryKey(),  queryFn: () => getSpendingByCategory() });
-    qc.prefetchQuery({ queryKey: getGetMonthlyTrendQueryKey(),        queryFn: () => getMonthlyTrend() });
-  }, [token, qc]);
+    if (!isSignedIn) return;
+    qc.prefetchQuery({ queryKey: getGetDashboardSummaryQueryKey(),   queryFn: () => getDashboardSummary() });
+    qc.prefetchQuery({ queryKey: getGetSpendingByCategoryQueryKey(), queryFn: () => getSpendingByCategory() });
+    qc.prefetchQuery({ queryKey: getGetMonthlyTrendQueryKey(),       queryFn: () => getMonthlyTrend() });
+  }, [isSignedIn, qc]);
 
   return null;
 }
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
-  const { token }            = useAuth();
-  const { hasAccess }        = useSubscription();
-  const [location, setLocation] = useLocation();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { hasAccess }            = useSubscription();
+  const [location, setLocation]  = useLocation();
 
   useEffect(() => {
-    if (!token) { setLocation("/login"); return; }
+    if (!isLoaded) return;
+    if (!isSignedIn) { setLocation("/sign-in"); return; }
     if (!hasAccess && !OPEN_ROUTES.has(location)) {
       setLocation("/paywall");
     }
-  }, [token, hasAccess, location, setLocation]);
+  }, [isSignedIn, isLoaded, hasAccess, location, setLocation]);
 
-  if (!token) return null;
+  if (!isLoaded) return <SpinnerLoader />;
+  if (!isSignedIn) return null;
 
   return (
     <AppLayout>
@@ -106,16 +178,17 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 }
 
 function PaywallRoute() {
-  const { token }     = useAuth();
-  const { hasAccess } = useSubscription();
-  const [, setLocation] = useLocation();
+  const { isSignedIn, isLoaded } = useAuth();
+  const { hasAccess }            = useSubscription();
+  const [, setLocation]          = useLocation();
 
   useEffect(() => {
-    if (!token)    { setLocation("/login");    return; }
-    if (hasAccess) { setLocation("/dashboard"); }
-  }, [token, hasAccess, setLocation]);
+    if (!isLoaded) return;
+    if (!isSignedIn) { setLocation("/sign-in"); return; }
+    if (hasAccess)  { setLocation("/dashboard"); }
+  }, [isSignedIn, isLoaded, hasAccess, setLocation]);
 
-  if (!token || hasAccess) return null;
+  if (!isLoaded || !isSignedIn || hasAccess) return null;
 
   return (
     <Suspense fallback={<SpinnerLoader />}>
@@ -124,54 +197,136 @@ function PaywallRoute() {
   );
 }
 
-function PublicRoute({ component: Component }: { component: React.ComponentType }) {
+function HomeRedirect() {
+  const { isSignedIn, isLoaded } = useAuth();
+  if (!isLoaded) return <SpinnerLoader />;
+  return isSignedIn ? <Redirect to="/dashboard" /> : <Redirect to="/sign-in" />;
+}
+
+function SignInPage() {
   return (
-    <Suspense fallback={<SpinnerLoader />}>
-      <Component />
-    </Suspense>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up`}
+        forceRedirectUrl={`${basePath}/dashboard`}
+      />
+    </div>
   );
 }
 
-function ThemedApp() {
+function SignUpPage() {
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <DashboardPrefetcher />
-      <Switch>
-        <Route path="/login"        component={() => <PublicRoute component={Login} />} />
-        <Route path="/register"     component={() => <PublicRoute component={Register} />} />
-        <Route path="/paywall"      component={() => <PaywallRoute />} />
-        <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
-        <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
-        <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
-        <Route path="/wallets"      component={() => <ProtectedRoute component={Wallets} />} />
-        <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
-        <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
-        <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
-        <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
-        <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
-        <Route path="/"             component={() => <ProtectedRoute component={Dashboard} />} />
-        <Route                      component={() => <ProtectedRoute component={Dashboard} />} />
-      </Switch>
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+        forceRedirectUrl={`${basePath}/dashboard`}
+      />
     </div>
+  );
+}
+
+function ClerkQueryClientCacheInvalidator() {
+  const { addListener } = useClerk();
+  const qc = useQueryClient();
+  const prevUserIdRef = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    const unsubscribe = addListener(({ user }) => {
+      const userId = user?.id ?? null;
+      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
+        qc.clear();
+      }
+      prevUserIdRef.current = userId;
+    });
+    return unsubscribe;
+  }, [addListener, qc]);
+
+  return null;
+}
+
+/**
+ * All children here have access to: Clerk, QueryClient, Theme, I18n, Auth
+ */
+function AppShell() {
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <div className="min-h-[100dvh] bg-background text-foreground">
+            <DashboardPrefetcher />
+            <Switch>
+              <Route path="/"             component={HomeRedirect} />
+              <Route path="/sign-in/*?"   component={SignInPage} />
+              <Route path="/sign-up/*?"   component={SignUpPage} />
+              {/* legacy routes redirect to sign pages */}
+              <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
+              <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
+              <Route path="/paywall"      component={() => <PaywallRoute />} />
+              <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
+              <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
+              <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
+              <Route path="/wallets"      component={() => <ProtectedRoute component={Wallets} />} />
+              <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
+              <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
+              <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
+              <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
+              <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
+              <Route                      component={HomeRedirect} />
+            </Switch>
+          </div>
+        </AuthProvider>
+      </I18nProvider>
+    </ThemeProvider>
+  );
+}
+
+function ClerkProviderWithRoutes() {
+  const [, setLocation] = useLocation();
+
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={{
+        signIn: {
+          start: {
+            title: "Bem-vindo de volta",
+            subtitle: "Entre com sua conta para continuar",
+          },
+        },
+        signUp: {
+          start: {
+            title: "Criar sua conta",
+            subtitle: "Comece sua jornada com o PoupaMais",
+          },
+        },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <QueryClientProvider client={queryClient}>
+        <ClerkQueryClientCacheInvalidator />
+        <TooltipProvider>
+          <AppShell />
+          <Toaster />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
   );
 }
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <ThemeProvider>
-          <I18nProvider>
-            <WouterRouter base={import.meta.env.BASE_URL?.replace(/\/$/, "") || ""}>
-              <AuthProvider>
-                <ThemedApp />
-              </AuthProvider>
-            </WouterRouter>
-          </I18nProvider>
-        </ThemeProvider>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <WouterRouter base={basePath}>
+      <ClerkProviderWithRoutes />
+    </WouterRouter>
   );
 }
 
