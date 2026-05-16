@@ -295,16 +295,21 @@ function ClerkProviderWithRoutes() {
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       localization={{
+        formFieldLabel__emailAddress: "Endereço de e-mail",
         signIn: {
           start: {
             title: "Bem-vindo de volta",
             subtitle: "Entre com sua conta para continuar",
+            actionText: "Não tem uma conta?",
+            actionLink: "Cadastre-se",
           },
         },
         signUp: {
           start: {
             title: "Criar sua conta",
             subtitle: "Comece sua jornada com o PoupaMais",
+            actionText: "Já tem uma conta?",
+            actionLink: "Entrar",
           },
         },
       }}
