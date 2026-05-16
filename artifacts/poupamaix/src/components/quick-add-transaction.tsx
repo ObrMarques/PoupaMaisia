@@ -12,15 +12,13 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
-import { WalletPicker } from "@/components/wallet-picker";
-import { Plus, ChevronRight, Wallet } from "lucide-react";
+import { Plus, ChevronRight } from "lucide-react";
 
 export function QuickAddTransaction({ children }: { children?: React.ReactNode }) {
   const queryClient = useQueryClient();
 
   const [open, setOpen] = useState(false);
   const [catPickerOpen, setCatPickerOpen] = useState(false);
-  const [walletPickerOpen, setWalletPickerOpen] = useState(false);
 
   const [type, setType] = useState<"expense" | "income">("expense");
   const [amount, setAmount] = useState("");
@@ -28,9 +26,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [categoryId, setCategoryId] = useState("");
   const [categoryName, setCategoryName] = useState("");
-  const [walletId, setWalletId] = useState<number | null>(null);
-  const [walletName, setWalletName] = useState<string | null>(null);
-  const [walletColor, setWalletColor] = useState<string | null>(null);
 
   const createMutation = useCreateTransaction();
 
@@ -38,7 +33,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
     setType("expense"); setAmount(""); setDescription("");
     setDate(new Date().toISOString().split("T")[0]);
     setCategoryId(""); setCategoryName("");
-    setWalletId(null); setWalletName(null); setWalletColor(null);
   };
 
   const invalidateAll = () => {
@@ -63,7 +57,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
     const currentDescription = description;
     const currentDate = date;
     const currentCategoryId = parseInt(categoryId, 10);
-    const currentWalletId = walletId ?? null;
 
     await queryClient.cancelQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     const previousSummary = queryClient.getQueryData(getGetDashboardSummaryQueryKey());
@@ -94,7 +87,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
           description: currentDescription,
           date: currentDate,
           categoryId: currentCategoryId,
-          walletId: currentWalletId,
+          walletId: null,
         } as any,
       },
       {
@@ -179,28 +172,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                 </button>
               </div>
             </div>
-
-            <div className="space-y-2">
-              <Label>Carteira <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-              <button
-                type="button"
-                onClick={() => setWalletPickerOpen(true)}
-                className="w-full flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
-              >
-                {walletId !== null && walletColor ? (
-                  <>
-                    <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                    <span className="flex-1 text-left text-foreground">{walletName}</span>
-                  </>
-                ) : (
-                  <>
-                    <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                    <span className="flex-1 text-left text-muted-foreground">Sem carteira</span>
-                  </>
-                )}
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
@@ -218,12 +189,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
         value={categoryId}
         type={type}
         onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }}
-      />
-      <WalletPicker
-        open={walletPickerOpen}
-        onOpenChange={setWalletPickerOpen}
-        value={walletId}
-        onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); }}
       />
     </>
   );
