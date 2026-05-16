@@ -228,7 +228,7 @@ export default function Support() {
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                 <MessageCircle className="w-6 h-6 text-primary" />
               </div>
-              <div><p className="font-semibold">{t("support.chat")}</p><p className="text-sm text-muted-foreground">Seg–Sex, 9h às 18h</p></div>
+              <div><p className="font-semibold">{t("support.chat")}</p></div>
               <div className="flex items-center gap-1 text-xs text-[#00C851] font-medium"><Zap className="w-3 h-3" /><span>Online agora</span></div>
             </CardContent>
           </Card>
