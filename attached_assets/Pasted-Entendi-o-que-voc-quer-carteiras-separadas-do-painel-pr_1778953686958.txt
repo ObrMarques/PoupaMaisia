@@ -1,0 +1,120 @@
+Entendi o que você quer: **carteiras separadas do painel principal**, sem “misturar” saldo entre elas, e o dashboard deve continuar sendo geral.
+
+Aqui vai o prompt corrigido para o Replit:
+
+---
+
+# CORREÇÃO — ISOLAMENTO DE CARTEIRAS (POUPAMAIS)
+
+## OBJETIVO
+
+Garantir que as **carteiras sejam totalmente independentes do painel principal**, sem interferir no cálculo geral do dashboard.
+
+---
+
+# REGRA PRINCIPAL
+
+As carteiras devem ser **individuais e isoladas**.
+
+Ou seja:
+
+* cada carteira tem seu próprio controle interno
+* o painel principal NÃO deve somar ou separar automaticamente por carteira
+
+---
+
+# 1. DASHBOARD PRINCIPAL
+
+O painel principal deve mostrar apenas:
+
+* total de receitas gerais
+* total de despesas gerais
+* saldo geral do usuário
+
+📌 SEM agrupar por carteiras
+
+📌 SEM dividir por carteira
+
+📌 SEM interferência de carteira no cálculo global
+
+---
+
+# 2. CARTEIRAS (ISOLADAS)
+
+As carteiras servem apenas para organização interna.
+
+Cada carteira:
+
+* armazena suas próprias transações vinculadas
+* não afeta o saldo geral automaticamente
+* não altera o dashboard principal
+
+---
+
+# 3. TRANSAÇÕES
+
+Ao criar uma transação:
+
+* pode escolher uma carteira OU “Sem carteira”
+
+Mas:
+
+* isso NÃO altera o cálculo global do app
+* serve apenas como organização/filtro
+
+---
+
+# 4. EXIBIÇÃO CORRETA
+
+## No dashboard principal:
+
+* todas as transações (independente da carteira)
+
+## Dentro da carteira:
+
+* apenas transações daquela carteira
+
+---
+
+# 5. FILTRO OPCIONAL (NÃO OBRIGATÓRIO)
+
+Permitir:
+
+* ver transações por carteira
+* mas isso é apenas filtro visual
+
+---
+
+# 6. REGRA CRÍTICA
+
+* carteiras NÃO podem impactar:
+
+  * saldo geral
+  * receitas totais
+  * despesas totais
+  * taxa de economia
+
+Elas são apenas organização.
+
+---
+
+# 7. EXPERIÊNCIA FINAL
+
+Quero:
+
+* dashboard simples e global
+* carteiras como “filtro avançado”
+* sistema organizado estilo banco real
+* sem confusão de saldo duplicado
+
+---
+
+# RESULTADO FINAL
+
+✔ dashboard global limpo
+✔ carteiras independentes
+✔ transações organizadas
+✔ sem interferência no cálculo principal
+✔ estrutura profissional de app financeiro
+
+---
