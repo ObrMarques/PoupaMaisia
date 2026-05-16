@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, cardsTable } from "@workspace/db";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, asc } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateCardBody, UpdateCardBody } from "@workspace/api-zod";
 
@@ -26,7 +26,9 @@ function serializeCard(c: any) {
 
 router.get("/cards", authMiddleware, async (req, res) => {
   const user = getUser(req);
-  const cards = await db.select().from(cardsTable).where(eq(cardsTable.userId, user.id));
+  const cards = await db.select().from(cardsTable)
+    .where(eq(cardsTable.userId, user.id))
+    .orderBy(asc(cardsTable.id));
   res.json(cards.map(serializeCard));
 });
 

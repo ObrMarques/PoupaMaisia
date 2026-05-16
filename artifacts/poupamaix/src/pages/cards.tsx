@@ -285,6 +285,13 @@ export default function Cards() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
 
+  const updateCardInCache = (updatedCard: any) => {
+    queryClient.setQueryData(getGetCardsQueryKey(), (old: any[] | undefined) => {
+      if (!old) return old;
+      return old.map((c) => c.id === updatedCard.id ? updatedCard : c);
+    });
+  };
+
   const resetForm = () => {
     setName(""); setLastFourDigits(""); setLimitVal(""); setCurrentBalance("0");
     setBrand("mastercard"); setClosingDay("1"); setDueDay("10"); setColor("#0A0A0A");
@@ -328,7 +335,7 @@ export default function Cards() {
       updateMutation.mutate(
         { id: editingCard.id, data },
         {
-          onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); toast({ title: "Cartão atualizado" }); },
+          onSuccess: (updatedCard) => { updateCardInCache(updatedCard); setIsOpen(false); resetForm(); toast({ title: "Cartão atualizado" }); },
           onError: () => toast({ title: "Erro ao atualizar cartão", variant: "destructive" }),
         }
       );

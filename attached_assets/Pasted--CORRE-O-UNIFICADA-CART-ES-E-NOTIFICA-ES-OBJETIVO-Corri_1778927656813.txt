@@ -1,0 +1,138 @@
+# CORREÇÃO UNIFICADA — CARTÕES E NOTIFICAÇÕES
+
+## OBJETIVO
+
+Corrigir definitivamente os problemas de:
+
+* personalização de cor dos cartões
+* ordenação dos cartões
+* notificações que ficam presas na tela
+
+Mantendo padrão premium e experiência fluida no PoupaMais.
+
+---
+
+# 1. COR PERSONALIZADA DOS CARTÕES (BUG CRÍTICO)
+
+## PROBLEMA
+
+Ao selecionar uma cor personalizada:
+
+* a cor não salva
+* ao sair da tela a cor volta ao padrão
+* não existe persistência correta
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+A cor escolhida deve:
+
+* salvar corretamente no banco de dados
+* atualizar instantaneamente no cartão
+* permanecer após fechar/reabrir o app
+* sincronizar entre dispositivos
+
+---
+
+# FUNCIONAMENTO CORRETO
+
+Quando o usuário:
+
+* escolher uma nova cor
+* clicar em salvar
+
+o cartão deve:
+
+* atualizar imediatamente
+* manter a cor permanentemente
+
+---
+
+# 2. CARTÃO MUDA DE POSIÇÃO AO EDITAR
+
+## PROBLEMA
+
+Ao editar:
+
+* cor
+* nome
+* limite
+* qualquer informação
+
+o cartão vai automaticamente para o final da lista.
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+Editar um cartão NÃO pode:
+
+* alterar ordem
+* mover posição
+* reorganizar lista automaticamente
+
+---
+
+# REGRA CORRETA
+
+Manter:
+
+* posição original
+* ordem atual do usuário
+* organização visual existente
+
+---
+
+# 3. NOTIFICAÇÕES FICAM INFINITAS
+
+## PROBLEMA
+
+As notificações/toasts:
+
+* ficam presas na tela
+* não desaparecem
+* acumulam visualmente
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+Todas as notificações devem:
+
+* aparecer suavemente
+* durar apenas 2 segundos
+* desaparecer automaticamente
+
+---
+
+# ANIMAÇÕES
+
+Implementar:
+
+* fade in
+* fade out
+* transição suave
+
+---
+
+# EXEMPLOS
+
+* “Cartão atualizado”
+* “Cor salva”
+* “Transação adicionada”
+* “Meta criada”
+
+Todas devem:
+
+* sumir automaticamente após 2 segundos
+
+---
+
+# IMPORTANTE FINAL
+
+* evitar múltiplas notificações acumuladas
+* manter alta performance
+* garantir persistência correta dos cartões
+* manter UX limpa e moderna
+* preservar padrão fintech premium do PoupaMais
