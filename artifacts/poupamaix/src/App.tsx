@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useRef } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
+import { ptBR } from "@clerk/localizations";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
@@ -295,9 +296,11 @@ function ClerkProviderWithRoutes() {
       signInUrl={`${basePath}/sign-in`}
       signUpUrl={`${basePath}/sign-up`}
       localization={{
-        formFieldLabel__emailAddress: "Endereço de e-mail",
+        ...ptBR,
         signIn: {
+          ...ptBR.signIn,
           start: {
+            ...ptBR.signIn?.start,
             title: "Bem-vindo de volta",
             subtitle: "Entre com sua conta para continuar",
             actionText: "Não tem uma conta?",
@@ -305,7 +308,9 @@ function ClerkProviderWithRoutes() {
           },
         },
         signUp: {
+          ...ptBR.signUp,
           start: {
+            ...ptBR.signUp?.start,
             title: "Criar sua conta",
             subtitle: "Comece sua jornada com o PoupaMais",
             actionText: "Já tem uma conta?",
