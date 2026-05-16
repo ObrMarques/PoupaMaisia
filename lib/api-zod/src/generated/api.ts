@@ -177,11 +177,10 @@ export const createTransactionBodyAmountMin = 0.01;
 
 
 
-
 export const CreateTransactionBody = zod.object({
   "type": zod.enum(['income', 'expense']),
   "amount": zod.number().min(createTransactionBodyAmountMin),
-  "description": zod.string().min(1),
+  "description": zod.string().nullish(),
   "date": zod.string(),
   "time": zod.string().nullish(),
   "categoryId": zod.number(),

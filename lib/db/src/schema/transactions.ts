@@ -7,7 +7,7 @@ export const transactionsTable = pgTable("transactions", {
   userId: integer("user_id").notNull(),
   type: text("type").notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
-  description: text("description").notNull(),
+  description: text("description"),
   date: date("date").notNull(),
   time: text("time"),
   categoryId: integer("category_id").notNull(),

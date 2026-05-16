@@ -53,7 +53,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
   };
 
   const handleSave = async () => {
-    if (!amount || !description || !categoryId) {
+    if (!amount || !categoryId) {
       return;
     }
 

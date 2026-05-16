@@ -138,8 +138,8 @@ export interface TransactionInput {
   type: TransactionInputType;
   /** @minimum 0.01 */
   amount: number;
-  /** @minLength 1 */
-  description: string;
+  /** @nullable */
+  description?: string | null;
   date: string;
   /** @nullable */
   time?: string | null;

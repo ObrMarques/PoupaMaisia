@@ -144,7 +144,7 @@ export default function Transactions() {
   };
 
   const handleSave = async () => {
-    if (!amount || !description || !categoryId) {
+    if (!amount || !categoryId) {
       return;
     }
 
@@ -460,7 +460,7 @@ export default function Transactions() {
                         {(t.categoryName || "?").charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-foreground truncate">{t.description}</p>
+                        <p className="font-medium text-foreground truncate">{t.description || t.categoryName}</p>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</span>
                           {t.categoryName && (

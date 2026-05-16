@@ -138,7 +138,7 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   const d = parsed.data;
   if (d.type !== undefined && d.type !== null) updates.type = d.type;
   if (d.amount !== undefined && d.amount !== null) updates.amount = String(d.amount);
-  if (d.description !== undefined && d.description !== null) updates.description = d.description;
+  if (d.description !== undefined) updates.description = d.description || null;
   if (d.date !== undefined && d.date !== null) updates.date = d.date;
   if (d.time !== undefined) updates.time = d.time;
   if (d.categoryId !== undefined && d.categoryId !== null) updates.categoryId = d.categoryId;
