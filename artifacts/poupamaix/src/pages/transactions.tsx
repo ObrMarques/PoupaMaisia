@@ -144,31 +144,116 @@ export default function Transactions() {
     setIsModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!amount || !description || !categoryId) {
       toast({ title: "Campos obrigatórios", description: "Preencha todos os campos necessários.", variant: "destructive" });
       return;
     }
+
+    const parsedAmount = parseFloat(amount);
+    const currentType = type;
+    const currentDescription = description;
+    const currentDate = date;
+    const currentCategoryId = parseInt(categoryId, 10);
+    const currentCategoryName = categoryName;
+    const currentNotes = notes || null;
+    const currentCardId = type === "expense" ? (cardId ?? null) : null;
+
     const payload = {
-      type,
-      amount: parseFloat(amount),
-      description,
-      date,
-      categoryId: parseInt(categoryId, 10),
-      notes: notes || null,
-      cardId: type === "expense" ? (cardId ?? null) : null,
+      type: currentType,
+      amount: parsedAmount,
+      description: currentDescription,
+      date: currentDate,
+      categoryId: currentCategoryId,
+      notes: currentNotes,
+      cardId: currentCardId,
     };
+
     if (editingTransaction) {
-      updateMutation.mutate({ id: editingTransaction.id, data: payload }, {
-        onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação atualizada" }); },
+      const prevId = editingTransaction.id;
+      setIsModalOpen(false);
+      resetForm();
+      updateMutation.mutate({ id: prevId, data: payload }, {
+        onSuccess: () => { toast({ title: "Transação atualizada" }); },
         onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
+        onSettled: () => { invalidateAll(); },
       });
-    } else {
-      createMutation.mutate({ data: payload }, {
-        onSuccess: () => { invalidateAll(); setIsModalOpen(false); resetForm(); toast({ title: "Transação adicionada" }); },
-        onError: () => toast({ title: "Erro ao salvar transação", variant: "destructive" }),
+      return;
+    }
+
+    const txQueryKey = getGetTransactionsQueryKey(params);
+    const summaryQueryKey = getGetDashboardSummaryQueryKey();
+
+    await queryClient.cancelQueries({ queryKey: txQueryKey });
+    await queryClient.cancelQueries({ queryKey: summaryQueryKey });
+
+    const previousTransactions = queryClient.getQueryData(txQueryKey);
+    const previousSummary = queryClient.getQueryData(summaryQueryKey);
+
+    const category = (categories ?? []).find(c => c.id === currentCategoryId);
+
+    const optimisticTx = {
+      id: Date.now() * -1,
+      userId: user?.id ?? 0,
+      type: currentType,
+      amount: parsedAmount,
+      description: currentDescription,
+      date: currentDate,
+      categoryId: currentCategoryId,
+      categoryName: currentCategoryName || "",
+      categoryColor: category?.color || "#6C5CE7",
+      categoryIcon: category?.icon || "",
+      cardId: currentCardId,
+      notes: currentNotes,
+      createdAt: new Date().toISOString(),
+    };
+
+    const shouldAddToList = filterType === "all" || filterType === currentType;
+    if (shouldAddToList) {
+      queryClient.setQueryData(txQueryKey, (old: any) => {
+        if (!Array.isArray(old)) return [optimisticTx];
+        return [optimisticTx, ...old];
       });
     }
+
+    const txDate = new Date(currentDate + "T12:00:00");
+    const now = new Date();
+    const isCurrentMonth =
+      txDate.getMonth() === now.getMonth() &&
+      txDate.getFullYear() === now.getFullYear();
+
+    queryClient.setQueryData(summaryQueryKey, (old: any) => {
+      if (!old) return old;
+      let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
+      if (currentType === "income") {
+        totalBalance += parsedAmount;
+        if (isCurrentMonth) monthlyIncome += parsedAmount;
+      } else {
+        totalBalance -= parsedAmount;
+        if (isCurrentMonth) monthlyExpenses += parsedAmount;
+      }
+      const savingsRate = monthlyIncome > 0
+        ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
+        : 0;
+      return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
+    });
+
+    setIsModalOpen(false);
+    resetForm();
+
+    createMutation.mutate({ data: payload }, {
+      onError: () => {
+        queryClient.setQueryData(txQueryKey, previousTransactions);
+        queryClient.setQueryData(summaryQueryKey, previousSummary);
+        toast({ title: "Erro ao salvar transação", variant: "destructive" });
+      },
+      onSuccess: () => {
+        toast({ title: "Transação adicionada" });
+      },
+      onSettled: () => {
+        invalidateAll();
+      },
+    });
   };
 
   const handleDelete = (id: number) => {
