@@ -3,9 +3,10 @@ import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -36,12 +37,20 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
           <p className="text-muted-foreground">Olá, {user?.name}</p>
         </div>
-        <Link href="/ai">
-          <Button className="bg-primary text-primary-foreground">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Perguntar ao PoupaAI
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <QuickAddTransaction>
+            <Button variant="outline" className="flex-1 md:flex-none bg-background">
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Transação
+            </Button>
+          </QuickAddTransaction>
+          <Link href="/ai" className="flex-1 md:flex-none">
+            <Button className="w-full bg-primary text-primary-foreground">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Perguntar ao PoupaAI
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Cartões de Resumo */}

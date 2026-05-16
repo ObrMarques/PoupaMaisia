@@ -1,0 +1,152 @@
+# MELHORIA COMPLETA NA FUNÇÃO DE CARTÕES
+
+## OBJETIVO
+
+Melhorar totalmente o sistema de cartões do aplicativo PoupaMais, adicionando:
+
+* edição completa
+* personalização visual
+* integração com despesas e transações
+
+Tudo com aparência fintech premium moderna.
+
+---
+
+# 1. CARTÕES EDITÁVEIS
+
+Os cartões devem ser totalmente editáveis.
+
+## O usuário deve conseguir alterar:
+
+* nome do cartão
+* banco
+* limite
+* data de vencimento
+* melhor dia de compra
+* descrição
+* bandeira
+* saldo/fatura
+
+---
+
+# 2. PERSONALIZAÇÃO DE COR
+
+Adicionar opção:
+
+## “Personalizar cor do cartão”
+
+O usuário deve conseguir:
+
+* escolher cor do cartão
+* visualizar preview em tempo real
+* deixar cada cartão único
+
+---
+
+# EXEMPLOS DE CORES
+
+* Preto
+* Branco
+* Azul
+* Roxo
+* Verde
+* Vermelho
+* Gradientes premium
+
+---
+
+# 3. VISUAL DOS CARTÕES
+
+Os cartões devem parecer:
+
+* cartões bancários modernos
+* estilo Nubank/inter/fintech
+* minimalistas
+* elegantes
+* premium
+
+---
+
+# 4. INTEGRAÇÃO COM DESPESAS
+
+Ao criar uma:
+
+## DESPESA
+
+Adicionar opção:
+
+# “Selecionar cartão”
+
+---
+
+# LISTA DE CARTÕES
+
+Mostrar:
+
+* nome do cartão
+* últimos 4 dígitos
+* cor personalizada
+
+---
+
+# EXEMPLO VISUAL
+
+Nubank •••• 4821
+Inter •••• 1039
+Banco do Brasil •••• 7742
+
+---
+
+# FUNCIONAMENTO
+
+Quando o usuário selecionar um cartão:
+
+## A DESPESA DEVE:
+
+* descontar do limite disponível
+* atualizar fatura automaticamente
+* atualizar valor utilizado
+* registrar no histórico do cartão
+
+---
+
+# RECÁLCULO AUTOMÁTICO
+
+Atualizar instantaneamente:
+
+* limite restante
+* valor usado
+* fatura
+* gastos do cartão
+
+Sem delay.
+
+---
+
+# EXPERIÊNCIA
+
+* interface rápida
+* seleção simples
+* animações suaves
+* atualização em tempo real
+* estilo fintech premium
+
+---
+
+# REGRAS IMPORTANTES
+
+* opção de cartão aparece apenas em despesas
+* receitas não usam cartão
+* integração com dashboard e relatórios
+* manter sincronização em tempo real
+* manter alta performance no PoupaMais
+
+---
+
+# IMPORTANTE FINAL
+
+* não quebrar sistema financeiro atual
+* manter compatibilidade mobile
+* integrar com modo claro/escuro
+* manter visual moderno, limpo e profissional
+* garantir experiência de aplicativo bancário real
