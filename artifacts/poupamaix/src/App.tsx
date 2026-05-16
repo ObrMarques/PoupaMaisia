@@ -31,11 +31,12 @@ const Paywall      = lazy(() => import("@/pages/paywall"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30 * 1000,
-      gcTime:    1000 * 60 * 5,
-      retry: 1,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect:   false,
+      staleTime:            30 * 1000,
+      gcTime:               1000 * 60 * 5,
+      retry:                1,
+      refetchInterval:      30 * 1000,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect:   true,
     },
   },
 });
