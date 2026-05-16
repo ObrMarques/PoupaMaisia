@@ -295,33 +295,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* ── Sair da Conta ──────────────────────────── */}
-        <Card className="bg-card">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <LogOut className="w-5 h-5" />
-              {t("auth.logout")}
-            </CardTitle>
-            <CardDescription>Encerrar a sessão atual e voltar à tela de login.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Sair da conta</p>
-                <p className="text-sm text-muted-foreground">Seus dados permanecem salvos com segurança.</p>
-              </div>
-              <Button
-                variant="outline"
-                className="bg-background gap-2"
-                onClick={logout}
-                data-testid="button-logout-settings"
-              >
-                <LogOut className="w-4 h-4" />
-                Sair
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
