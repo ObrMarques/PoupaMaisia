@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { db, cardsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateCardBody, UpdateCardBody } from "@workspace/api-zod";
+
+const FREE_WALLET_LIMIT = 3;
 
 const router = Router();
 
@@ -30,6 +32,26 @@ router.get("/cards", authMiddleware, async (req, res) => {
 
 router.post("/cards", authMiddleware, async (req, res) => {
   const user = getUser(req);
+
+  const now = new Date();
+  const isPremiumActive =
+    user.isPremium === true &&
+    (!user.premiumExpiresAt || now < new Date(user.premiumExpiresAt));
+
+  if (!isPremiumActive) {
+    const [{ value: cardCount }] = await db
+      .select({ value: count() })
+      .from(cardsTable)
+      .where(eq(cardsTable.userId, user.id));
+    if (cardCount >= FREE_WALLET_LIMIT) {
+      res.status(403).json({
+        error: "wallet_limit_reached",
+        message: "Limite de carteiras atingido. Assine o Premium para carteiras ilimitadas.",
+      });
+      return;
+    }
+  }
+
   const parsed = CreateCardBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid input" });
