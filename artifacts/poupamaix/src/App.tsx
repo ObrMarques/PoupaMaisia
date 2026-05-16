@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
@@ -9,6 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
 import { useSubscription } from "@/hooks/use-subscription";
+import {
+  getDashboardSummary, getSpendingByCategory, getMonthlyTrend,
+  getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
+} from "@workspace/api-client-react";
 
 const Login        = lazy(() => import("@/pages/login"));
 const Register     = lazy(() => import("@/pages/register"));
@@ -61,6 +65,20 @@ function SpinnerLoader() {
 /** Routes that remain accessible even after the trial expires, so users can
  *  manage their account and subscribe. */
 const OPEN_ROUTES = new Set(["/settings", "/support", "/paywall"]);
+
+function DashboardPrefetcher() {
+  const { token } = useAuth();
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!token) return;
+    qc.prefetchQuery({ queryKey: getGetDashboardSummaryQueryKey(),    queryFn: () => getDashboardSummary() });
+    qc.prefetchQuery({ queryKey: getGetSpendingByCategoryQueryKey(),  queryFn: () => getSpendingByCategory() });
+    qc.prefetchQuery({ queryKey: getGetMonthlyTrendQueryKey(),        queryFn: () => getMonthlyTrend() });
+  }, [token, qc]);
+
+  return null;
+}
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { token }            = useAuth();
@@ -115,6 +133,7 @@ function PublicRoute({ component: Component }: { component: React.ComponentType 
 function ThemedApp() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
+      <DashboardPrefetcher />
       <Switch>
         <Route path="/login"        component={() => <PublicRoute component={Login} />} />
         <Route path="/register"     component={() => <PublicRoute component={Register} />} />

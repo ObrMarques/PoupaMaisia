@@ -18,7 +18,7 @@ export default function Dashboard() {
   const tooltipStyle = isDark
     ? { backgroundColor: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
     : { backgroundColor: "#FFFFFF", borderColor: "#E0E0E0", color: "#111" };
-  const { data: summary, isLoading: loadingSummary } = useGetDashboardSummary();
+  const { data: summary } = useGetDashboardSummary();
   const { data: spending, isLoading: loadingSpending } = useGetSpendingByCategory();
   const { data: trend, isLoading: loadingTrend } = useGetMonthlyTrend();
   const { data: goals, isLoading: loadingGoals } = useGetGoals();
@@ -61,11 +61,7 @@ export default function Dashboard() {
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loadingSummary ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="text-2xl font-bold" data-testid="text-total-balance">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
-            )}
+            <div className="text-2xl font-bold" data-testid="text-total-balance">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
           </CardContent>
         </Card>
         <Card className="bg-card">
@@ -74,11 +70,7 @@ export default function Dashboard() {
             <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
           </CardHeader>
           <CardContent>
-            {loadingSummary ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="text-2xl font-bold text-[#00C851]">{formatCurrency(summary?.monthlyIncome || 0, currency)}</div>
-            )}
+            <div className="text-2xl font-bold text-[#00C851]">{formatCurrency(summary?.monthlyIncome || 0, currency)}</div>
           </CardContent>
         </Card>
         <Card className="bg-card">
@@ -87,11 +79,7 @@ export default function Dashboard() {
             <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
           </CardHeader>
           <CardContent>
-            {loadingSummary ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="text-2xl font-bold text-[#FF4444]">{formatCurrency(summary?.monthlyExpenses || 0, currency)}</div>
-            )}
+            <div className="text-2xl font-bold text-[#FF4444]">{formatCurrency(summary?.monthlyExpenses || 0, currency)}</div>
           </CardContent>
         </Card>
         <Card className="bg-card">
@@ -100,11 +88,7 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {loadingSummary ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="text-2xl font-bold">{(summary?.savingsRate || 0).toFixed(1)}%</div>
-            )}
+            <div className="text-2xl font-bold">{(summary?.savingsRate || 0).toFixed(1)}%</div>
           </CardContent>
         </Card>
       </div>
