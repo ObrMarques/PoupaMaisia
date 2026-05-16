@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/hooks/use-toast";
 import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, LogOut } from "lucide-react";
 import { Link } from "wouter";
 import type { Language } from "@/i18n/translations";
@@ -42,7 +41,6 @@ export default function Settings() {
   const { user, updateUser, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t, languages } = useI18n();
-  const { toast } = useToast();
   const updateMutation = useUpdateProfile();
 
   const [name,     setName]     = useState(user?.name  || "");
@@ -54,8 +52,8 @@ export default function Settings() {
     updateMutation.mutate(
       { data: { name, email } },
       {
-        onSuccess: (updated) => { updateUser(updated); toast({ title: t("settings.profileUpdated") }); },
-        onError:   () => toast({ title: t("common.error"), variant: "destructive" }),
+        onSuccess: (updated) => { updateUser(updated); },
+        onError:   () => {},
       }
     );
   };
@@ -64,8 +62,8 @@ export default function Settings() {
     updateMutation.mutate(
       { data: { currency, language } },
       {
-        onSuccess: (updated) => { updateUser(updated); toast({ title: t("settings.preferencesUpdated") }); },
-        onError:   () => toast({ title: t("common.error"), variant: "destructive" }),
+        onSuccess: (updated) => { updateUser(updated); },
+        onError:   () => {},
       }
     );
   };
@@ -76,7 +74,6 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "Arquivo muito grande. Máximo 10MB.", variant: "destructive" });
       return;
     }
     setIsUploadingPhoto(true);
@@ -85,14 +82,13 @@ export default function Settings() {
       updateMutation.mutate(
         { data: { avatarUrl: base64 } },
         {
-          onSuccess:  (updated) => { updateUser(updated); toast({ title: t("settings.photoUpdated") }); },
-          onError:    () => toast({ title: t("common.error"), variant: "destructive" }),
+          onSuccess:  (updated) => { updateUser(updated); },
+          onError:    () => {},
           onSettled:  () => setIsUploadingPhoto(false),
         }
       );
     } catch {
       setIsUploadingPhoto(false);
-      toast({ title: "Erro ao processar imagem.", variant: "destructive" });
     }
   };
 

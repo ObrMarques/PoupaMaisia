@@ -18,7 +18,6 @@ import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { Plus, Filter, Trash2, Pencil, ChevronRight, CreditCard, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
 
 const CARD_BRAND_LABEL: Record<string, string> = {
@@ -87,7 +86,7 @@ function CardSelector({
 export default function Transactions() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+
   const [filterType, setFilterType] = useState<string>("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
@@ -146,7 +145,6 @@ export default function Transactions() {
 
   const handleSave = async () => {
     if (!amount || !description || !categoryId) {
-      toast({ title: "Campos obrigatórios", description: "Preencha todos os campos necessários.", variant: "destructive" });
       return;
     }
 
@@ -174,8 +172,8 @@ export default function Transactions() {
       setIsModalOpen(false);
       resetForm();
       updateMutation.mutate({ id: prevId, data: payload }, {
-        onSuccess: () => { toast({ title: "Transação atualizada" }); },
-        onError: () => toast({ title: "Erro ao atualizar", variant: "destructive" }),
+        onSuccess: () => {},
+        onError: () => {},
         onSettled: () => { invalidateAll(); },
       });
       return;
@@ -245,10 +243,8 @@ export default function Transactions() {
       onError: () => {
         queryClient.setQueryData(txQueryKey, previousTransactions);
         queryClient.setQueryData(summaryQueryKey, previousSummary);
-        toast({ title: "Erro ao salvar transação", variant: "destructive" });
       },
       onSuccess: () => {
-        toast({ title: "Transação adicionada" });
       },
       onSettled: () => {
         invalidateAll();
@@ -258,7 +254,7 @@ export default function Transactions() {
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate({ id }, {
-      onSuccess: () => { invalidateAll(); toast({ title: "Transação excluída" }); },
+      onSuccess: () => { invalidateAll(); },
     });
   };
 

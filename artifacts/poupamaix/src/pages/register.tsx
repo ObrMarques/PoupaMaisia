@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -18,7 +17,6 @@ const formSchema = z.object({
 export default function Register() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
-  const { toast } = useToast();
   const registerMutation = useRegister();
   const onboardingMutation = useCompleteOnboarding();
 
@@ -42,13 +40,7 @@ export default function Register() {
             }
           );
         },
-        onError: () => {
-          toast({
-            variant: "destructive",
-            title: "Falha no cadastro",
-            description: "Ocorreu um erro durante o cadastro. Tente novamente.",
-          });
-        },
+        onError: () => {},
       }
     );
   }

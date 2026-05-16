@@ -19,7 +19,6 @@ import {
   TrendingUp, Pencil, Trash2,
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 
 const FREE_WALLET_LIMIT = 3;
 const PAYMENT_LINK = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
@@ -250,7 +249,6 @@ export default function Cards() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
   const { data: cards, isLoading } = useGetCards();
   const createMutation = useCreateCard();
   const updateMutation = useUpdateCard();
@@ -309,7 +307,6 @@ export default function Cards() {
 
   const handleSave = () => {
     if (!name || !lastFourDigits || !limitVal) {
-      toast({ title: "Preencha todos os campos", variant: "destructive" });
       return;
     }
     const data = {
@@ -325,18 +322,17 @@ export default function Cards() {
       updateMutation.mutate(
         { id: editingCard.id, data },
         {
-          onSuccess: (updatedCard) => { updateCardInCache(updatedCard); setIsOpen(false); resetForm(); toast({ title: "Cartão atualizado" }); },
-          onError: () => toast({ title: "Erro ao atualizar cartão", variant: "destructive" }),
+          onSuccess: (updatedCard) => { updateCardInCache(updatedCard); setIsOpen(false); resetForm(); },
+          onError: () => {},
         }
       );
     } else {
       createMutation.mutate(
         { data: { name, lastFourDigits, brand, limit: parseFloat(limitVal), closingDay: parseInt(closingDay), dueDay: parseInt(dueDay), color } },
         {
-          onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); toast({ title: "Cartão adicionado" }); },
+          onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); },
           onError: (err: any) => {
             if (err?.response?.status === 403) { setIsOpen(false); setShowPremiumModal(true); }
-            else toast({ title: "Erro ao adicionar cartão", variant: "destructive" });
           },
         }
       );
@@ -348,8 +344,8 @@ export default function Cards() {
     deleteMutation.mutate(
       { id: editingCard.id },
       {
-        onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); toast({ title: "Cartão excluído" }); },
-        onError: () => toast({ title: "Erro ao excluir cartão", variant: "destructive" }),
+        onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); },
+        onError: () => {},
       }
     );
   };

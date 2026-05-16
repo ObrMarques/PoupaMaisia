@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Check, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useToast } from "@/hooks/use-toast";
+
 
 interface CategoryPickerProps {
   open: boolean;
@@ -23,7 +23,6 @@ export function CategoryPicker({ open, onOpenChange, value, onSelect, type }: Ca
   const { data: categories, isLoading } = useGetCategories();
   const createMutation = useCreateCategory();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
 
   const filtered = useMemo(() => {
     const cats = (categories ?? []).filter(c =>
@@ -52,9 +51,8 @@ export function CategoryPicker({ open, onOpenChange, value, onSelect, type }: Ca
           setCustomName("");
           setShowCustomInput(false);
           setSearch("");
-          toast({ title: `Categoria "${newCat.name}" criada` });
         },
-        onError: () => toast({ title: "Erro ao criar categoria", variant: "destructive" })
+        onError: () => {}
       }
     );
   };

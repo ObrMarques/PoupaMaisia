@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { Plus, ChevronRight, CreditCard, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+
 
 const CARD_BRAND_LABEL: Record<string, string> = {
   mastercard: "Mastercard", visa: "Visa", amex: "Amex",
@@ -22,7 +22,7 @@ const CARD_BRAND_LABEL: Record<string, string> = {
 
 export function QuickAddTransaction({ children }: { children?: React.ReactNode }) {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+
   const [open, setOpen] = useState(false);
   const [catPickerOpen, setCatPickerOpen] = useState(false);
 
@@ -54,7 +54,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
 
   const handleSave = async () => {
     if (!amount || !description || !categoryId) {
-      toast({ title: "Preencha todos os campos obrigatórios", variant: "destructive" });
       return;
     }
 
@@ -111,10 +110,8 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
       {
         onError: () => {
           queryClient.setQueryData(getGetDashboardSummaryQueryKey(), previousSummary);
-          toast({ title: "Erro ao salvar transação", variant: "destructive" });
         },
         onSuccess: () => {
-          toast({ title: currentType === "expense" ? "Despesa adicionada" : "Receita adicionada" });
         },
         onSettled: () => {
           invalidateAll();

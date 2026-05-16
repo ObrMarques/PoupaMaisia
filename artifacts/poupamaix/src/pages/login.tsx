@@ -7,7 +7,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -17,7 +16,6 @@ const formSchema = z.object({
 export default function Login() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
-  const { toast } = useToast();
   const loginMutation = useLogin();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -33,13 +31,7 @@ export default function Login() {
           login(data.user, data.token);
           setLocation("/dashboard");
         },
-        onError: () => {
-          toast({
-            variant: "destructive",
-            title: "Falha no login",
-            description: "Verifique seu e-mail e senha.",
-          });
-        },
+        onError: () => {},
       }
     );
   }
@@ -101,12 +93,7 @@ export default function Login() {
         <Button
           variant="outline"
           className="w-full bg-card"
-          onClick={() => {
-            toast({
-              title: "Em breve",
-              description: "Login com Google ainda não está disponível.",
-            });
-          }}
+          onClick={() => {}}
         >
           Continuar com Google
         </Button>

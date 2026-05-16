@@ -16,7 +16,6 @@ import { CurrencyInput } from "@/components/currency-input";
 import { Input } from "@/components/ui/input";
 import { Plus, TrendingUp, Pencil, Trash2, Sparkles, Infinity, BarChart3, Target, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
 
 const FREE_GOAL_LIMIT = 3;
 const PAYMENT_LINK = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
@@ -219,7 +218,7 @@ export default function Goals() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+
 
   const { data: goals, isLoading } = useGetGoals();
   const createMutation     = useCreateGoal();
@@ -275,7 +274,6 @@ export default function Goals() {
 
   const handleSave = () => {
     if (!name.trim() || !targetAmount) {
-      toast({ title: "Preencha o nome e o valor da meta", variant: "destructive" });
       return;
     }
     const payload = {
@@ -291,18 +289,17 @@ export default function Goals() {
       updateMutation.mutate(
         { id: editingGoal.id, data: payload },
         {
-          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); toast({ title: "Meta atualizada" }); },
-          onError: () => toast({ title: "Erro ao atualizar meta", variant: "destructive" }),
+          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
+          onError: () => {},
         }
       );
     } else {
       createMutation.mutate(
         { data: payload },
         {
-          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); toast({ title: "Meta criada" }); },
+          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
           onError: (err: any) => {
             if (err?.response?.status === 403) { setIsFormOpen(false); setShowPremiumModal(true); }
-            else toast({ title: "Erro ao criar meta", variant: "destructive" });
           },
         }
       );
@@ -314,8 +311,8 @@ export default function Goals() {
     deleteMutation.mutate(
       { id: editingGoal.id },
       {
-        onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); toast({ title: "Meta excluída" }); },
-        onError: () => toast({ title: "Erro ao excluir meta", variant: "destructive" }),
+        onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
+        onError: () => {},
       }
     );
   };
@@ -335,9 +332,8 @@ export default function Goals() {
           invalidate();
           setIsContributeOpen(false);
           setContributeAmount("");
-          toast({ title: "Contribuição adicionada!" });
         },
-        onError: () => toast({ title: "Erro ao contribuir", variant: "destructive" }),
+        onError: () => {},
       }
     );
   };
