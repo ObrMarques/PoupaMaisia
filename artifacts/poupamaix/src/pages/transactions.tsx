@@ -46,12 +46,12 @@ export default function Transactions() {
   const deleteMutation = useDeleteTransaction();
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),          refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),    refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),      refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),    refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),          refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                 refetchType: 'all' });
   };
 
   const resetForm = () => {

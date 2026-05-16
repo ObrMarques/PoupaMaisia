@@ -1,0 +1,101 @@
+# CORREÇÃO — ESTATÍSTICAS DO DASHBOARD EM TEMPO REAL (POUPAMAIS)
+
+## PROBLEMA
+
+As estatísticas do painel (dashboard) não estão atualizando instantaneamente quando o usuário:
+
+* adiciona receitas
+* adiciona despesas
+* edita transações
+* exclui transações
+
+Atualmente há atraso ou necessidade de refresh manual.
+
+---
+
+# OBJETIVO
+
+Fazer o dashboard do PoupaMais atualizar **em tempo real (instantâneo)** sem recarregar a página.
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+## 1. USAR FIREBASE EM TEMPO REAL
+
+Implementar escuta ativa no Firestore:
+
+* usar `onSnapshot()` na coleção de transações
+* evitar `fetch` manual após alterações
+* evitar reload de página
+
+---
+
+## 2. FONTE ÚNICA DE DADOS
+
+Todas as estatísticas devem ser derivadas diretamente do estado sincronizado:
+
+* receitas totais
+* despesas totais
+* saldo total
+* taxa de economia
+
+---
+
+## 3. ATUALIZAÇÃO INSTANTÂNEA
+
+Sempre que houver mudança na coleção `transactions`:
+
+* atualizar automaticamente o estado global
+* recalcular métricas do dashboard imediatamente
+* re-renderizar UI sem delay
+
+---
+
+## 4. CÁLCULOS DO DASHBOARD
+
+### Receitas
+
+* soma de `type === "income"`
+
+### Despesas
+
+* soma de `type === "expense"`
+
+### Saldo
+
+* receitas - despesas
+
+---
+
+## 5. TAXA DE ECONOMIA
+
+\text{Taxa de economia} = \frac{\text{Receitas} - \text{Despesas}}{\text{Receitas}} \times 100
+
+---
+
+## 6. REGRA IMPORTANTE
+
+* NÃO usar atualização manual após adicionar transação
+* NÃO usar delay (setTimeout / polling)
+* NÃO depender de reload de página
+
+---
+
+## 7. EXPERIÊNCIA FINAL
+
+O dashboard deve:
+
+* atualizar instantaneamente ao adicionar receita/despesa
+* refletir mudanças em tempo real
+* funcionar como aplicativo bancário profissional
+* não ter qualquer atraso visual
+
+---
+
+## IMPORTANTE FINAL
+
+* garantir sincronização com Firestore em tempo real
+* evitar cache antigo
+* manter performance alta no Replit
+* manter consistência entre todas as telas do PoupaMais
