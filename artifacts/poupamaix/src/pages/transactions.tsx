@@ -253,8 +253,52 @@ export default function Transactions() {
   };
 
   const handleDelete = (id: number) => {
+    const txQueryKey = getGetTransactionsQueryKey(params);
+    const summaryQueryKey = getGetDashboardSummaryQueryKey();
+
+    const allTx = queryClient.getQueryData(txQueryKey) as any[] | undefined;
+    const txToDelete = allTx?.find((t: any) => t.id === id);
+
+    const previousTransactions = queryClient.getQueryData(txQueryKey);
+    const previousSummary = queryClient.getQueryData(summaryQueryKey);
+
+    queryClient.setQueryData(txQueryKey, (old: any) => {
+      if (!Array.isArray(old)) return old;
+      return old.filter((t: any) => t.id !== id);
+    });
+
+    if (txToDelete) {
+      const amount = Number(txToDelete.amount);
+      const txDate = new Date(txToDelete.date);
+      const now = new Date();
+      const isCurrentMonth =
+        txDate.getMonth() === now.getMonth() &&
+        txDate.getFullYear() === now.getFullYear();
+
+      queryClient.setQueryData(summaryQueryKey, (old: any) => {
+        if (!old) return old;
+        let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
+        if (txToDelete.type === "income") {
+          totalBalance -= amount;
+          if (isCurrentMonth) monthlyIncome -= amount;
+        } else {
+          totalBalance += amount;
+          if (isCurrentMonth) monthlyExpenses -= amount;
+        }
+        const savingsRate =
+          monthlyIncome > 0
+            ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
+            : 0;
+        return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
+      });
+    }
+
     deleteMutation.mutate({ id }, {
-      onSuccess: () => { invalidateAll(); },
+      onError: () => {
+        queryClient.setQueryData(txQueryKey, previousTransactions);
+        queryClient.setQueryData(summaryQueryKey, previousSummary);
+      },
+      onSettled: () => { invalidateAll(); },
     });
   };
 
