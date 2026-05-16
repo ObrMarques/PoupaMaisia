@@ -361,7 +361,7 @@ export default function Goals() {
                 <Plus className="w-4 h-4 mr-2" /> Nova Meta
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
+            <DialogContent aria-describedby={undefined} className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>{editingGoal ? "Editar Meta" : "Criar Nova Meta"}</DialogTitle>
               </DialogHeader>
@@ -410,7 +410,7 @@ export default function Goals() {
 
       {/* Contribute dialog */}
       <Dialog open={isContributeOpen} onOpenChange={setIsContributeOpen}>
-        <DialogContent className="sm:max-w-[380px]">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[380px]">
           <DialogHeader>
             <DialogTitle>Adicionar Contribuição</DialogTitle>
           </DialogHeader>

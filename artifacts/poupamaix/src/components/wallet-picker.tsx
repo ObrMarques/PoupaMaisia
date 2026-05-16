@@ -18,7 +18,7 @@ export function WalletPicker({ open, onOpenChange, value, onSelect }: WalletPick
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[380px] max-h-[80vh] overflow-y-auto">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[380px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Selecionar Carteira</DialogTitle>
         </DialogHeader>

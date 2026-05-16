@@ -118,7 +118,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
           )}
         </DialogTrigger>
 
-        <DialogContent className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[420px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nova Transação</DialogTitle>
           </DialogHeader>

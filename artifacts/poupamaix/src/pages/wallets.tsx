@@ -98,7 +98,7 @@ export default function Wallets() {
               <Plus className="w-4 h-4 mr-2" /> Nova Carteira
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[440px]">
+          <DialogContent aria-describedby={undefined} className="sm:max-w-[440px]">
             <DialogHeader>
               <DialogTitle>{editingId !== null ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
             </DialogHeader>
@@ -271,7 +271,7 @@ export default function Wallets() {
       </div>
 
       <Dialog open={confirmDeleteId !== null} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
-        <DialogContent className="sm:max-w-[360px]">
+        <DialogContent aria-describedby={undefined} className="sm:max-w-[360px]">
           <DialogHeader>
             <DialogTitle>Excluir carteira?</DialogTitle>
           </DialogHeader>

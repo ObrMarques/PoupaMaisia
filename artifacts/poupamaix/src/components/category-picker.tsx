@@ -135,7 +135,7 @@ export function CategoryPicker({ open, onOpenChange, value, onSelect, type }: Ca
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[400px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[400px] max-h-[80vh] flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-5 pt-5 pb-3 shrink-0">
           <DialogTitle className="text-base">Selecionar Categoria</DialogTitle>
         </DialogHeader>
