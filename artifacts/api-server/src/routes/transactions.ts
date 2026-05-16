@@ -103,7 +103,7 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     recurringPeriod: parsed.data.recurringPeriod ?? null,
     installments: parsed.data.installments ?? null,
     cardId: parsed.data.cardId ?? null,
-    walletId: (parsed.data as any).walletId ?? null,
+    walletId: parsed.data.walletId ?? null,
     notes: parsed.data.notes ?? null,
   }).returning();
 

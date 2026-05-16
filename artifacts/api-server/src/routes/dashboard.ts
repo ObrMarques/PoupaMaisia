@@ -26,7 +26,7 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
       SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_expenses,
       COUNT(CASE WHEN EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year} THEN 1 END) AS tx_count
     FROM transactions
-    WHERE user_id = ${user.id}
+    WHERE user_id = ${user.id} AND wallet_id IS NULL
   `);
 
   const r = (result.rows[0] ?? {}) as any;
@@ -68,6 +68,7 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
     LEFT JOIN categories c ON c.id = t.category_id
     WHERE t.user_id = ${user.id}
       AND t.type = 'expense'
+      AND t.wallet_id IS NULL
       AND EXTRACT(MONTH FROM t.date) = ${month}
       AND EXTRACT(YEAR  FROM t.date) = ${year}
     GROUP BY t.category_id, c.name, c.color, c.icon
@@ -104,7 +105,7 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
       SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END) AS income,
       SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END) AS expenses
     FROM transactions
-    WHERE user_id = ${user.id} AND date >= ${cutoff}
+    WHERE user_id = ${user.id} AND date >= ${cutoff} AND wallet_id IS NULL
     GROUP BY EXTRACT(MONTH FROM date), EXTRACT(YEAR FROM date)
     ORDER BY year ASC, month ASC
   `);
@@ -143,7 +144,7 @@ router.get("/dashboard/recent-transactions", authMiddleware, async (req, res) =>
       c.icon  AS category_icon
     FROM transactions t
     LEFT JOIN categories c ON c.id = t.category_id
-    WHERE t.user_id = ${user.id}
+    WHERE t.user_id = ${user.id} AND t.wallet_id IS NULL
     ORDER BY t.date DESC, t.created_at DESC
     LIMIT 10
   `);
