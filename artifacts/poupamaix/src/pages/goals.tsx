@@ -140,18 +140,6 @@ function GoalForm({
   return (
     <div className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label>Tipo de meta</Label>
-        <Select value={type} onValueChange={(v: any) => { setType(v); if (!isEditing) setName(""); }}>
-          <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {Object.entries(GOAL_TYPES).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{GOAL_ICONS[k]} {v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="space-y-2">
         <Label>{type === "other" ? "Qual é o seu objetivo?" : "Nome da meta"}</Label>
         <Input
           placeholder={type === "other" ? "Ex: Casa própria, iPhone, Curso..." : (EXAMPLES[type]?.[0] ?? "Nome da meta")}
