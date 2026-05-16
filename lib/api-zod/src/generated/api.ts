@@ -571,6 +571,7 @@ export const GetWalletsResponseItem = zod.object({
   "name": zod.string(),
   "color": zod.string(),
   "icon": zod.string(),
+  "initialBalance": zod.number(),
   "balance": zod.number(),
   "createdAt": zod.string()
 })
@@ -586,7 +587,8 @@ export const GetWalletsResponse = zod.array(GetWalletsResponseItem)
 export const CreateWalletBody = zod.object({
   "name": zod.string().min(1),
   "color": zod.string().nullish(),
-  "icon": zod.string().nullish()
+  "icon": zod.string().nullish(),
+  "initialBalance": zod.number().nullish()
 })
 
 
@@ -600,7 +602,8 @@ export const UpdateWalletParams = zod.object({
 export const UpdateWalletBody = zod.object({
   "name": zod.string().nullish(),
   "color": zod.string().nullish(),
-  "icon": zod.string().nullish()
+  "icon": zod.string().nullish(),
+  "initialBalance": zod.number().nullish()
 })
 
 export const UpdateWalletResponse = zod.object({
@@ -609,6 +612,7 @@ export const UpdateWalletResponse = zod.object({
   "name": zod.string(),
   "color": zod.string(),
   "icon": zod.string(),
+  "initialBalance": zod.number(),
   "balance": zod.number(),
   "createdAt": zod.string()
 })

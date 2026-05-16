@@ -1,19 +1,22 @@
 import { Router } from "express";
 import { db, walletsTable } from "@workspace/db";
-import { eq, and, asc, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateWalletBody, UpdateWalletBody } from "@workspace/api-zod";
 
 const router = Router();
 
 function serializeWallet(w: any) {
+  const initialBalance = parseFloat(w.initial_balance ?? w.initialBalance ?? "0");
+  const txBalance = parseFloat(w.balance ?? "0");
   return {
     id: w.id,
     userId: w.user_id ?? w.userId,
     name: w.name,
     color: w.color,
     icon: w.icon,
-    balance: parseFloat(w.balance ?? "0"),
+    initialBalance,
+    balance: initialBalance + txBalance,
     createdAt: w.created_at ? new Date(w.created_at).toISOString() : w.createdAt,
   };
 }
@@ -21,13 +24,13 @@ function serializeWallet(w: any) {
 router.get("/wallets", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const result = await db.execute(sql`
-    SELECT w.id, w.user_id, w.name, w.color, w.icon, w.created_at,
+    SELECT w.id, w.user_id, w.name, w.color, w.icon, w.initial_balance, w.created_at,
       COALESCE(SUM(CASE WHEN t.type = 'income'  THEN t.amount::numeric ELSE 0 END), 0) -
       COALESCE(SUM(CASE WHEN t.type = 'expense' THEN t.amount::numeric ELSE 0 END), 0) AS balance
     FROM wallets w
     LEFT JOIN transactions t ON t.wallet_id = w.id
     WHERE w.user_id = ${user.id}
-    GROUP BY w.id, w.name, w.color, w.icon, w.created_at
+    GROUP BY w.id, w.user_id, w.name, w.color, w.icon, w.initial_balance, w.created_at
     ORDER BY w.id ASC
   `);
   res.json((result.rows as any[]).map(serializeWallet));
@@ -45,6 +48,7 @@ router.post("/wallets", authMiddleware, async (req, res) => {
     name: parsed.data.name,
     color: parsed.data.color ?? "#1A1A1A",
     icon: parsed.data.icon ?? "💼",
+    initialBalance: String(parsed.data.initialBalance ?? 0),
   }).returning();
 
   res.status(201).json(serializeWallet({ ...wallet, balance: "0" }));
@@ -69,6 +73,7 @@ router.patch("/wallets/:id", authMiddleware, async (req, res) => {
   if (d.name !== undefined && d.name !== null) updates.name = d.name;
   if (d.color !== undefined && d.color !== null) updates.color = d.color;
   if (d.icon !== undefined && d.icon !== null) updates.icon = d.icon;
+  if (d.initialBalance !== undefined && d.initialBalance !== null) updates.initialBalance = String(d.initialBalance);
 
   const [wallet] = await db.update(walletsTable).set(updates)
     .where(and(eq(walletsTable.id, id), eq(walletsTable.userId, user.id))).returning();
@@ -79,9 +84,8 @@ router.patch("/wallets/:id", authMiddleware, async (req, res) => {
       COALESCE(SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END), 0) AS balance
     FROM transactions WHERE wallet_id = ${id}
   `);
-  const balance = (balResult.rows[0] as any)?.balance ?? "0";
-
-  res.json(serializeWallet({ ...wallet, balance }));
+  const txBalance = (balResult.rows[0] as any)?.balance ?? "0";
+  res.json(serializeWallet({ ...wallet, balance: txBalance }));
 });
 
 router.delete("/wallets/:id", authMiddleware, async (req, res) => {

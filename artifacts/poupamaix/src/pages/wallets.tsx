@@ -6,11 +6,12 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency } from "@/lib/format";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/currency-input";
 import { Plus, Pencil, Trash2, Wallet } from "lucide-react";
 
 const PRESET_COLORS = [
@@ -25,9 +26,10 @@ interface WalletFormState {
   name: string;
   color: string;
   icon: string;
+  initialBalance: string;
 }
 
-const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "💰" };
+const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "💰", initialBalance: "" };
 
 export default function Wallets() {
   const { user } = useAuth();
@@ -35,13 +37,14 @@ export default function Wallets() {
   const currency = user?.currency || "BRL";
 
   const { data: wallets, isLoading } = useGetWallets();
-  const createMutation  = useCreateWallet();
-  const updateMutation  = useUpdateWallet();
-  const deleteMutation  = useDeleteWallet();
+  const createMutation = useCreateWallet();
+  const updateMutation = useUpdateWallet();
+  const deleteMutation = useDeleteWallet();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId]     = useState<number | null>(null);
   const [form, setForm]               = useState<WalletFormState>(defaultForm);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(), refetchType: 'all' });
@@ -55,18 +58,19 @@ export default function Wallets() {
 
   const openEdit = (w: any) => {
     setEditingId(w.id);
-    setForm({ name: w.name, color: w.color, icon: w.icon });
+    setForm({ name: w.name, color: w.color, icon: w.icon, initialBalance: w.initialBalance.toFixed(2) });
     setIsModalOpen(true);
   };
 
   const handleSave = () => {
     if (!form.name.trim()) return;
+    const initialBalance = form.initialBalance ? parseFloat(form.initialBalance) : 0;
     if (editingId !== null) {
-      updateMutation.mutate({ id: editingId, data: form }, {
+      updateMutation.mutate({ id: editingId, data: { name: form.name, color: form.color, icon: form.icon, initialBalance } }, {
         onSuccess: () => { setIsModalOpen(false); invalidate(); },
       });
     } else {
-      createMutation.mutate({ data: form }, {
+      createMutation.mutate({ data: { name: form.name, color: form.color, icon: form.icon, initialBalance } }, {
         onSuccess: () => { setIsModalOpen(false); invalidate(); },
       });
     }
@@ -74,7 +78,7 @@ export default function Wallets() {
 
   const handleDelete = (id: number) => {
     deleteMutation.mutate({ id }, {
-      onSettled: () => { invalidate(); },
+      onSettled: () => { setConfirmDeleteId(null); invalidate(); },
     });
   };
 
@@ -87,13 +91,14 @@ export default function Wallets() {
           <h1 className="text-3xl font-bold tracking-tight">Carteiras</h1>
           <p className="text-muted-foreground">Gerencie suas contas e fontes de dinheiro.</p>
         </div>
+
         <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
           <DialogTrigger asChild>
             <Button onClick={openCreate} data-testid="button-add-wallet">
               <Plus className="w-4 h-4 mr-2" /> Nova Carteira
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[420px]">
+          <DialogContent className="sm:max-w-[440px]">
             <DialogHeader>
               <DialogTitle>{editingId !== null ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
             </DialogHeader>
@@ -107,6 +112,19 @@ export default function Wallets() {
                   className="bg-background"
                   autoFocus
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Saldo inicial</Label>
+                <CurrencyInput
+                  value={form.initialBalance}
+                  onValueChange={v => setForm(f => ({ ...f, initialBalance: v }))}
+                  className="bg-background"
+                  placeholder="R$ 0,00"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Valor que você já possui nessa conta antes de registrar transações.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -151,7 +169,14 @@ export default function Wallets() {
                 >
                   {form.icon}
                 </div>
-                <span className="font-medium">{form.name || "Nome da carteira"}</span>
+                <div>
+                  <p className="font-medium">{form.name || "Nome da carteira"}</p>
+                  {form.initialBalance && parseFloat(form.initialBalance) !== 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      Saldo inicial: {formatCurrency(parseFloat(form.initialBalance), currency)}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex justify-end gap-2">
@@ -186,9 +211,7 @@ export default function Wallets() {
       <div className="space-y-3">
         {isLoading ? (
           <Card className="bg-card border-border">
-            <CardContent className="p-8 text-center text-muted-foreground">
-              Carregando...
-            </CardContent>
+            <CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent>
           </Card>
         ) : (wallets ?? []).length === 0 ? (
           <Card className="bg-card border-border">
@@ -213,9 +236,16 @@ export default function Wallets() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold truncate">{w.name}</p>
-                    <p className={`text-sm font-medium tabular-nums ${w.balance >= 0 ? "text-[#00C851]" : "text-[#FF4444]"}`}>
-                      {formatCurrency(w.balance, currency)}
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <p className={`text-sm font-medium tabular-nums ${w.balance >= 0 ? "text-[#00C851]" : "text-[#FF4444]"}`}>
+                        {formatCurrency(w.balance, currency)}
+                      </p>
+                      {w.initialBalance !== 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          saldo inicial: {formatCurrency(w.initialBalance, currency)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
                     <Button
@@ -228,7 +258,7 @@ export default function Wallets() {
                     <Button
                       variant="ghost" size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleDelete(w.id)}
+                      onClick={() => setConfirmDeleteId(w.id)}
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </Button>
@@ -239,6 +269,27 @@ export default function Wallets() {
           ))
         )}
       </div>
+
+      <Dialog open={confirmDeleteId !== null} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
+        <DialogContent className="sm:max-w-[360px]">
+          <DialogHeader>
+            <DialogTitle>Excluir carteira?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            As transações vinculadas a esta carteira não serão excluídas, apenas desvinculadas.
+          </p>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
+            <Button
+              variant="destructive"
+              onClick={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

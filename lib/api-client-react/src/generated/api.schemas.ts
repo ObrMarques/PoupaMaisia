@@ -436,6 +436,7 @@ export interface Wallet {
   name: string;
   color: string;
   icon: string;
+  initialBalance: number;
   balance: number;
   createdAt: string;
 }
@@ -447,6 +448,8 @@ export interface WalletInput {
   color?: string | null;
   /** @nullable */
   icon?: string | null;
+  /** @nullable */
+  initialBalance?: number | null;
 }
 
 export interface WalletUpdate {
@@ -456,6 +459,8 @@ export interface WalletUpdate {
   color?: string | null;
   /** @nullable */
   icon?: string | null;
+  /** @nullable */
+  initialBalance?: number | null;
 }
 
 export interface DashboardSummary {

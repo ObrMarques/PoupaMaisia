@@ -1180,7 +1180,7 @@ components:
 
     Wallet:
       type: object
-      required: [id, userId, name, color, icon, balance, createdAt]
+      required: [id, userId, name, color, icon, initialBalance, balance, createdAt]
       properties:
         id:
           type: integer
@@ -1192,6 +1192,8 @@ components:
           type: string
         icon:
           type: string
+        initialBalance:
+          type: number
         balance:
           type: number
         createdAt:
@@ -1208,6 +1210,8 @@ components:
           type: ["string", "null"]
         icon:
           type: ["string", "null"]
+        initialBalance:
+          type: ["number", "null"]
 
     WalletUpdate:
       type: object
@@ -1218,6 +1222,8 @@ components:
           type: ["string", "null"]
         icon:
           type: ["string", "null"]
+        initialBalance:
+          type: ["number", "null"]
 
     DashboardSummary:
       type: object

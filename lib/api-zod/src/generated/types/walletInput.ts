@@ -13,4 +13,6 @@ export interface WalletInput {
   color?: string | null;
   /** @nullable */
   icon?: string | null;
+  /** @nullable */
+  initialBalance?: number | null;
 }
