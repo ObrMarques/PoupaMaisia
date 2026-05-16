@@ -58,7 +58,7 @@ export default function Wallets() {
 
   const openEdit = (w: any) => {
     setEditingId(w.id);
-    setForm({ name: w.name, color: w.color, icon: w.icon, initialBalance: w.initialBalance.toFixed(2) });
+    setForm({ name: w.name, color: w.color, icon: w.icon, initialBalance: (w.initialBalance ?? 0).toFixed(2) });
     setIsModalOpen(true);
   };
 
