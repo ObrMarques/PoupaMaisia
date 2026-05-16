@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
-  useCreateTransaction, useGetCategories, useGetCards,
+  useCreateTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey,
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey,
-  getGetMonthlyTrendQueryKey, getGetCardsQueryKey,
+  getGetMonthlyTrendQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -12,13 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
-import { Plus, ChevronRight, CreditCard, X } from "lucide-react";
-
-
-const CARD_BRAND_LABEL: Record<string, string> = {
-  mastercard: "Mastercard", visa: "Visa", amex: "Amex",
-  elo: "Elo", hipercard: "Hipercard", other: "Outro",
-};
+import { Plus, ChevronRight } from "lucide-react";
 
 export function QuickAddTransaction({ children }: { children?: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -32,15 +26,13 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [categoryId, setCategoryId] = useState("");
   const [categoryName, setCategoryName] = useState("");
-  const [cardId, setCardId] = useState<number | null>(null);
 
-  const { data: cards } = useGetCards();
   const createMutation = useCreateTransaction();
 
   const reset = () => {
     setType("expense"); setAmount(""); setDescription("");
     setDate(new Date().toISOString().split("T")[0]);
-    setCategoryId(""); setCategoryName(""); setCardId(null);
+    setCategoryId(""); setCategoryName("");
   };
 
   const invalidateAll = () => {
@@ -49,13 +41,10 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
   };
 
   const handleSave = async () => {
-    if (!amount || !categoryId) {
-      return;
-    }
+    if (!amount || !categoryId) return;
 
     const parsedAmount = parseFloat(amount);
     const txDate = new Date(date + "T12:00:00");
@@ -68,7 +57,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
     const currentDescription = description;
     const currentDate = date;
     const currentCategoryId = parseInt(categoryId, 10);
-    const currentCardId = type === "expense" ? (cardId ?? null) : null;
 
     await queryClient.cancelQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     const previousSummary = queryClient.getQueryData(getGetDashboardSummaryQueryKey());
@@ -104,14 +92,11 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
           description: currentDescription,
           date: currentDate,
           categoryId: currentCategoryId,
-          cardId: currentCardId,
         },
       },
       {
         onError: () => {
           queryClient.setQueryData(getGetDashboardSummaryQueryKey(), previousSummary);
-        },
-        onSuccess: () => {
         },
         onSettled: () => {
           invalidateAll();
@@ -153,7 +138,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                 className={type === "income"
                   ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white"
                   : "bg-background"}
-                onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); setCardId(null); }}
+                onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
               >
                 Receita
               </Button>
@@ -202,59 +187,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                 </button>
               </div>
             </div>
-
-            {type === "expense" && (cards ?? []).length > 0 && (
-              <div className="space-y-2">
-                <Label className="flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5" />
-                  Cartão <span className="text-muted-foreground text-xs">(opcional)</span>
-                </Label>
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setCardId(null)}
-                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm transition-colors ${
-                      cardId === null
-                        ? "border-foreground bg-secondary font-medium"
-                        : "border-border hover:border-foreground/30 hover:bg-secondary/50"
-                    }`}
-                  >
-                    <span className="text-muted-foreground">Sem cartão</span>
-                    {cardId === null && (
-                      <div className="w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
-                        <X className="w-2.5 h-2.5 text-background" />
-                      </div>
-                    )}
-                  </button>
-                  {(cards ?? []).map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => setCardId(c.id)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg border text-sm transition-colors ${
-                        cardId === c.id
-                          ? "border-foreground bg-secondary font-medium"
-                          : "border-border hover:border-foreground/30 hover:bg-secondary/50"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="w-6 h-4 rounded-sm shrink-0" style={{ backgroundColor: c.color || "#0A0A0A" }} />
-                        <span>{c.name}</span>
-                        <span className="text-muted-foreground font-mono text-xs">•••• {c.lastFourDigits}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground">{CARD_BRAND_LABEL[c.brand] ?? "Cartão"}</span>
-                        {cardId === c.id && (
-                          <div className="w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
-                            <div className="w-1.5 h-1.5 rounded-full bg-background" />
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-1">

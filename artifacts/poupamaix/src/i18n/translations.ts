@@ -18,7 +18,7 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 
 type TranslationMap = {
   nav: {
-    dashboard: string; transactions: string; goals: string; cards: string;
+    dashboard: string; transactions: string; goals: string;
     reports: string; ai: string; premium: string; support: string; settings: string;
   };
   common: {
@@ -52,7 +52,7 @@ type TranslationMap = {
 
 const ptBR: TranslationMap = {
   nav: {
-    dashboard: "Painel", transactions: "Transações", goals: "Metas", cards: "Cartões",
+    dashboard: "Painel", transactions: "Transações", goals: "Metas",
     reports: "Relatórios", ai: "PoupaAI", premium: "Premium", support: "Suporte", settings: "Configurações",
   },
   common: {
@@ -90,7 +90,7 @@ const ptBR: TranslationMap = {
 
 const en: TranslationMap = {
   nav: {
-    dashboard: "Dashboard", transactions: "Transactions", goals: "Goals", cards: "Cards",
+    dashboard: "Dashboard", transactions: "Transactions", goals: "Goals",
     reports: "Reports", ai: "PoupaAI", premium: "Premium", support: "Support", settings: "Settings",
   },
   common: {
@@ -128,7 +128,7 @@ const en: TranslationMap = {
 
 const es: TranslationMap = {
   nav: {
-    dashboard: "Panel", transactions: "Transacciones", goals: "Metas", cards: "Tarjetas",
+    dashboard: "Panel", transactions: "Transacciones", goals: "Metas",
     reports: "Informes", ai: "PoupaAI", premium: "Premium", support: "Soporte", settings: "Configuración",
   },
   common: {
@@ -166,7 +166,7 @@ const es: TranslationMap = {
 
 const fr: TranslationMap = {
   nav: {
-    dashboard: "Tableau de bord", transactions: "Transactions", goals: "Objectifs", cards: "Cartes",
+    dashboard: "Tableau de bord", transactions: "Transactions", goals: "Objectifs",
     reports: "Rapports", ai: "PoupaAI", premium: "Premium", support: "Support", settings: "Paramètres",
   },
   common: {
@@ -195,7 +195,7 @@ const fr: TranslationMap = {
 };
 
 const de: TranslationMap = {
-  nav: { dashboard: "Übersicht", transactions: "Transaktionen", goals: "Ziele", cards: "Karten",
+  nav: { dashboard: "Übersicht", transactions: "Transaktionen", goals: "Ziele",
     reports: "Berichte", ai: "PoupaAI", premium: "Premium", support: "Support", settings: "Einstellungen" },
   common: { save: "Speichern", cancel: "Abbrechen", delete: "Löschen", edit: "Bearbeiten", add: "Hinzufügen",
     loading: "Laden...", search: "Suchen", close: "Schließen", confirm: "Bestätigen",
@@ -221,7 +221,7 @@ const de: TranslationMap = {
 };
 
 const zh: TranslationMap = {
-  nav: { dashboard: "仪表板", transactions: "交易", goals: "目标", cards: "卡片",
+  nav: { dashboard: "仪表板", transactions: "交易", goals: "目标",
     reports: "报告", ai: "PoupaAI", premium: "高级版", support: "支持", settings: "设置" },
   common: { save: "保存", cancel: "取消", delete: "删除", edit: "编辑", add: "添加",
     loading: "加载中...", search: "搜索", close: "关闭", confirm: "确认",
@@ -247,7 +247,7 @@ const zh: TranslationMap = {
 };
 
 const ja: TranslationMap = {
-  nav: { dashboard: "ダッシュボード", transactions: "取引", goals: "目標", cards: "カード",
+  nav: { dashboard: "ダッシュボード", transactions: "取引", goals: "目標",
     reports: "レポート", ai: "PoupaAI", premium: "プレミアム", support: "サポート", settings: "設定" },
   common: { save: "保存", cancel: "キャンセル", delete: "削除", edit: "編集", add: "追加",
     loading: "読み込み中...", search: "検索", close: "閉じる", confirm: "確認",
@@ -273,7 +273,7 @@ const ja: TranslationMap = {
 };
 
 const ko: TranslationMap = {
-  nav: { dashboard: "대시보드", transactions: "거래", goals: "목표", cards: "카드",
+  nav: { dashboard: "대시보드", transactions: "거래", goals: "목표",
     reports: "보고서", ai: "PoupaAI", premium: "프리미엄", support: "지원", settings: "설정" },
   common: { save: "저장", cancel: "취소", delete: "삭제", edit: "편집", add: "추가",
     loading: "로딩 중...", search: "검색", close: "닫기", confirm: "확인",
@@ -299,7 +299,7 @@ const ko: TranslationMap = {
 };
 
 const ru: TranslationMap = {
-  nav: { dashboard: "Панель", transactions: "Транзакции", goals: "Цели", cards: "Карты",
+  nav: { dashboard: "Панель", transactions: "Транзакции", goals: "Цели",
     reports: "Отчёты", ai: "PoupaAI", premium: "Премиум", support: "Поддержка", settings: "Настройки" },
   common: { save: "Сохранить", cancel: "Отмена", delete: "Удалить", edit: "Изменить", add: "Добавить",
     loading: "Загрузка...", search: "Поиск", close: "Закрыть", confirm: "Подтвердить",
@@ -325,7 +325,7 @@ const ru: TranslationMap = {
 };
 
 const ar: TranslationMap = {
-  nav: { dashboard: "لوحة التحكم", transactions: "المعاملات", goals: "الأهداف", cards: "البطاقات",
+  nav: { dashboard: "لوحة التحكم", transactions: "المعاملات", goals: "الأهداف",
     reports: "التقارير", ai: "PoupaAI", premium: "مميز", support: "الدعم", settings: "الإعدادات" },
   common: { save: "حفظ", cancel: "إلغاء", delete: "حذف", edit: "تعديل", add: "إضافة",
     loading: "جاري التحميل...", search: "بحث", close: "إغلاق", confirm: "تأكيد",
@@ -351,7 +351,7 @@ const ar: TranslationMap = {
 };
 
 const hi: TranslationMap = {
-  nav: { dashboard: "डैशबोर्ड", transactions: "लेनदेन", goals: "लक्ष्य", cards: "कार्ड",
+  nav: { dashboard: "डैशबोर्ड", transactions: "लेनदेन", goals: "लक्ष्य",
     reports: "रिपोर्ट", ai: "PoupaAI", premium: "प्रीमियम", support: "सहायता", settings: "सेटिंग्स" },
   common: { save: "सहेजें", cancel: "रद्द करें", delete: "हटाएं", edit: "संपादित करें", add: "जोड़ें",
     loading: "लोड हो रहा है...", search: "खोजें", close: "बंद करें", confirm: "पुष्टि करें",

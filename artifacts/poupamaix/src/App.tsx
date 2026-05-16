@@ -14,12 +14,12 @@ import {
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
 } from "@workspace/api-client-react";
 
+
 const Login        = lazy(() => import("@/pages/login"));
 const Register     = lazy(() => import("@/pages/register"));
 const Dashboard    = lazy(() => import("@/pages/dashboard"));
 const Transactions = lazy(() => import("@/pages/transactions"));
 const Goals        = lazy(() => import("@/pages/goals"));
-const Cards        = lazy(() => import("@/pages/cards"));
 const Reports      = lazy(() => import("@/pages/reports"));
 const AI           = lazy(() => import("@/pages/ai"));
 const Premium      = lazy(() => import("@/pages/premium"));
@@ -141,7 +141,6 @@ function ThemedApp() {
         <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
         <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
         <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
-        <Route path="/cards"        component={() => <ProtectedRoute component={Cards} />} />
         <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
         <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
         <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
