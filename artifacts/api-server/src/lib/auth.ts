@@ -1,56 +1,58 @@
 import { Request, Response, NextFunction } from "express";
-import { getAuth, clerkClient } from "@clerk/express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
+declare module "express-session" {
+  interface SessionData {
+    userId?: number;
+  }
+}
+
 /**
- * JIT-provisions a local user row from the Clerk session.
+ * Session-based auth middleware.
+ * JIT-provisions a local user row keyed to the express-session ID.
  * Attaches the full user row to req.user.
  */
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const auth = getAuth(req);
-  const clerkUserId = auth?.userId;
+  const session = req.session;
 
-  if (!clerkUserId) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
+  if (session.userId) {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.id, session.userId))
+      .limit(1);
+
+    if (users.length) {
+      (req as any).user = users[0];
+      return next();
+    }
+    // Session points to a non-existent user — fall through to provision
   }
 
-  // Look up or provision the local user row
-  let users = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkUserId)).limit(1);
+  // Provision a new user for this session
+  const sessionId = session.id;
+
+  let users = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.sessionId, sessionId))
+    .limit(1);
 
   if (!users.length) {
-    // JIT provision: fetch real user data from Clerk Backend API.
-    // Session claims (JWT) do not include email/name for OAuth users —
-    // clerkClient.users.getUser() works for both email/password and Google OAuth.
-    const clerkUser = await clerkClient.users.getUser(clerkUserId);
-
-    // Resolve primary email — fail fast if absent (prevents empty-string INSERT)
-    const primaryId = clerkUser.primaryEmailAddressId;
-    const emailObj = clerkUser.emailAddresses.find((e) => e.id === primaryId)
-      ?? clerkUser.emailAddresses[0];
-    const email = emailObj?.emailAddress;
-
-    if (!email) {
-      res.status(422).json({ error: "Conta sem endereço de e-mail associado." });
-      return;
-    }
-
-    const firstName = clerkUser.firstName ?? "";
-    const lastName = clerkUser.lastName ?? "";
-    const fullName = `${firstName} ${lastName}`.trim();
-    const name = fullName || email.split("@")[0] || "Usuário";
-
-    const inserted = await db.insert(usersTable).values({
-      clerkId: clerkUserId,
-      name,
-      email,
-      currency: "BRL",
-      language: "pt-BR",
-    }).returning();
+    const inserted = await db
+      .insert(usersTable)
+      .values({
+        sessionId,
+        name: "Usuário",
+        currency: "BRL",
+        language: "pt-BR",
+      })
+      .returning();
     users = inserted;
   }
 
+  session.userId = users[0].id;
   (req as any).user = users[0];
   next();
 }
