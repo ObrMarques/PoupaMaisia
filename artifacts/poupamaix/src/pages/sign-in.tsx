@@ -217,6 +217,8 @@ export default function SignInPage() {
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
+          <div id="clerk-captcha" />
+
           <button
             type="submit"
             disabled={busy || !email || !password}

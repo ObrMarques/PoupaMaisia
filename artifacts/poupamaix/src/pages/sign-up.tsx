@@ -279,6 +279,8 @@ export default function SignUpPage() {
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 
+              <div id="clerk-captcha" />
+
               <button
                 type="submit"
                 disabled={busy || !name.trim() || !email || !password}

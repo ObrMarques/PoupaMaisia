@@ -250,7 +250,12 @@ function AppShell() {
               <Route path="/"             component={HomeRedirect} />
               <Route path="/sign-in/*?"   component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />
               <Route path="/sign-up"      component={() => <Suspense fallback={<SpinnerLoader />}><SignUpPage /></Suspense>} />
-              <Route path="/sso-callback" component={() => <AuthenticateWithRedirectCallback />} />
+              <Route path="/sso-callback" component={() => (
+                <AuthenticateWithRedirectCallback
+                  signInForceRedirectUrl={`${basePath}/dashboard`}
+                  signUpForceRedirectUrl={`${basePath}/dashboard`}
+                />
+              )} />
               {/* legacy routes redirect to sign pages */}
               <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
               <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
