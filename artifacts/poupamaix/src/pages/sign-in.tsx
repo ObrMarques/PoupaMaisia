@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useSignIn } from "@clerk/react";
+import { useSignIn, AuthenticateWithRedirectCallback } from "@clerk/react";
+import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
@@ -117,13 +118,25 @@ function useHideDevBanner() {
 
 export default function SignInPage() {
   useHideDevBanner();
+  const [location] = useLocation();
   const { signIn, fetchStatus } = useSignIn();
 
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [showPass, setShowPass] = useState(false);
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [showPass, setShowPass]   = useState(false);
+  const [loading, setLoading]     = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const [error, setError]         = useState("");
+
+  // Clerk OAuth callback — rendered when the route wildcard matches /sign-in/sso-callback
+  if (location.endsWith("/sso-callback")) {
+    return (
+      <AuthenticateWithRedirectCallback
+        signInForceRedirectUrl={`${basePath}/dashboard`}
+        signUpForceRedirectUrl={`${basePath}/dashboard`}
+      />
+    );
+  }
 
   const busy = loading || fetchStatus === "fetching";
 
@@ -153,15 +166,18 @@ export default function SignInPage() {
   async function handleGoogle() {
     if (!signIn) return;
     setError("");
+    setGoogleBusy(true);
     try {
       const { error: ssoErr } = await signIn.sso({
         strategy:            "oauth_google",
-        redirectUrl:         `${window.location.origin}${basePath}/sso-callback`,
+        redirectUrl:         `${window.location.origin}${basePath}/sign-in/sso-callback`,
         redirectCallbackUrl: `${window.location.origin}${basePath}/dashboard`,
       });
       if (ssoErr) setError(getErrMsg(ssoErr, "Erro ao entrar com Google."));
     } catch (err) {
       setError(getErrMsg(err, "Erro ao entrar com Google."));
+    } finally {
+      setGoogleBusy(false);
     }
   }
 
@@ -238,10 +254,10 @@ export default function SignInPage() {
         <button
           type="button"
           onClick={handleGoogle}
-          disabled={busy}
+          disabled={googleBusy}
           className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] text-sm font-medium text-[#111111] transition-colors disabled:opacity-50"
         >
-          {googleIcon}
+          {googleBusy ? <Loader2 size={16} className="animate-spin" /> : googleIcon}
           Continuar com Google
         </button>
 
