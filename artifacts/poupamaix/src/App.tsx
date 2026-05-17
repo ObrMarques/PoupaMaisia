@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, AuthenticateWithRedirectCallback, useClerk } from "@clerk/react";
 import { ptBR } from "@clerk/localizations";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -23,6 +23,7 @@ const Goals        = lazy(() => import("@/pages/goals"));
 const Wallets      = lazy(() => import("@/pages/wallets"));
 const Reports      = lazy(() => import("@/pages/reports"));
 const AI           = lazy(() => import("@/pages/ai"));
+const SignUpPage   = lazy(() => import("@/pages/sign-up"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
 
@@ -253,27 +254,6 @@ function SignInPage() {
   );
 }
 
-function SignUpPage() {
-  useHideClerkDevBanner();
-  return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
-      <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg">
-        <div className="px-8 pt-8 pb-4 space-y-1 text-center">
-          <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
-          <h1 className="text-xl font-bold text-[#111111]">Criar sua conta</h1>
-          <p className="text-sm text-[#737373]">Comece sua jornada com o PoupaMais</p>
-        </div>
-        <SignUp
-          routing="path"
-          path={`${basePath}/sign-up`}
-          signInUrl={`${basePath}/sign-in`}
-          forceRedirectUrl={`${basePath}/dashboard`}
-          appearance={authAppearanceFull}
-        />
-      </div>
-    </div>
-  );
-}
 
 function ClerkQueryClientCacheInvalidator() {
   const { addListener } = useClerk();
@@ -307,7 +287,8 @@ function AppShell() {
             <Switch>
               <Route path="/"             component={HomeRedirect} />
               <Route path="/sign-in/*?"   component={SignInPage} />
-              <Route path="/sign-up/*?"   component={SignUpPage} />
+              <Route path="/sign-up"      component={() => <Suspense fallback={<SpinnerLoader />}><SignUpPage /></Suspense>} />
+              <Route path="/sso-callback" component={() => <AuthenticateWithRedirectCallback />} />
               {/* legacy routes redirect to sign pages */}
               <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
               <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
