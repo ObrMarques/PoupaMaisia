@@ -16,11 +16,57 @@ const googleIcon = (
 
 type Step = "form" | "verify";
 
-type ClerkErr = { errors?: { longMessage?: string; message?: string }[] };
+type ClerkErrItem = { code?: string; longMessage?: string; message?: string };
+type ClerkErr = { errors?: ClerkErrItem[] };
+
+const CLERK_PT: Record<string, string> = {
+  form_identifier_exists:              "Esse e-mail já está em uso. Tente outro.",
+  form_identifier_not_found:           "Nenhuma conta encontrada com esse e-mail.",
+  form_password_pwned:                 "Essa senha foi comprometida em vazamentos. Use uma senha diferente.",
+  form_password_length_too_short:      "A senha deve ter no mínimo 8 caracteres.",
+  form_password_no_digit:              "A senha deve conter ao menos um número.",
+  form_password_no_uppercase:          "A senha deve conter ao menos uma letra maiúscula.",
+  form_password_no_special_char:       "A senha deve conter ao menos um caractere especial.",
+  form_password_incorrect:             "Senha incorreta.",
+  form_param_format_invalid:           "Formato inválido.",
+  form_param_nil:                      "Campo obrigatório.",
+  form_param_duplicated:               "Esse valor já está em uso.",
+  verification_failed:                 "Código inválido. Tente novamente.",
+  verification_expired:                "Código expirado. Solicite um novo código.",
+  strategy_for_user_invalid:           "Método de autenticação não permitido para essa conta.",
+  not_allowed_access:                  "Acesso não permitido.",
+  session_exists:                      "Você já está autenticado.",
+  rate_limit_exceeded:                 "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+  captcha_invalid:                     "Verificação de segurança falhou. Tente novamente.",
+};
+
+const CLERK_MSG_PT: [string, string][] = [
+  ["that email address is taken",      "Esse e-mail já está em uso. Tente outro."],
+  ["is already taken",                 "Esse valor já está em uso."],
+  ["password has been found in",       "Essa senha foi comprometida em vazamentos. Use uma senha diferente."],
+  ["incorrect password",               "Senha incorreta."],
+  ["too many requests",                "Muitas tentativas. Aguarde alguns minutos."],
+  ["invalid verification code",        "Código de verificação inválido."],
+  ["verification code expired",        "Código expirado. Solicite um novo."],
+];
+
+function translateClerkError(item: ClerkErrItem): string {
+  if (item.code && CLERK_PT[item.code]) return CLERK_PT[item.code];
+
+  const raw = (item.longMessage ?? item.message ?? "").toLowerCase();
+  for (const [en, pt] of CLERK_MSG_PT) {
+    if (raw.includes(en)) return pt;
+  }
+
+  return item.longMessage ?? item.message ?? "";
+}
 
 function getErrMsg(err: unknown, fallback: string): string {
   const e = err as ClerkErr;
-  return e?.errors?.[0]?.longMessage ?? e?.errors?.[0]?.message ?? fallback;
+  const item = e?.errors?.[0];
+  if (!item) return fallback;
+  const translated = translateClerkError(item);
+  return translated || fallback;
 }
 
 export default function SignUpPage() {
