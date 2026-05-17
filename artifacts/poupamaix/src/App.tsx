@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, AuthenticateWithRedirectCallback, useClerk } from "@clerk/react";
+import { ClerkProvider, AuthenticateWithRedirectCallback, useClerk } from "@clerk/react";
 import { ptBR } from "@clerk/localizations";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -24,6 +24,7 @@ const Wallets      = lazy(() => import("@/pages/wallets"));
 const Reports      = lazy(() => import("@/pages/reports"));
 const AI           = lazy(() => import("@/pages/ai"));
 const SignUpPage   = lazy(() => import("@/pages/sign-up"));
+const SignInPage   = lazy(() => import("@/pages/sign-in"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
 
@@ -214,45 +215,6 @@ const googleIcon = (
   </svg>
 );
 
-const authAppearanceFull = {
-  ...clerkAppearance,
-  elements: {
-    ...clerkAppearance.elements,
-    header: "!hidden",
-    logoBox: "!hidden",
-    headerTitle: "!hidden",
-    headerSubtitle: "!hidden",
-    cardBox: "!shadow-none !rounded-none w-full max-w-full overflow-hidden !bg-transparent",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    socialButtonsBlockButton:
-      "!w-full !flex !items-center !justify-center !gap-3 !px-4 !py-2.5 !rounded-lg !border !border-[#e0e0e0] !bg-white hover:!bg-[#f5f5f5] !transition-colors !text-sm !font-medium !text-[#111111] !shadow-none",
-    socialButtonsBlockButtonText: "!text-sm !font-medium !text-[#111111]",
-    socialButtonsProviderIcon: "!w-5 !h-5",
-  },
-};
-
-function SignInPage() {
-  useHideClerkDevBanner();
-  return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
-      <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg">
-        <div className="px-8 pt-8 pb-4 space-y-1 text-center">
-          <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
-          <h1 className="text-xl font-bold text-[#111111]">Bem-vindo de volta</h1>
-          <p className="text-sm text-[#737373]">Entre com sua conta para continuar</p>
-        </div>
-        <SignIn
-          routing="path"
-          path={`${basePath}/sign-in`}
-          signUpUrl={`${basePath}/sign-up`}
-          forceRedirectUrl={`${basePath}/dashboard`}
-          appearance={authAppearanceFull}
-        />
-      </div>
-    </div>
-  );
-}
 
 
 function ClerkQueryClientCacheInvalidator() {
