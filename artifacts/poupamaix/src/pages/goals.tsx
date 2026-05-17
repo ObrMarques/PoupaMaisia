@@ -5,7 +5,6 @@ import {
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
-import { useSubscription } from "@/hooks/use-subscription";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,11 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/currency-input";
 import { Input } from "@/components/ui/input";
-import { Plus, TrendingUp, Pencil, Trash2, Sparkles, Infinity, BarChart3, Target, X } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const FREE_GOAL_LIMIT = 3;
-const PAYMENT_LINK = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
 
 const GOAL_TYPES: Record<string, string> = {
   savings:   "Poupança",
@@ -54,73 +50,6 @@ const GOAL_COLORS = [
   { label: "Vermelho", value: "#DC2626" },
   { label: "Preto",    value: "#0A0A0A" },
 ];
-
-const PREMIUM_BENEFITS = [
-  { icon: Infinity,   text: "Metas ilimitadas" },
-  { icon: BarChart3,  text: "Acompanhamento avançado" },
-  { icon: Target,     text: "Metas personalizadas completas" },
-  { icon: TrendingUp, text: "Análise de progresso detalhada" },
-  { icon: Sparkles,   text: "Experiência premium completa" },
-];
-
-function PremiumModal({ open, onClose, userEmail }: { open: boolean; onClose: () => void; userEmail?: string }) {
-  if (!open) return null;
-  const handleSubscribe = () => {
-    const url = new URL(PAYMENT_LINK);
-    if (userEmail) url.searchParams.set("prefilled_email", userEmail);
-    window.open(url.toString(), "_blank", "noopener,noreferrer");
-    onClose();
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-background border border-border rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-        <div className="bg-foreground text-background px-6 pt-8 pb-6">
-          <div className="w-10 h-10 rounded-xl bg-background/15 flex items-center justify-center mb-4">
-            <Sparkles className="w-5 h-5" />
-          </div>
-          <h2 className="text-xl font-bold">Desbloqueie metas ilimitadas</h2>
-          <p className="text-background/70 text-sm mt-1">com <span className="font-semibold text-background">PoupaMais Premium</span></p>
-        </div>
-        <div className="px-6 py-5 space-y-4">
-          <div className="p-3 bg-secondary/60 rounded-xl border border-border">
-            <p className="text-xs text-muted-foreground text-center">
-              Você atingiu o limite de <span className="font-semibold text-foreground">{FREE_GOAL_LIMIT} metas</span> do plano gratuito
-            </p>
-          </div>
-          <ul className="space-y-2.5">
-            {PREMIUM_BENEFITS.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center shrink-0">
-                  <Icon className="w-3.5 h-3.5 text-background" />
-                </div>
-                <span className="text-sm">{text}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="flex items-baseline gap-1">
-            <span className="text-3xl font-bold">R$&nbsp;9,90</span>
-            <span className="text-muted-foreground text-sm">/mês</span>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Button className="w-full h-11 font-semibold" onClick={handleSubscribe}>
-              <Sparkles className="w-4 h-4 mr-2" /> Assinar Premium
-            </Button>
-            <Button variant="ghost" className="w-full h-9 text-sm text-muted-foreground" onClick={onClose}>
-              Agora não
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type GoalType = "savings" | "travel" | "emergency" | "purchase" | "other";
 
@@ -216,7 +145,6 @@ function GoalForm({
 
 export default function Goals() {
   const { user } = useAuth();
-  const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
 
 
@@ -228,7 +156,6 @@ export default function Goals() {
 
   const [isFormOpen, setIsFormOpen]               = useState(false);
   const [isContributeOpen, setIsContributeOpen]   = useState(false);
-  const [showPremiumModal, setShowPremiumModal]   = useState(false);
   const [editingGoal, setEditingGoal]             = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedGoalId, setSelectedGoalId]       = useState<number | null>(null);
@@ -240,9 +167,6 @@ export default function Goals() {
   const [type, setType]                 = useState<GoalType>("savings");
   const [color, setColor]               = useState("#7C3AED");
   const [deadline, setDeadline]         = useState("");
-
-  const goalCount = goals?.length ?? 0;
-  const atLimit   = !isPremium && goalCount >= FREE_GOAL_LIMIT;
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
@@ -256,7 +180,6 @@ export default function Goals() {
   };
 
   const openCreate = () => {
-    if (atLimit) { setShowPremiumModal(true); return; }
     resetForm(); setIsFormOpen(true);
   };
 
@@ -298,9 +221,7 @@ export default function Goals() {
         { data: payload },
         {
           onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
-          onError: (err: any) => {
-            if (err?.response?.status === 403) { setIsFormOpen(false); setShowPremiumModal(true); }
-          },
+          onError: () => {},
         }
       );
     }
@@ -342,19 +263,12 @@ export default function Goals() {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
-      <PremiumModal open={showPremiumModal} onClose={() => setShowPremiumModal(false)} userEmail={user?.email} />
-
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Metas Financeiras</h1>
           <p className="text-muted-foreground">Acompanhe suas economias e conquistas.</p>
         </div>
         <div className="flex items-center gap-3">
-          {!isPremium && (
-            <span className="text-xs text-muted-foreground bg-secondary px-2.5 py-1 rounded-full border border-border">
-              {goalCount}/{FREE_GOAL_LIMIT} metas
-            </span>
-          )}
           <Dialog open={isFormOpen} onOpenChange={(open) => { setIsFormOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={openCreate} data-testid="button-new-goal">

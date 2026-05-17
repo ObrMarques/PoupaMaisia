@@ -12,7 +12,6 @@ import { AppLayout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
-import { useSubscription } from "@/hooks/use-subscription";
 import {
   getDashboardSummary, getSpendingByCategory, getMonthlyTrend,
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
@@ -27,7 +26,6 @@ const AI           = lazy(() => import("@/pages/ai"));
 const Premium      = lazy(() => import("@/pages/premium"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
-const Paywall      = lazy(() => import("@/pages/paywall"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -139,7 +137,6 @@ function SpinnerLoader() {
   );
 }
 
-const OPEN_ROUTES = new Set(["/settings", "/support", "/paywall"]);
 
 function DashboardPrefetcher() {
   const { isSignedIn } = useAuth();
@@ -157,16 +154,12 @@ function DashboardPrefetcher() {
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { hasAccess }            = useSubscription();
-  const [location, setLocation]  = useLocation();
+  const [, setLocation]          = useLocation();
 
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { setLocation("/sign-in"); return; }
-    if (!hasAccess && !OPEN_ROUTES.has(location)) {
-      setLocation("/paywall");
-    }
-  }, [isSignedIn, isLoaded, hasAccess, location, setLocation]);
+  }, [isSignedIn, isLoaded, setLocation]);
 
   if (!isLoaded) return <SpinnerLoader />;
   if (!isSignedIn) return null;
@@ -177,26 +170,6 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
         <Component />
       </Suspense>
     </AppLayout>
-  );
-}
-
-function PaywallRoute() {
-  const { isSignedIn, isLoaded } = useAuth();
-  const { hasAccess }            = useSubscription();
-  const [, setLocation]          = useLocation();
-
-  useEffect(() => {
-    if (!isLoaded) return;
-    if (!isSignedIn) { setLocation("/sign-in"); return; }
-    if (hasAccess)  { setLocation("/dashboard"); }
-  }, [isSignedIn, isLoaded, hasAccess, setLocation]);
-
-  if (!isLoaded || !isSignedIn || hasAccess) return null;
-
-  return (
-    <Suspense fallback={<SpinnerLoader />}>
-      <Paywall />
-    </Suspense>
   );
 }
 
@@ -339,7 +312,7 @@ function AppShell() {
               {/* legacy routes redirect to sign pages */}
               <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
               <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
-              <Route path="/paywall"      component={() => <PaywallRoute />} />
+              <Route path="/paywall"      component={() => { const [,s] = useLocation(); useEffect(() => s("/dashboard"), []); return null; }} />
               <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
               <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
               <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />

@@ -1,10 +1,8 @@
 import { Router } from "express";
 import { db, goalsTable } from "@workspace/db";
-import { eq, and, count, asc } from "drizzle-orm";
+import { eq, and, asc } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateGoalBody, UpdateGoalBody, ContributeToGoalBody } from "@workspace/api-zod";
-
-const FREE_GOAL_LIMIT = 3;
 
 const router = Router();
 
@@ -37,25 +35,6 @@ router.get("/goals", authMiddleware, async (req, res) => {
 
 router.post("/goals", authMiddleware, async (req, res) => {
   const user = getUser(req);
-
-  const now = new Date();
-  const isPremiumActive =
-    user.isPremium === true &&
-    (!user.premiumExpiresAt || now < new Date(user.premiumExpiresAt));
-
-  if (!isPremiumActive) {
-    const [{ value: goalCount }] = await db
-      .select({ value: count() })
-      .from(goalsTable)
-      .where(eq(goalsTable.userId, user.id));
-    if (goalCount >= FREE_GOAL_LIMIT) {
-      res.status(403).json({
-        error: "goal_limit_reached",
-        message: "Limite de metas atingido. Assine o Premium para metas ilimitadas.",
-      });
-      return;
-    }
-  }
 
   const parsed = CreateGoalBody.safeParse(req.body);
   if (!parsed.success) {

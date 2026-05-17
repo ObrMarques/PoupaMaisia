@@ -63,11 +63,6 @@ function generateAIResponse(message: string, _txCount: number): { response: stri
 router.post("/ai/chat", authMiddleware, async (req, res) => {
   const user = getUser(req);
 
-  if (!user.isPremium) {
-    res.status(403).json({ error: "Premium required" });
-    return;
-  }
-
   const parsed = ChatWithAIBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid input" });
@@ -111,11 +106,6 @@ router.post("/ai/chat", authMiddleware, async (req, res) => {
 router.get("/ai/conversations", authMiddleware, async (req, res) => {
   const user = getUser(req);
 
-  if (!user.isPremium) {
-    res.json([]);
-    return;
-  }
-
   const convs = await db.select().from(aiConversationsTable)
     .where(eq(aiConversationsTable.userId, user.id))
     .orderBy(desc(aiConversationsTable.updatedAt));
@@ -131,11 +121,6 @@ router.get("/ai/conversations", authMiddleware, async (req, res) => {
 
 router.post("/ai/conversations", authMiddleware, async (req, res) => {
   const user = getUser(req);
-
-  if (!user.isPremium) {
-    res.status(403).json({ error: "Premium required" });
-    return;
-  }
 
   const [conv] = await db.insert(aiConversationsTable).values({
     userId: user.id,

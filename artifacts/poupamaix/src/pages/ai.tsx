@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Link } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sparkles, Send, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sparkles, Send } from "lucide-react";
 import { useChatWithAI } from "@workspace/api-client-react";
 
 const SUGGESTIONS = [
@@ -30,46 +28,6 @@ export default function AI() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, chatMutation.isPending]);
-
-  if (!user?.isPremium) {
-    return (
-      <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-background/50">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-primary/20 to-primary/5 flex items-center justify-center mb-6 ring-1 ring-primary/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-          <Sparkles className="w-10 h-10 text-primary" />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight mb-4">Conheça o PoupaAI</h1>
-        <p className="text-muted-foreground max-w-md mb-8 text-lg">
-          Seu consultor financeiro pessoal que analisa seus gastos, identifica oportunidades de economia e responde perguntas financeiras complexas em segundos.
-        </p>
-
-        <Card className="max-w-md w-full bg-card border-border/50 shadow-2xl relative overflow-hidden mb-8">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background/90 z-10" />
-          <CardContent className="p-6 space-y-4 opacity-50">
-            <div className="flex gap-3">
-              <div className="w-8 h-8 rounded-full bg-secondary shrink-0" />
-              <div className="bg-secondary rounded-2xl rounded-tl-sm p-3 text-sm flex-1">
-                Quanto posso economizar se cortar 20% nos restaurantes?
-              </div>
-            </div>
-            <div className="flex gap-3 flex-row-reverse">
-              <div className="w-8 h-8 rounded-full bg-primary shrink-0" />
-              <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm p-3 text-sm flex-1">
-                Analisando seus últimos 3 meses, cortar 20% em restaurantes economizaria R$ 450/mês. Investindo isso, seriam R$ 5.400 em um ano!
-              </div>
-            </div>
-          </CardContent>
-          <div className="absolute inset-0 z-20 flex flex-col items-center justify-center backdrop-blur-[2px]">
-            <Lock className="w-8 h-8 mb-4 text-foreground" />
-            <Link href="/premium">
-              <Button size="lg" className="font-bold">
-                Desbloquear PoupaAI
-              </Button>
-            </Link>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   const handleSend = () => {
     if (!input.trim()) return;

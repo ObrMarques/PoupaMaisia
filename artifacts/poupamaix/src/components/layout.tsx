@@ -32,7 +32,6 @@ function useNavItems() {
     { href: "/wallets",      icon: Wallet,           label: t("nav.wallets") },
     { href: "/reports",      icon: PieChart,         label: t("nav.reports") },
     { href: "/ai",           icon: Sparkles,         label: t("nav.ai") },
-    { href: "/premium",      icon: Sparkles,         label: t("nav.premium") },
   ];
 }
 
