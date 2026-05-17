@@ -241,51 +241,10 @@ const googleIcon = (
   </svg>
 );
 
-function GoogleRedirectButton({ mode }: { mode: "signIn" | "signUp" }) {
-  const clerk = useClerk() as any;
-  const [loading, setLoading] = useState(false);
-
-  const handleClick = async () => {
-    setLoading(true);
-    try {
-      const redirectUrl = `${window.location.origin}${basePath}/sign-in/sso-callback`;
-      const redirectUrlComplete = `${window.location.origin}${basePath}/dashboard`;
-      const resource = mode === "signIn"
-        ? clerk?.client?.signIn
-        : clerk?.client?.signUp;
-      if (resource?.create) {
-        await resource.create({
-          strategy: "oauth_google",
-          redirectUrl,
-          actionCompleteRedirectUrl: redirectUrlComplete,
-        });
-      }
-    } catch {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] transition-colors text-sm font-medium text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
-    >
-      {loading ? (
-        <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
-      ) : googleIcon}
-      Continuar com Google
-    </button>
-  );
-}
-
-const authAppearanceNoSocial = {
+const authAppearanceFull = {
   ...clerkAppearance,
   elements: {
     ...clerkAppearance.elements,
-    socialButtonsRoot: "!hidden",
-    dividerRow: "!hidden",
     header: "!hidden",
     logoBox: "!hidden",
     headerTitle: "!hidden",
@@ -293,6 +252,10 @@ const authAppearanceNoSocial = {
     cardBox: "!shadow-none !rounded-none w-full max-w-full overflow-hidden !bg-transparent",
     card: "!shadow-none !border-0 !bg-transparent !rounded-none",
     footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    socialButtonsBlockButton:
+      "!w-full !flex !items-center !justify-center !gap-3 !px-4 !py-2.5 !rounded-lg !border !border-[#e0e0e0] !bg-white hover:!bg-[#f5f5f5] !transition-colors !text-sm !font-medium !text-[#111111] !shadow-none",
+    socialButtonsBlockButtonText: "!text-sm !font-medium !text-[#111111]",
+    socialButtonsProviderIcon: "!w-5 !h-5",
   },
 };
 
@@ -301,25 +264,17 @@ function SignInPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
       <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg">
-        <div className="px-8 pt-8 pb-2 space-y-1 text-center">
+        <div className="px-8 pt-8 pb-4 space-y-1 text-center">
           <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
           <h1 className="text-xl font-bold text-[#111111]">Bem-vindo de volta</h1>
           <p className="text-sm text-[#737373]">Entre com sua conta para continuar</p>
-        </div>
-        <div className="px-8 pb-2 pt-4">
-          <GoogleRedirectButton mode="signIn" />
-        </div>
-        <div className="px-8 pb-2 flex items-center gap-3">
-          <div className="flex-1 h-px bg-[#e0e0e0]" />
-          <span className="text-xs text-[#737373]">ou</span>
-          <div className="flex-1 h-px bg-[#e0e0e0]" />
         </div>
         <SignIn
           routing="path"
           path={`${basePath}/sign-in`}
           signUpUrl={`${basePath}/sign-up`}
           forceRedirectUrl={`${basePath}/dashboard`}
-          appearance={authAppearanceNoSocial}
+          appearance={authAppearanceFull}
         />
       </div>
     </div>
@@ -331,25 +286,17 @@ function SignUpPage() {
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
       <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg">
-        <div className="px-8 pt-8 pb-2 space-y-1 text-center">
+        <div className="px-8 pt-8 pb-4 space-y-1 text-center">
           <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
           <h1 className="text-xl font-bold text-[#111111]">Criar sua conta</h1>
           <p className="text-sm text-[#737373]">Comece sua jornada com o PoupaMais</p>
-        </div>
-        <div className="px-8 pb-2 pt-4">
-          <GoogleRedirectButton mode="signUp" />
-        </div>
-        <div className="px-8 pb-2 flex items-center gap-3">
-          <div className="flex-1 h-px bg-[#e0e0e0]" />
-          <span className="text-xs text-[#737373]">ou</span>
-          <div className="flex-1 h-px bg-[#e0e0e0]" />
         </div>
         <SignUp
           routing="path"
           path={`${basePath}/sign-up`}
           signInUrl={`${basePath}/sign-in`}
           forceRedirectUrl={`${basePath}/dashboard`}
-          appearance={authAppearanceNoSocial}
+          appearance={authAppearanceFull}
         />
       </div>
     </div>

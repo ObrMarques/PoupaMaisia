@@ -1,0 +1,168 @@
+# CORREÇÃO CRÍTICA — LOGIN COM GOOGLE FICA EM CARREGAMENTO INFINITO
+
+## PROBLEMA
+
+Ao clicar em:
+
+> “Continuar com Google”
+
+o aplicativo PoupaMais entra em carregamento infinito e o login nunca finaliza.
+
+---
+
+# OBJETIVO
+
+Corrigir completamente a autenticação Google para:
+
+* funcionar corretamente no mobile e desktop
+* finalizar login instantaneamente
+* redirecionar corretamente para o dashboard
+* evitar loading infinito
+
+---
+
+# POSSÍVEIS CAUSAS
+
+Verificar e corrigir:
+
+* Firebase Auth mal configurado
+* domínio do Replit não autorizado
+* ausência de tratamento de erro
+* problema no `signInWithPopup`
+* popup bloqueado no mobile
+* estado de autenticação não sendo atualizado
+* loading não sendo encerrado após sucesso/erro
+
+---
+
+# CORREÇÃO OBRIGATÓRIA
+
+## 1. FIREBASE AUTH
+
+Garantir:
+
+* Google Provider habilitado
+* Authentication ativado corretamente no Firebase
+* domínio do Replit adicionado em:
+
+  * Authorized Domains
+
+Adicionar:
+
+* `*.replit.app`
+* domínio atual do projeto
+
+---
+
+# 2. IMPLEMENTAÇÃO CORRETA
+
+Usar:
+
+```javascript id="0v8g3n"
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+```
+
+Criar provider:
+
+```javascript id="n2d4p1"
+const provider = new GoogleAuthProvider();
+```
+
+Login:
+
+```javascript id="m6f9q2"
+const result = await signInWithPopup(auth, provider);
+```
+
+---
+
+# 3. TRATAMENTO DE ERRO
+
+Adicionar try/catch obrigatório:
+
+```javascript id="d7s1w4"
+try {
+  setLoading(true);
+
+  const result = await signInWithPopup(auth, provider);
+
+  // sucesso
+} catch (error) {
+  console.error(error);
+} finally {
+  setLoading(false);
+}
+```
+
+---
+
+# 4. CORRIGIR LOADING INFINITO
+
+Garantir:
+
+* `setLoading(false)` sempre execute
+* inclusive em erro
+* inclusive se popup for fechado
+
+---
+
+# 5. MOBILE
+
+No mobile:
+
+Se `signInWithPopup()` falhar,
+usar automaticamente:
+
+```javascript id="v4t8x0"
+signInWithRedirect()
+```
+
+---
+
+# 6. REDIRECIONAMENTO
+
+Após login bem sucedido:
+
+* salvar usuário
+* atualizar estado global
+* redirecionar automaticamente para dashboard
+
+---
+
+# 7. ESTADO DE AUTENTICAÇÃO
+
+Implementar listener:
+
+```javascript id="f5r2k9"
+onAuthStateChanged(auth, (user) => {
+  ...
+});
+```
+
+Para evitar:
+
+* tela travada
+* login perdido
+* loading eterno
+
+---
+
+# 8. EXPERIÊNCIA FINAL
+
+Quero:
+
+* login Google instantâneo
+* sem travamentos
+* sem loading infinito
+* funcionamento no mobile e desktop
+* experiência tipo Nubank/fintech real
+
+---
+
+# IMPORTANTE FINAL
+
+* evitar múltiplos cliques no botão
+* desabilitar botão durante login
+* garantir persistência de sessão
+* manter sincronização correta com Firebase Auth
+* manter performance alta no PoupaMais
