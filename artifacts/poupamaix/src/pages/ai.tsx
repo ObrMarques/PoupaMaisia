@@ -191,6 +191,8 @@ export default function AIPage() {
 
   useEffect(() => {
     fetchConversations().then(setConversations);
+    // Abort any in-flight stream when the component unmounts
+    return () => { abortRef.current?.abort(); };
   }, []);
 
   const loadConversation = useCallback(async (convId: number) => {
@@ -229,31 +231,39 @@ export default function AIPage() {
     if (!msg || streaming) return;
 
     setInput("");
-    setMessages((prev) => [...prev, { role: "user", content: msg }]);
+    // Add user message and placeholder assistant message atomically
+    setMessages((prev) => [
+      ...prev,
+      { role: "user" as const, content: msg },
+      { role: "assistant" as const, content: "", streaming: true },
+    ]);
     setStreaming(true);
-    const streamingIdx = messages.length + 1;
-    setMessages((prev) => [...prev, { role: "assistant", content: "", streaming: true }]);
 
-    abortRef.current = new AbortController();
+    // Timeout: abort after 90 seconds of no completion
+    const controller = new AbortController();
+    abortRef.current = controller;
+    const timeoutId = setTimeout(() => controller.abort(), 90_000);
+
+    let newConvId: number | null = null;
 
     try {
       const res = await fetch(`${BASE_URL}/api/ai/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        signal: abortRef.current.signal,
+        signal: controller.signal,
         body: JSON.stringify({ message: msg, conversationId: activeConvId }),
       });
 
       if (!res.ok || !res.body) {
+        const errMsg = res.status === 401
+          ? "Sessão expirada. Por favor, faça login novamente."
+          : "Erro ao conectar com a PoupaAI. Tente novamente.";
         setMessages((prev) =>
           prev.map((m, i) =>
-            i === streamingIdx
-              ? { role: "assistant", content: "Erro ao conectar com a PoupaAI. Tente novamente." }
-              : m
+            i === prev.length - 1 ? { role: "assistant" as const, content: errMsg } : m
           )
         );
-        setStreaming(false);
         return;
       }
 
@@ -270,29 +280,32 @@ export default function AIPage() {
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
+          // SSE comment (heartbeat) — skip
+          if (line.startsWith(":")) continue;
           if (!line.startsWith("data: ")) continue;
           try {
-            const data = JSON.parse(line.slice(6));
+            const data = JSON.parse(line.slice(6)) as {
+              content?: string;
+              done?: boolean;
+              conversationId?: number;
+              error?: string;
+            };
             if (data.content) {
               fullContent += data.content;
               setMessages((prev) =>
                 prev.map((m, i) =>
                   i === prev.length - 1
-                    ? { role: "assistant", content: fullContent, streaming: true }
+                    ? { role: "assistant" as const, content: fullContent, streaming: true }
                     : m
                 )
               );
             } else if (data.done) {
-              if (data.conversationId && !activeConvId) {
-                setActiveConvId(data.conversationId);
-                const updated = await fetchConversations();
-                setConversations(updated);
-              }
+              if (data.conversationId) newConvId = data.conversationId;
             } else if (data.error) {
               fullContent = data.error;
             }
           } catch {
-            // ignore parse errors
+            // ignore malformed SSE lines
           }
         }
       }
@@ -300,24 +313,35 @@ export default function AIPage() {
       setMessages((prev) =>
         prev.map((m, i) =>
           i === prev.length - 1
-            ? { role: "assistant", content: fullContent || "Não consegui gerar uma resposta.", streaming: false }
+            ? { role: "assistant" as const, content: fullContent || "Não consegui gerar uma resposta.", streaming: false }
             : m
         )
       );
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        setMessages((prev) =>
-          prev.map((m, i) =>
-            i === prev.length - 1
-              ? { role: "assistant", content: "Erro de conexão. Verifique sua internet e tente novamente." }
-              : m
-          )
-        );
+
+      // Refresh conversation list after stream ends (not inside the loop)
+      if (newConvId && !activeConvId) {
+        setActiveConvId(newConvId);
+        fetchConversations().then(setConversations);
       }
+    } catch (err: unknown) {
+      const isAbort = err instanceof Error && err.name === "AbortError";
+      setMessages((prev) =>
+        prev.map((m, i) =>
+          i === prev.length - 1
+            ? {
+                role: "assistant" as const,
+                content: isAbort
+                  ? "Tempo esgotado. A PoupaAI demorou muito para responder. Tente novamente."
+                  : "Erro de conexão. Verifique sua internet e tente novamente.",
+              }
+            : m
+        )
+      );
     } finally {
+      clearTimeout(timeoutId);
       setStreaming(false);
     }
-  }, [streaming, messages.length, activeConvId]);
+  }, [streaming, activeConvId]);
 
   const isEmptyChat = messages.length === 0 && !loadingHistory;
 

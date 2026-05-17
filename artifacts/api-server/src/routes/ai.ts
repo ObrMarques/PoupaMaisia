@@ -199,9 +199,17 @@ router.post("/ai/stream", authMiddleware, async (req, res) => {
       content: m.content,
     }));
 
+  // Disable proxy buffering so chunks reach the client immediately
   res.setHeader("Content-Type", "text/event-stream");
-  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
+  res.setHeader("X-Accel-Buffering", "no");
+  res.setHeader("Transfer-Encoding", "chunked");
+  res.flushHeaders();
+
+  // Send a heartbeat comment so the connection is accepted immediately
+  res.write(": connected\n\n");
+  (res as any).flush?.();
 
   let fullResponse = "";
 
@@ -222,6 +230,7 @@ router.post("/ai/stream", authMiddleware, async (req, res) => {
       if (content) {
         fullResponse += content;
         res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        (res as any).flush?.();
       }
     }
   } catch (_err) {
@@ -230,19 +239,23 @@ router.post("/ai/stream", authMiddleware, async (req, res) => {
         error: "Erro ao processar sua mensagem. Tente novamente.",
       })}\n\n`
     );
+    (res as any).flush?.();
     res.end();
     return;
   }
 
-  await db.insert(aiMessagesTable).values({
-    conversationId: convId,
-    role: "assistant",
-    content: fullResponse,
-  });
+  if (fullResponse) {
+    await db.insert(aiMessagesTable).values({
+      conversationId: convId,
+      role: "assistant",
+      content: fullResponse,
+    });
+  }
 
   res.write(
     `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`
   );
+  (res as any).flush?.();
   res.end();
 });
 
