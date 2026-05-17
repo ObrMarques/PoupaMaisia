@@ -156,8 +156,8 @@ export default function SignInPage() {
     try {
       const { error: ssoErr } = await signIn.sso({
         strategy:            "oauth_google",
-        redirectUrl:         `${window.location.origin}${basePath}/dashboard`,
-        redirectCallbackUrl: `${window.location.origin}${basePath}/sso-callback`,
+        redirectUrl:         `${window.location.origin}${basePath}/sso-callback`,
+        redirectCallbackUrl: `${window.location.origin}${basePath}/dashboard`,
       });
       if (ssoErr) setError(getErrMsg(ssoErr, "Erro ao entrar com Google."));
     } catch (err) {
