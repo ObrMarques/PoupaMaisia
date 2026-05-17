@@ -17,18 +17,20 @@ type ClerkErrItem = { code?: string; longMessage?: string; message?: string };
 type ClerkErr = { errors?: ClerkErrItem[] };
 
 const CLERK_PT: Record<string, string> = {
-  form_identifier_exists:         "Esse e-mail já está em uso. Tente outro.",
-  form_identifier_not_found:      "Nenhuma conta encontrada com esse e-mail.",
-  form_password_incorrect:        "Senha incorreta.",
-  form_password_pwned:            "Essa senha foi comprometida em vazamentos. Use uma senha diferente.",
-  form_password_length_too_short: "A senha deve ter no mínimo 8 caracteres.",
-  form_param_format_invalid:      "Formato inválido.",
-  form_param_nil:                 "Campo obrigatório.",
-  strategy_for_user_invalid:      "Método de autenticação não permitido para essa conta.",
-  not_allowed_access:             "Acesso não permitido.",
-  session_exists:                 "Você já está autenticado.",
-  rate_limit_exceeded:            "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
-  captcha_invalid:                "Verificação de segurança falhou. Tente novamente.",
+  form_identifier_exists:                "Esse e-mail já está em uso. Tente outro.",
+  form_identifier_not_found:             "Nenhuma conta encontrada com esse e-mail.",
+  form_password_incorrect:               "Senha incorreta.",
+  form_password_pwned:                   "Essa senha foi comprometida em vazamentos. Use uma senha diferente.",
+  form_password_length_too_short:        "A senha deve ter no mínimo 8 caracteres.",
+  form_password_strength_insufficient:   "A senha não é forte o suficiente. Use letras, números e símbolos.",
+  form_password_not_strong_enough:       "A senha não é forte o suficiente. Use letras, números e símbolos.",
+  form_param_format_invalid:             "Formato inválido.",
+  form_param_nil:                        "Campo obrigatório.",
+  strategy_for_user_invalid:             "Método de autenticação não permitido para essa conta.",
+  not_allowed_access:                    "Acesso não permitido.",
+  session_exists:                        "Você já está autenticado.",
+  rate_limit_exceeded:                   "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+  captcha_invalid:                       "Verificação de segurança falhou. Tente novamente.",
 };
 
 const CLERK_MSG_PT: [string, string][] = [
@@ -36,6 +38,8 @@ const CLERK_MSG_PT: [string, string][] = [
   ["identifier not found",       "Nenhuma conta encontrada com esse e-mail."],
   ["incorrect password",         "Senha incorreta."],
   ["password is incorrect",      "Senha incorreta."],
+  ["not strong enough",          "A senha não é forte o suficiente. Use letras, números e símbolos."],
+  ["password is not strong",     "A senha não é forte o suficiente. Use letras, números e símbolos."],
   ["too many requests",          "Muitas tentativas. Aguarde alguns minutos."],
   ["password has been found in", "Essa senha foi comprometida em vazamentos. Use outra."],
   ["is already taken",           "Esse valor já está em uso."],
