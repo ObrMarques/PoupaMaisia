@@ -23,7 +23,6 @@ const Goals        = lazy(() => import("@/pages/goals"));
 const Wallets      = lazy(() => import("@/pages/wallets"));
 const Reports      = lazy(() => import("@/pages/reports"));
 const AI           = lazy(() => import("@/pages/ai"));
-const Premium      = lazy(() => import("@/pages/premium"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
 
@@ -319,7 +318,7 @@ function AppShell() {
               <Route path="/wallets"      component={() => <ProtectedRoute component={Wallets} />} />
               <Route path="/reports"      component={() => <ProtectedRoute component={Reports} />} />
               <Route path="/ai"           component={() => <ProtectedRoute component={AI} />} />
-              <Route path="/premium"      component={() => <ProtectedRoute component={Premium} />} />
+              <Route path="/premium"      component={() => { const [,s] = useLocation(); useEffect(() => s("/dashboard"), []); return null; }} />
               <Route path="/settings"     component={() => <ProtectedRoute component={Settings} />} />
               <Route path="/support"      component={() => <ProtectedRoute component={Support} />} />
               <Route                      component={HomeRedirect} />

@@ -57,7 +57,7 @@ export default function AI() {
         </div>
         <div>
           <h2 className="font-bold">PoupaAI</h2>
-          <p className="text-xs text-primary">Online • Consultor Premium</p>
+          <p className="text-xs text-primary">Online • Assistente Financeiro</p>
         </div>
       </div>
 
