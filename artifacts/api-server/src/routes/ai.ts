@@ -1,88 +1,180 @@
 import { Router } from "express";
-import { db, aiConversationsTable, aiMessagesTable, transactionsTable } from "@workspace/db";
-import { eq, and, desc } from "drizzle-orm";
+import {
+  db,
+  aiConversationsTable,
+  aiMessagesTable,
+  transactionsTable,
+  walletsTable,
+  goalsTable,
+  categoriesTable,
+} from "@workspace/db";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
-import { ChatWithAIBody } from "@workspace/api-zod";
+import { openai } from "@workspace/integrations-openai-ai-server";
 
 const router = Router();
 
-const FINANCIAL_TIPS: Record<string, string[]> = {
-  economia: [
-    "Para economizar mais, recomendo aplicar a regra 50/30/20: 50% para necessidades, 30% para desejos e 20% para poupança e investimentos.",
-    "Revise suas assinaturas mensais. Muitas pessoas pagam por serviços que raramente usam. Cancele o que não usa e pode economizar bastante!",
-    "Considere criar um fundo de emergência equivalente a 6 meses de despesas. Isso te dá segurança financeira real.",
-  ],
-  dividas: [
-    "Para sair das dívidas, use o método bola de neve: pague o mínimo em todas e aplique todo o extra na menor dívida. Ao quitar uma, passe o valor para a próxima.",
-    "Priorize sempre as dívidas com juros mais altos primeiro (método avalanche). Cartão de crédito e cheque especial costumam ter as taxas mais abusivas.",
-    "Negocie diretamente com os credores — muitas empresas oferecem descontos de 30-60% para pagamento à vista de dívidas antigas.",
-  ],
-  investimento: [
-    "Para iniciantes, o Tesouro Selic é uma ótima opção: seguro, líquido e com rendimento acima da poupança.",
-    "Diversifique seus investimentos entre renda fixa e variável conforme seu perfil de risco. Não coloque todos os ovos em uma cesta.",
-    "Invista regularmente, mesmo que seja pouco. O efeito dos juros compostos ao longo do tempo é poderoso.",
-  ],
-  salario: [
-    "A regra de ouro é: pague-se primeiro. Assim que o salário chegar, transfira automaticamente o valor da poupança antes de gastar.",
-    "Crie um orçamento mensal detalhado. Saiba exatamente quanto você ganha, quanto gasta e com o quê.",
-    "Considere ter pelo menos 3 contas: uma para gastos fixos, uma para gastos variáveis e uma para poupança.",
-  ],
-  default: [
-    "Analisei seus dados financeiros. Minha principal recomendação é manter um registro fiel de todas as despesas — conhecer seus gastos é o primeiro passo para controlá-los.",
-    "Finanças saudáveis se constroem com hábitos consistentes. Pequenas ações diárias têm grande impacto no longo prazo.",
-    "Você está no caminho certo ao usar o PoupaMais para monitorar suas finanças. A consciência financeira é o início de uma vida financeira mais saudável.",
-  ],
-};
+async function buildFinancialContext(userId: number): Promise<string> {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-function generateAIResponse(message: string, _txCount: number): { response: string; suggestions: string[] } {
-  const lower = message.toLowerCase();
-  let tips: string[];
-  let suggestions: string[];
+  const [transactions, wallets, goals, categories] = await Promise.all([
+    db
+      .select()
+      .from(transactionsTable)
+      .where(eq(transactionsTable.userId, userId))
+      .orderBy(desc(transactionsTable.date))
+      .limit(50),
+    db.select().from(walletsTable).where(eq(walletsTable.userId, userId)),
+    db.select().from(goalsTable).where(eq(goalsTable.userId, userId)),
+    db
+      .select()
+      .from(categoriesTable)
+      .where(
+        sql`${categoriesTable.userId} IS NULL OR ${categoriesTable.userId} = ${userId}`
+      ),
+  ]);
 
-  if (lower.includes("economizar") || lower.includes("poupar") || lower.includes("economia")) {
-    tips = FINANCIAL_TIPS.economia;
-    suggestions = ["Como criar um fundo de emergência?", "Qual o melhor app para controlar gastos?", "Como investir com pouco dinheiro?"];
-  } else if (lower.includes("dívida") || lower.includes("divida") || lower.includes("débito") || lower.includes("sair")) {
-    tips = FINANCIAL_TIPS.dividas;
-    suggestions = ["Como negociar dívidas?", "Qual dívida pagar primeiro?", "Como evitar novas dívidas?"];
-  } else if (lower.includes("investir") || lower.includes("investimento") || lower.includes("aplicar")) {
-    tips = FINANCIAL_TIPS.investimento;
-    suggestions = ["O que é Tesouro Selic?", "Como diversificar investimentos?", "Qual o perfil de risco ideal?"];
-  } else if (lower.includes("salário") || lower.includes("salario") || lower.includes("organizar") || lower.includes("orçamento")) {
-    tips = FINANCIAL_TIPS.salario;
-    suggestions = ["Como fazer um orçamento mensal?", "Quanto guardar por mês?", "Como cortar gastos desnecessários?"];
-  } else {
-    tips = FINANCIAL_TIPS.default;
-    suggestions = ["Como economizar mais?", "Como sair das dívidas?", "Como organizar meu salário?"];
-  }
+  const catMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
 
-  const response = tips[Math.floor(Math.random() * tips.length)];
-  return { response, suggestions };
+  const monthTx = transactions.filter((t) => new Date(t.date) >= firstOfMonth);
+  const monthIncome = monthTx
+    .filter((t) => t.type === "income")
+    .reduce((s, t) => s + parseFloat(t.amount), 0);
+  const monthExpense = monthTx
+    .filter((t) => t.type === "expense")
+    .reduce((s, t) => s + parseFloat(t.amount), 0);
+
+  const totalBalance = wallets.reduce(
+    (s, w) => s + parseFloat(w.initialBalance ?? "0"),
+    0
+  );
+
+  const recentTx = transactions.slice(0, 15).map((t) => ({
+    tipo: t.type === "income" ? "RECEITA" : "DESPESA",
+    valor: parseFloat(t.amount).toFixed(2),
+    categoria: catMap[t.categoryId ?? 0] ?? "Sem categoria",
+    data: new Date(t.date).toLocaleDateString("pt-BR"),
+    descricao: t.description ?? "",
+  }));
+
+  const goalsInfo = goals.map((g) => ({
+    nome: g.name,
+    meta: parseFloat(g.targetAmount).toFixed(2),
+    atual: parseFloat(g.currentAmount).toFixed(2),
+    progresso: Math.round(
+      (parseFloat(g.currentAmount) / parseFloat(g.targetAmount)) * 100
+    ),
+    prazo: g.deadline
+      ? new Date(g.deadline).toLocaleDateString("pt-BR")
+      : "Sem prazo",
+  }));
+
+  const walletsInfo = wallets.map((w) => ({
+    nome: w.name,
+    saldo: parseFloat(w.initialBalance ?? "0").toFixed(2),
+  }));
+
+  const expenseByCategory: Record<string, number> = {};
+  monthTx
+    .filter((t) => t.type === "expense")
+    .forEach((t) => {
+      const cat = catMap[t.categoryId ?? 0] ?? "Sem categoria";
+      expenseByCategory[cat] = (expenseByCategory[cat] ?? 0) + parseFloat(t.amount);
+    });
+
+  const topCategories = Object.entries(expenseByCategory)
+    .sort(([, a], [, b]) => b - a)
+    .slice(0, 5);
+
+  return `
+=== DADOS FINANCEIROS DO USUÁRIO (${new Date().toLocaleDateString("pt-BR")}) ===
+
+RESUMO DO MÊS ATUAL (${now.toLocaleString("pt-BR", { month: "long", year: "numeric" })}):
+- Receitas: R$ ${monthIncome.toFixed(2)}
+- Despesas: R$ ${monthExpense.toFixed(2)}
+- Saldo do mês: R$ ${(monthIncome - monthExpense).toFixed(2)}
+- Total de transações no mês: ${monthTx.length}
+
+MAIORES CATEGORIAS DE GASTO NO MÊS:
+${topCategories.length ? topCategories.map(([cat, val]) => `- ${cat}: R$ ${val.toFixed(2)}`).join("\n") : "- Sem dados de categorias"}
+
+CARTEIRAS E SALDOS:
+${walletsInfo.length ? walletsInfo.map((w) => `- ${w.nome}: R$ ${w.saldo}`).join("\n") : "- Nenhuma carteira cadastrada"}
+Patrimônio total: R$ ${totalBalance.toFixed(2)}
+
+METAS FINANCEIRAS:
+${goalsInfo.length ? goalsInfo.map((g) => `- ${g.nome}: R$ ${g.atual}/${g.meta} (${g.progresso}%) — Prazo: ${g.prazo}`).join("\n") : "- Nenhuma meta cadastrada"}
+
+ÚLTIMAS TRANSAÇÕES:
+${recentTx.length ? recentTx.map((t) => `- ${t.data} | ${t.tipo} | R$ ${t.valor} | ${t.categoria}${t.descricao ? ` — ${t.descricao}` : ""}`).join("\n") : "- Nenhuma transação registrada"}
+=====================================`;
 }
 
-router.post("/ai/chat", authMiddleware, async (req, res) => {
-  const user = getUser(req);
+const SYSTEM_PROMPT = `Você é o PoupaAI, assistente financeiro pessoal inteligente e premium do aplicativo PoupaMais. Você é especialista em finanças pessoais brasileiras.
 
-  const parsed = ChatWithAIBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid input" });
+DIRETRIZES:
+- Responda em português brasileiro, de forma clara, objetiva e personalizada
+- Analise os dados financeiros reais do usuário antes de responder
+- Ofereça insights acionáveis com base nos dados reais
+- Use tom profissional mas acolhedor — como um consultor financeiro de confiança
+- Valores sempre em Reais (R$), use referências brasileiras (Tesouro Direto, CDI, IPCA, PIX, etc.)
+- Formate bem as respostas com listas e tópicos quando adequado
+- Se os dados forem insuficientes, oriente como começar a registrar
+- Não repita os dados brutos — interprete-os e gere insights
+
+CAPACIDADES:
+- Analisar padrões de gastos e receitas
+- Identificar oportunidades de economia
+- Avaliar progresso de metas financeiras
+- Detectar alertas financeiros (gastos excessivos, metas atrasadas, saldo negativo)
+- Gerar resumo mensal completo
+- Recomendar estratégias de investimento básicas
+- Orientar sobre organização financeira`;
+
+router.post("/ai/stream", authMiddleware, async (req, res) => {
+  const user = getUser(req);
+  const { message, conversationId } = req.body as {
+    message: string;
+    conversationId?: number;
+  };
+
+  if (!message?.trim()) {
+    res.status(400).json({ error: "Mensagem não pode ser vazia" });
     return;
   }
-
-  const { message, conversationId } = parsed.data;
 
   let convId = conversationId;
 
   if (!convId) {
-    const [conv] = await db.insert(aiConversationsTable).values({
-      userId: user.id,
-      title: message.slice(0, 50),
-      updatedAt: new Date(),
-    }).returning();
+    const [conv] = await db
+      .insert(aiConversationsTable)
+      .values({
+        userId: user.id,
+        title: message.slice(0, 60),
+        updatedAt: new Date(),
+      })
+      .returning();
     convId = conv.id;
   } else {
-    await db.update(aiConversationsTable).set({ updatedAt: new Date() })
-      .where(and(eq(aiConversationsTable.id, convId), eq(aiConversationsTable.userId, user.id)));
+    const conv = await db
+      .select()
+      .from(aiConversationsTable)
+      .where(
+        and(
+          eq(aiConversationsTable.id, convId),
+          eq(aiConversationsTable.userId, user.id)
+        )
+      )
+      .limit(1);
+    if (!conv.length) {
+      res.status(404).json({ error: "Conversa não encontrada" });
+      return;
+    }
+    await db
+      .update(aiConversationsTable)
+      .set({ updatedAt: new Date() })
+      .where(eq(aiConversationsTable.id, convId));
   }
 
   await db.insert(aiMessagesTable).values({
@@ -91,42 +183,100 @@ router.post("/ai/chat", authMiddleware, async (req, res) => {
     content: message,
   });
 
-  const txCount = (await db.select().from(transactionsTable).where(eq(transactionsTable.userId, user.id))).length;
-  const { response, suggestions } = generateAIResponse(message, txCount);
+  const [financialContext, allHistory] = await Promise.all([
+    buildFinancialContext(user.id),
+    db
+      .select()
+      .from(aiMessagesTable)
+      .where(eq(aiMessagesTable.conversationId, convId))
+      .orderBy(aiMessagesTable.createdAt),
+  ]);
+
+  const historyMessages = allHistory
+    .slice(0, -1)
+    .map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+
+  let fullResponse = "";
+
+  try {
+    const stream = await openai.chat.completions.create({
+      model: "gpt-5.4",
+      max_completion_tokens: 8192,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT + "\n\n" + financialContext },
+        ...historyMessages,
+        { role: "user", content: message },
+      ],
+      stream: true,
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk.choices[0]?.delta?.content;
+      if (content) {
+        fullResponse += content;
+        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      }
+    }
+  } catch (_err) {
+    res.write(
+      `data: ${JSON.stringify({
+        error: "Erro ao processar sua mensagem. Tente novamente.",
+      })}\n\n`
+    );
+    res.end();
+    return;
+  }
 
   await db.insert(aiMessagesTable).values({
     conversationId: convId,
     role: "assistant",
-    content: response,
+    content: fullResponse,
   });
 
-  res.json({ message: response, conversationId: convId, suggestions });
+  res.write(
+    `data: ${JSON.stringify({ done: true, conversationId: convId })}\n\n`
+  );
+  res.end();
 });
 
 router.get("/ai/conversations", authMiddleware, async (req, res) => {
   const user = getUser(req);
 
-  const convs = await db.select().from(aiConversationsTable)
+  const convs = await db
+    .select()
+    .from(aiConversationsTable)
     .where(eq(aiConversationsTable.userId, user.id))
     .orderBy(desc(aiConversationsTable.updatedAt));
 
-  res.json(convs.map(c => ({
-    id: c.id,
-    userId: c.userId,
-    title: c.title,
-    createdAt: c.createdAt.toISOString(),
-    updatedAt: c.updatedAt.toISOString(),
-  })));
+  res.json(
+    convs.map((c) => ({
+      id: c.id,
+      userId: c.userId,
+      title: c.title,
+      createdAt: c.createdAt.toISOString(),
+      updatedAt: c.updatedAt.toISOString(),
+    }))
+  );
 });
 
 router.post("/ai/conversations", authMiddleware, async (req, res) => {
   const user = getUser(req);
 
-  const [conv] = await db.insert(aiConversationsTable).values({
-    userId: user.id,
-    title: "Nova conversa",
-    updatedAt: new Date(),
-  }).returning();
+  const [conv] = await db
+    .insert(aiConversationsTable)
+    .values({
+      userId: user.id,
+      title: "Nova conversa",
+      updatedAt: new Date(),
+    })
+    .returning();
 
   res.status(201).json({
     id: conv.id,
@@ -137,28 +287,75 @@ router.post("/ai/conversations", authMiddleware, async (req, res) => {
   });
 });
 
-router.get("/ai/conversations/:id/messages", authMiddleware, async (req, res) => {
+router.delete("/ai/conversations/:id", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const id = parseInt(req.params["id"] as string);
 
-  const conv = await db.select().from(aiConversationsTable)
-    .where(and(eq(aiConversationsTable.id, id), eq(aiConversationsTable.userId, user.id))).limit(1);
+  const conv = await db
+    .select()
+    .from(aiConversationsTable)
+    .where(
+      and(
+        eq(aiConversationsTable.id, id),
+        eq(aiConversationsTable.userId, user.id)
+      )
+    )
+    .limit(1);
+
   if (!conv.length) {
-    res.status(404).json({ error: "Conversation not found" });
+    res.status(404).json({ error: "Conversa não encontrada" });
     return;
   }
 
-  const messages = await db.select().from(aiMessagesTable)
-    .where(eq(aiMessagesTable.conversationId, id))
-    .orderBy(aiMessagesTable.createdAt);
+  await db
+    .delete(aiMessagesTable)
+    .where(eq(aiMessagesTable.conversationId, id));
+  await db
+    .delete(aiConversationsTable)
+    .where(eq(aiConversationsTable.id, id));
 
-  res.json(messages.map(m => ({
-    id: m.id,
-    conversationId: m.conversationId,
-    role: m.role,
-    content: m.content,
-    createdAt: m.createdAt.toISOString(),
-  })));
+  res.status(204).end();
 });
+
+router.get(
+  "/ai/conversations/:id/messages",
+  authMiddleware,
+  async (req, res) => {
+    const user = getUser(req);
+    const id = parseInt(req.params["id"] as string);
+
+    const conv = await db
+      .select()
+      .from(aiConversationsTable)
+      .where(
+        and(
+          eq(aiConversationsTable.id, id),
+          eq(aiConversationsTable.userId, user.id)
+        )
+      )
+      .limit(1);
+
+    if (!conv.length) {
+      res.status(404).json({ error: "Conversa não encontrada" });
+      return;
+    }
+
+    const messages = await db
+      .select()
+      .from(aiMessagesTable)
+      .where(eq(aiMessagesTable.conversationId, id))
+      .orderBy(aiMessagesTable.createdAt);
+
+    res.json(
+      messages.map((m) => ({
+        id: m.id,
+        conversationId: m.conversationId,
+        role: m.role,
+        content: m.content,
+        createdAt: m.createdAt.toISOString(),
+      }))
+    );
+  }
+);
 
 export default router;
