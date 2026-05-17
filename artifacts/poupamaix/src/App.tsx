@@ -244,7 +244,7 @@ function AppShell() {
     <ThemeProvider>
       <I18nProvider>
         <AuthProvider>
-          <div className="min-h-[100dvh] bg-background text-foreground">
+          <div className="min-h-[100dvh] bg-background text-foreground" translate="no">
             <DashboardPrefetcher />
             <Switch>
               <Route path="/"             component={HomeRedirect} />
