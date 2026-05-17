@@ -2,7 +2,6 @@ import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useClerk } from "@clerk/react";
-import { useSignIn, useSignUp } from "@clerk/react/legacy";
 import { ptBR } from "@clerk/localizations";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
@@ -243,8 +242,7 @@ const googleIcon = (
 );
 
 function GoogleRedirectButton({ mode }: { mode: "signIn" | "signUp" }) {
-  const { signIn, isLoaded: signInLoaded } = useSignIn();
-  const { signUp, isLoaded: signUpLoaded } = useSignUp();
+  const clerk = useClerk() as any;
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
@@ -252,14 +250,11 @@ function GoogleRedirectButton({ mode }: { mode: "signIn" | "signUp" }) {
     try {
       const redirectUrl = `${window.location.origin}${basePath}/sign-in/sso-callback`;
       const redirectUrlComplete = `${window.location.origin}${basePath}/dashboard`;
-      if (mode === "signIn" && signIn) {
-        await (signIn as any).create({
-          strategy: "oauth_google",
-          redirectUrl,
-          actionCompleteRedirectUrl: redirectUrlComplete,
-        });
-      } else if (mode === "signUp" && signUp) {
-        await (signUp as any).create({
+      const resource = mode === "signIn"
+        ? clerk?.client?.signIn
+        : clerk?.client?.signUp;
+      if (resource?.create) {
+        await resource.create({
           strategy: "oauth_google",
           redirectUrl,
           actionCompleteRedirectUrl: redirectUrlComplete,
@@ -270,13 +265,11 @@ function GoogleRedirectButton({ mode }: { mode: "signIn" | "signUp" }) {
     }
   };
 
-  const isLoaded = mode === "signIn" ? signInLoaded : signUpLoaded;
-
   return (
     <button
       type="button"
       onClick={handleClick}
-      disabled={!isLoaded || loading}
+      disabled={loading}
       className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] transition-colors text-sm font-medium text-[#111111] disabled:opacity-60 disabled:cursor-not-allowed"
     >
       {loading ? (
