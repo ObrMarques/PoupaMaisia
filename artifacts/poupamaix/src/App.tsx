@@ -29,11 +29,11 @@ const Support      = lazy(() => import("@/pages/support"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime:            0,
-      gcTime:               1000 * 60 * 5,
+      staleTime:            1000 * 60 * 5,
+      gcTime:               1000 * 60 * 10,
       retry:                1,
-      refetchInterval:      15 * 1000,
-      refetchOnWindowFocus: true,
+      refetchInterval:      false,
+      refetchOnWindowFocus: false,
       refetchOnReconnect:   true,
     },
   },
