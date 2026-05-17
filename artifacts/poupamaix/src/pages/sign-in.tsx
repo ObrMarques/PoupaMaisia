@@ -39,6 +39,9 @@ const CLERK_MSG_PT: [string, string][] = [
   ["too many requests",          "Muitas tentativas. Aguarde alguns minutos."],
   ["password has been found in", "Essa senha foi comprometida em vazamentos. Use outra."],
   ["is already taken",           "Esse valor já está em uso."],
+  ["is not a valid parameter",   "Erro de configuração. Tente novamente ou entre com Google."],
+  ["not a valid parameter",      "Erro de configuração. Tente novamente ou entre com Google."],
+  ["is not allowed",             "Campo não permitido para este tipo de conta."],
 ];
 
 function translateClerkError(item: ClerkErrItem): string {

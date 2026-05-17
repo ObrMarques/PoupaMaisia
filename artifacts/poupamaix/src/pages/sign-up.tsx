@@ -48,6 +48,9 @@ const CLERK_MSG_PT: [string, string][] = [
   ["too many requests",                "Muitas tentativas. Aguarde alguns minutos."],
   ["invalid verification code",        "Código de verificação inválido."],
   ["verification code expired",        "Código expirado. Solicite um novo."],
+  ["is not a valid parameter",         "Erro de configuração. Tente novamente ou entre com Google."],
+  ["not a valid parameter",            "Erro de configuração. Tente novamente ou entre com Google."],
+  ["is not allowed",                   "Campo não permitido para este tipo de conta."],
 ];
 
 function translateClerkError(item: ClerkErrItem): string {
@@ -85,6 +88,15 @@ export default function SignUpPage() {
 
   const busy = loading || fetchStatus === "fetching";
 
+  function isParamError(err: unknown): boolean {
+    const e = err as ClerkErr;
+    const item = e?.errors?.[0];
+    if (!item) return false;
+    if (item.code === "form_param_unknown" || item.code === "form_param_not_allowed") return true;
+    const raw = (item.longMessage ?? item.message ?? "").toLowerCase();
+    return raw.includes("not a valid parameter") || raw.includes("is not allowed");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!signUp) return;
@@ -92,13 +104,22 @@ export default function SignUpPage() {
     setError("");
     try {
       const parts = name.trim().split(/\s+/);
-      const { error: createErr } = await signUp.create({
+
+      let createResult = await signUp.create({
         firstName:    parts[0],
         lastName:     parts.length > 1 ? parts.slice(1).join(" ") : undefined,
         emailAddress: email,
         password,
       });
-      if (createErr) { setError(getErrMsg(createErr, "Erro ao criar conta.")); return; }
+
+      if (createResult.error && isParamError(createResult.error)) {
+        createResult = await signUp.create({ emailAddress: email, password });
+      }
+
+      if (createResult.error) {
+        setError(getErrMsg(createResult.error, "Erro ao criar conta."));
+        return;
+      }
 
       const { error: sendErr } = await signUp.verifications.sendEmailCode();
       if (sendErr) { setError(getErrMsg(sendErr, "Erro ao enviar código.")); return; }

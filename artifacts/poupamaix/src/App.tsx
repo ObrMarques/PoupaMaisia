@@ -248,7 +248,7 @@ function AppShell() {
             <DashboardPrefetcher />
             <Switch>
               <Route path="/"             component={HomeRedirect} />
-              <Route path="/sign-in/*?"   component={SignInPage} />
+              <Route path="/sign-in/*?"   component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />
               <Route path="/sign-up"      component={() => <Suspense fallback={<SpinnerLoader />}><SignUpPage /></Suspense>} />
               <Route path="/sso-callback" component={() => <AuthenticateWithRedirectCallback />} />
               {/* legacy routes redirect to sign pages */}
