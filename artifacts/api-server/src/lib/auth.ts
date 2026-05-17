@@ -25,7 +25,17 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     // clerkClient.users.getUser() works for both email/password and Google OAuth.
     const clerkUser = await clerkClient.users.getUser(clerkUserId);
 
-    const email = clerkUser.emailAddresses[0]?.emailAddress ?? "";
+    // Resolve primary email — fail fast if absent (prevents empty-string INSERT)
+    const primaryId = clerkUser.primaryEmailAddressId;
+    const emailObj = clerkUser.emailAddresses.find((e) => e.id === primaryId)
+      ?? clerkUser.emailAddresses[0];
+    const email = emailObj?.emailAddress;
+
+    if (!email) {
+      res.status(422).json({ error: "Conta sem endereço de e-mail associado." });
+      return;
+    }
+
     const firstName = clerkUser.firstName ?? "";
     const lastName = clerkUser.lastName ?? "";
     const fullName = `${firstName} ${lastName}`.trim();
