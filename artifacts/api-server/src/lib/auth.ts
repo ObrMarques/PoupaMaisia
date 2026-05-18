@@ -37,15 +37,25 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     const name = rawName.trim() || email.split("@")[0] || "Usuário";
     const avatarUrl = supabaseUser.user_metadata?.avatar_url ?? null;
 
-    const inserted = await db.insert(usersTable).values({
-      supabaseId,
-      name,
-      email,
-      avatarUrl,
-      currency: "BRL",
-      language: "pt-BR",
-    }).returning();
-    users = inserted;
+    // Use ON CONFLICT DO NOTHING to handle the race condition where multiple
+    // simultaneous requests all attempt to provision the same user.
+    const inserted = await db
+      .insert(usersTable)
+      .values({ supabaseId, name, email, avatarUrl, currency: "BRL", language: "pt-BR" })
+      .onConflictDoNothing()
+      .returning();
+
+    if (inserted.length) {
+      users = inserted;
+    } else {
+      // Another concurrent request already inserted the row — fetch it.
+      users = await db.select().from(usersTable).where(eq(usersTable.supabaseId, supabaseId)).limit(1);
+    }
+  }
+
+  if (!users.length) {
+    res.status(500).json({ error: "Falha ao provisionar usuário." });
+    return;
   }
 
   (req as any).user = users[0];
