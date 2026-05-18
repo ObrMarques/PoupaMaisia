@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import { supabaseAdmin } from "./supabase";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { sendWelcomeEmail } from "./email";
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
@@ -47,6 +48,8 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     if (inserted.length) {
       users = inserted;
+      // Fire-and-forget welcome email — don't block the request
+      sendWelcomeEmail(email, name).catch(() => {});
     } else {
       // Another concurrent request already inserted the row — fetch it.
       users = await db.select().from(usersTable).where(eq(usersTable.supabaseId, supabaseId)).limit(1);
