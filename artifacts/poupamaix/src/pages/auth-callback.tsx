@@ -2,19 +2,27 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 
-const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-
 export default function AuthCallbackPage() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setLocation("/reset-password");
+      } else if (session) {
         setLocation("/dashboard");
       } else {
         setLocation("/sign-in");
       }
     });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setLocation("/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [setLocation]);
 
   return (

@@ -137,12 +137,19 @@ export default function SignInPage() {
           Continuar com Google
         </button>
 
-        <p className="text-center text-sm text-[#737373]">
-          Não tem conta?{" "}
-          <a href={`${basePath}/sign-up`} className="text-[#111111] font-semibold hover:underline">
-            Criar conta
-          </a>
-        </p>
+        <div className="space-y-2 text-center">
+          <p className="text-sm text-[#737373]">
+            <a href={`${basePath}/forgot-password`} className="text-[#111111] font-semibold hover:underline">
+              Esqueci minha senha
+            </a>
+          </p>
+          <p className="text-sm text-[#737373]">
+            Não tem conta?{" "}
+            <a href={`${basePath}/sign-up`} className="text-[#111111] font-semibold hover:underline">
+              Criar conta
+            </a>
+          </p>
+        </div>
 
       </div>
     </div>

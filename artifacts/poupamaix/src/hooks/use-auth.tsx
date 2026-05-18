@@ -41,9 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const prevSession = session;
-      setSession(prevSession);
-      if (!prevSession) {
+      setSession(session);
+      if (!session) {
         qc.clear();
       }
     });
@@ -61,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
-  const updateUser = (_user: AppUser) => {
-    // no-op: user data comes from server via react-query invalidation
+  const updateUser = (updatedUser: AppUser) => {
+    qc.setQueryData(getGetMeQueryKey(), updatedUser);
   };
 
   const logout = async () => {

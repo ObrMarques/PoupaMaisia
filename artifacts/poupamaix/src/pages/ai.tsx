@@ -2,8 +2,16 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
+
+async function getAuthHeader(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return session?.access_token
+    ? { Authorization: `Bearer ${session.access_token}` }
+    : {};
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -157,13 +165,15 @@ function ConversationItem({
 }
 
 async function fetchConversations(): Promise<Conversation[]> {
-  const res = await fetch(`${BASE_URL}/api/ai/conversations`, { credentials: "include" });
+  const authHeader = await getAuthHeader();
+  const res = await fetch(`${BASE_URL}/api/ai/conversations`, { headers: authHeader });
   if (!res.ok) return [];
   return res.json();
 }
 
 async function fetchMessages(convId: number) {
-  const res = await fetch(`${BASE_URL}/api/ai/conversations/${convId}/messages`, { credentials: "include" });
+  const authHeader = await getAuthHeader();
+  const res = await fetch(`${BASE_URL}/api/ai/conversations/${convId}/messages`, { headers: authHeader });
   if (!res.ok) return [];
   return res.json() as Promise<{ role: string; content: string; id: number }[]>;
 }
@@ -218,9 +228,10 @@ export default function AIPage() {
 
   const deleteConversation = useCallback(async (e: React.MouseEvent, id: number) => {
     e.stopPropagation();
+    const authHeader = await getAuthHeader();
     await fetch(`${BASE_URL}/api/ai/conversations/${id}`, {
       method: "DELETE",
-      credentials: "include",
+      headers: authHeader,
     });
     setConversations((prev) => prev.filter((c) => c.id !== id));
     if (activeConvId === id) startNew();
@@ -247,10 +258,10 @@ export default function AIPage() {
     let newConvId: number | null = null;
 
     try {
+      const authHeader = await getAuthHeader();
       const res = await fetch(`${BASE_URL}/api/ai/stream`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", ...authHeader },
         signal: controller.signal,
         body: JSON.stringify({ message: msg, conversationId: activeConvId }),
       });

@@ -23,7 +23,9 @@ const SignUpPage   = lazy(() => import("@/pages/sign-up"));
 const SignInPage   = lazy(() => import("@/pages/sign-in"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
-const AuthCallback = lazy(() => import("@/pages/auth-callback"));
+const AuthCallback    = lazy(() => import("@/pages/auth-callback"));
+const ForgotPassword  = lazy(() => import("@/pages/forgot-password"));
+const ResetPassword   = lazy(() => import("@/pages/reset-password"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,7 +117,9 @@ function AppShell() {
               <Route path="/"             component={HomeRedirect} />
               <Route path="/sign-in"      component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />
               <Route path="/sign-up"      component={() => <Suspense fallback={<SpinnerLoader />}><SignUpPage /></Suspense>} />
-              <Route path="/auth/callback" component={() => <Suspense fallback={<SpinnerLoader />}><AuthCallback /></Suspense>} />
+              <Route path="/auth/callback"    component={() => <Suspense fallback={<SpinnerLoader />}><AuthCallback /></Suspense>} />
+              <Route path="/forgot-password" component={() => <Suspense fallback={<SpinnerLoader />}><ForgotPassword /></Suspense>} />
+              <Route path="/reset-password"  component={() => <Suspense fallback={<SpinnerLoader />}><ResetPassword /></Suspense>} />
               {/* legacy redirects */}
               <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
               <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
