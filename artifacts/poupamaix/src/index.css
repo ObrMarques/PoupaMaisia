@@ -1,7 +1,6 @@
-@layer theme, base, clerk, components, utilities;
+@layer theme, base, components, utilities;
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@clerk/themes/shadcn.css";
 @plugin "@tailwindcss/typography";
 
 @custom-variant dark (&:where(.dark, .dark *));
@@ -136,13 +135,3 @@
   }
 }
 
-@layer clerk {
-  [data-localization-key="badge__dev"] {
-    display: none !important;
-  }
-}
-
-/* Hide Clerk development mode banner */
-div:has(> a[href*="clerk.com/docs/deployments"]) {
-  display: none !important;
-}
