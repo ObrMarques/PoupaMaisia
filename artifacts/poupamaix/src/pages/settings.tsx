@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
-import { useUpdateProfile } from "@workspace/api-client-react";
+import { useUpdateProfile, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ export default function Settings() {
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t, languages } = useI18n();
   const updateMutation = useUpdateProfile();
+  const qc = useQueryClient();
 
   const [name,     setName]     = useState(user?.name  || "");
   const [currency, setCurrency] = useState(user?.currency || "BRL");
@@ -51,14 +53,25 @@ export default function Settings() {
   const [resetState, setResetState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [profileSaved, setProfileSaved] = useState(false);
 
+  // Sync local state when user data arrives asynchronously (avoids empty initial value)
+  useEffect(() => {
+    if (user?.name) setName(user.name);
+    if (user?.currency) setCurrency(user.currency);
+  }, [user?.name, user?.currency]);
+
   const handleSaveProfile = () => {
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
     updateMutation.mutate(
-      { data: { name } },
+      { data: { name: trimmedName } },
       {
         onSuccess: (updated) => {
+          // Update local cache immediately so every component sees the new name
           updateUser(updated);
+          // Invalidate so the next background fetch pulls fresh data from DB
+          qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           setProfileSaved(true);
-          setTimeout(() => setProfileSaved(false), 3000);
+          setTimeout(() => setProfileSaved(false), 3500);
         },
         onError: () => {},
       }
@@ -69,8 +82,11 @@ export default function Settings() {
     updateMutation.mutate(
       { data: { currency, language } },
       {
-        onSuccess: (updated) => { updateUser(updated); },
-        onError:   () => {},
+        onSuccess: (updated) => {
+          updateUser(updated);
+          qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        },
+        onError: () => {},
       }
     );
   };
@@ -87,7 +103,10 @@ export default function Settings() {
       updateMutation.mutate(
         { data: { avatarUrl: base64 } },
         {
-          onSuccess:  (updated) => { updateUser(updated); },
+          onSuccess:  (updated) => {
+            updateUser(updated);
+            qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+          },
           onError:    () => {},
           onSettled:  () => setIsUploadingPhoto(false),
         }
