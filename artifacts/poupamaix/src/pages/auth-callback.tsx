@@ -6,6 +6,23 @@ export default function AuthCallbackPage() {
   const [, setLocation] = useLocation();
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code   = params.get("code");
+    const next   = params.get("next") ?? "/dashboard";
+
+    if (code) {
+      // PKCE flow: exchange the authorization code for a session
+      supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+        if (error) {
+          setLocation("/sign-in");
+        } else {
+          setLocation(next.startsWith("/") ? next : "/dashboard");
+        }
+      });
+      return;
+    }
+
+    // Implicit / password-recovery flow: wait for auth state event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY") {
         setLocation("/reset-password");
@@ -16,10 +33,9 @@ export default function AuthCallbackPage() {
       }
     });
 
+    // Fallback: session may already exist (e.g. hash token already parsed)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setLocation("/dashboard");
-      }
+      if (session) setLocation("/dashboard");
     });
 
     return () => subscription.unsubscribe();
