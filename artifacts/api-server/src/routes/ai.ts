@@ -10,7 +10,7 @@ import {
 } from "@workspace/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
-import { openai } from "@workspace/integrations-openai-ai-server";
+import { ai } from "@workspace/integrations-gemini-ai";
 
 const router = Router();
 
@@ -214,22 +214,28 @@ router.post("/ai/stream", authMiddleware, async (req, res) => {
   let fullResponse = "";
 
   try {
-    const stream = await openai.chat.completions.create({
-      model: "gpt-5.4",
-      max_completion_tokens: 8192,
-      messages: [
-        { role: "system", content: SYSTEM_PROMPT + "\n\n" + financialContext },
-        ...historyMessages,
-        { role: "user", content: message },
-      ],
-      stream: true,
+    const geminiContents = [
+      ...historyMessages.map((m) => ({
+        role: m.role === "assistant" ? "model" as const : "user" as const,
+        parts: [{ text: m.content }],
+      })),
+      { role: "user" as const, parts: [{ text: message }] },
+    ];
+
+    const stream = await ai.models.generateContentStream({
+      model: "gemini-2.5-flash",
+      contents: geminiContents,
+      config: {
+        systemInstruction: SYSTEM_PROMPT + "\n\n" + financialContext,
+        maxOutputTokens: 8192,
+      },
     });
 
     for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content;
-      if (content) {
-        fullResponse += content;
-        res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      const text = chunk.text;
+      if (text) {
+        fullResponse += text;
+        res.write(`data: ${JSON.stringify({ content: text })}\n\n`);
         (res as any).flush?.();
       }
     }
