@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authMiddleware, getUser } from "../lib/auth";
 import { supabaseAdmin } from "../lib/supabase";
 import { sendVerificationEmail } from "../lib/email";
-import { sendOtpEmail, isSmtpConfigured } from "../lib/smtp";
+import { sendOtpEmail, sendPasswordResetEmail, isSmtpConfigured } from "../lib/smtp";
 import { generateOtp, storeOtp, verifyOtp, hasValidOtp, getUserIdByEmail } from "../lib/otp-store";
 
 const router = Router();
@@ -169,6 +169,36 @@ router.post("/auth/verify-otp", async (req, res) => {
 
   log.info({ email }, "verify-otp: account confirmed");
   res.json({ ok: true });
+});
+
+// ─── POST /auth/reset-password ───────────────────────────────────────────────
+// Authenticated: generates a recovery link for the logged-in user and sends via Gmail SMTP.
+router.post("/auth/reset-password", authMiddleware, async (req, res) => {
+  const user = getUser(req);
+  const { redirectTo } = req.body as { redirectTo?: string };
+
+  const log = req.log;
+
+  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type: "recovery",
+    email: user.email,
+    options: redirectTo ? { redirectTo } : undefined,
+  });
+
+  if (linkError || !linkData?.properties?.action_link) {
+    log.error({ err: linkError, email: user.email }, "reset-password: failed to generate recovery link");
+    res.status(500).json({ error: "Falha ao gerar link de redefinição. Tente novamente." });
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(user.email, linkData.properties.action_link);
+    log.info({ email: user.email }, "reset-password: recovery email sent");
+    res.json({ ok: true });
+  } catch (err) {
+    log.error({ err, email: user.email }, "reset-password: failed to send email");
+    res.status(502).json({ error: "Falha ao enviar e-mail. Tente novamente." });
+  }
 });
 
 // ─── POST /auth/send-verification (Resend magic-link fallback) ───────────────

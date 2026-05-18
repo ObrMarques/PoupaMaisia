@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, LogOut } from "lucide-react";
+import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, KeyRound, Check, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
+import { supabase } from "@/lib/supabase";
 import type { Language } from "@/i18n/translations";
 
 function resizeImageToBase64(file: File, maxSize = 200): Promise<string> {
@@ -38,22 +39,28 @@ function resizeImageToBase64(file: File, maxSize = 200): Promise<string> {
 }
 
 export default function Settings() {
-  const { user, updateUser, logout } = useAuth();
+  const { user, updateUser } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { language, setLanguage, t, languages } = useI18n();
   const updateMutation = useUpdateProfile();
 
   const [name,     setName]     = useState(user?.name  || "");
-  const [email,    setEmail]    = useState(user?.email  || "");
   const [currency, setCurrency] = useState(user?.currency || "BRL");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
+  const [resetState, setResetState] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  const [profileSaved, setProfileSaved] = useState(false);
+
   const handleSaveProfile = () => {
     updateMutation.mutate(
-      { data: { name, email } },
+      { data: { name } },
       {
-        onSuccess: (updated) => { updateUser(updated); },
-        onError:   () => {},
+        onSuccess: (updated) => {
+          updateUser(updated);
+          setProfileSaved(true);
+          setTimeout(() => setProfileSaved(false), 3000);
+        },
+        onError: () => {},
       }
     );
   };
@@ -73,9 +80,7 @@ export default function Settings() {
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      return;
-    }
+    if (file.size > 10 * 1024 * 1024) return;
     setIsUploadingPhoto(true);
     try {
       const base64 = await resizeImageToBase64(file);
@@ -89,6 +94,33 @@ export default function Settings() {
       );
     } catch {
       setIsUploadingPhoto(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!user?.email) return;
+    setResetState("loading");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const origin = window.location.origin;
+      const res = await fetch(`${origin}/api/auth/reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ redirectTo: `${origin}/reset-password` }),
+      });
+
+      if (res.ok) {
+        setResetState("sent");
+      } else {
+        setResetState("error");
+      }
+    } catch {
+      setResetState("error");
     }
   };
 
@@ -108,11 +140,13 @@ export default function Settings() {
             <CardDescription>Atualize suas informações pessoais.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
+
+            {/* Avatar upload */}
             <div className="flex items-center gap-5">
               <label htmlFor="avatar-input" className="relative group cursor-pointer">
                 <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border group-hover:ring-primary transition-all">
                   {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={user.avatarUrl} alt="Avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-2xl font-semibold">{user?.name?.charAt(0).toUpperCase()}</span>
                   )}
@@ -142,19 +176,84 @@ export default function Settings() {
               </div>
             </div>
 
+            {/* Name + Email */}
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nome completo</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} className="bg-background" data-testid="input-name" />
+                <Label htmlFor="input-name">Nome completo</Label>
+                <Input
+                  id="input-name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  className="bg-background"
+                  data-testid="input-name"
+                />
               </div>
               <div className="space-y-2">
-                <Label>E-mail</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} className="bg-background" data-testid="input-email" />
+                <Label htmlFor="input-email">
+                  E-mail
+                  <span className="ml-2 text-xs text-muted-foreground font-normal">(não editável)</span>
+                </Label>
+                <Input
+                  id="input-email"
+                  type="email"
+                  value={user?.email || ""}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed opacity-70"
+                  data-testid="input-email"
+                />
               </div>
             </div>
-            <Button onClick={handleSaveProfile} disabled={updateMutation.isPending} data-testid="button-save-profile">
-              {updateMutation.isPending ? t("common.loading") : t("settings.saveProfile")}
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={handleSaveProfile}
+                disabled={updateMutation.isPending || !name.trim()}
+                data-testid="button-save-profile"
+              >
+                {updateMutation.isPending ? t("common.loading") : t("settings.saveProfile")}
+              </Button>
+              {profileSaved && (
+                <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                  <Check className="w-4 h-4" />
+                  Salvo com sucesso
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── Segurança ───────────────────────────────── */}
+        <Card className="bg-card">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5" />
+              Segurança
+            </CardTitle>
+            <CardDescription>Gerencie sua senha de acesso.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">
+                Clique abaixo para receber um link de redefinição de senha no seu e-mail cadastrado.
+              </p>
+              <Button
+                variant="outline"
+                onClick={handleResetPassword}
+                disabled={resetState === "loading" || resetState === "sent"}
+                className="flex items-center gap-2"
+              >
+                {resetState === "loading" && (
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                )}
+                {resetState === "sent" && <Check className="w-4 h-4 text-green-600" />}
+                {resetState === "error" && <AlertCircle className="w-4 h-4 text-destructive" />}
+                {resetState === "idle"    && "Redefinir senha"}
+                {resetState === "loading" && "Enviando..."}
+                {resetState === "sent"    && "Link enviado para o seu e-mail"}
+                {resetState === "error"   && "Erro ao enviar. Tente novamente."}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
