@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, usersTable, goalsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
+import { supabaseAdmin } from "../lib/supabase";
 import { UpdateProfileBody, CompleteOnboardingBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -28,13 +29,25 @@ router.patch("/users/profile", authMiddleware, async (req, res) => {
     res.status(400).json({ error: "Invalid input" });
     return;
   }
+
   const updates: any = {};
   if (parsed.data.name !== undefined && parsed.data.name !== null) updates.name = parsed.data.name;
   if (parsed.data.email !== undefined && parsed.data.email !== null) updates.email = parsed.data.email;
   if (parsed.data.avatarUrl !== undefined) updates.avatarUrl = parsed.data.avatarUrl;
   if (parsed.data.currency !== undefined && parsed.data.currency !== null) updates.currency = parsed.data.currency;
   if (parsed.data.language !== undefined && parsed.data.language !== null) updates.language = parsed.data.language;
+
+  // Persist to our DB (source of truth)
   const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id)).returning();
+
+  // Keep Supabase Auth user_metadata in sync so full_name is consistent
+  // across JWTs and any OAuth provider re-auth. Fire-and-forget — DB is source of truth.
+  if (updates.name) {
+    supabaseAdmin.auth.admin.updateUserById(user.supabaseId, {
+      user_metadata: { full_name: updates.name },
+    }).catch(() => {});
+  }
+
   res.json(serializeUser(updated));
 });
 
