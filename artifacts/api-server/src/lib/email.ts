@@ -108,6 +108,72 @@ export async function sendWelcomeEmail(to: string, name: string): Promise<void> 
   });
 }
 
+export async function sendVerificationEmail(email: string, link: string): Promise<void> {
+  await resend.emails.send({
+    from: FROM,
+    to: email,
+    subject: "Verifique sua conta — PoupaMais",
+    html: `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Verifique sua conta</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Inter',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5f5f5;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <tr>
+            <td style="background:#111111;padding:32px 40px;text-align:center;">
+              <div style="display:inline-flex;align-items:center;gap:10px;">
+                <div style="width:36px;height:36px;background:#ffffff;border-radius:8px;display:inline-block;text-align:center;line-height:36px;font-size:18px;font-weight:bold;color:#111111;">$</div>
+                <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;vertical-align:middle;margin-left:10px;">PoupaMais</span>
+              </div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#111111;letter-spacing:-0.5px;">
+                Confirme seu e-mail
+              </h1>
+              <p style="margin:0 0 28px;font-size:15px;color:#555555;line-height:1.7;">
+                Clique no botão abaixo para verificar sua conta e começar a usar o PoupaMais.
+              </p>
+              <table cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:28px;">
+                <tr>
+                  <td align="center">
+                    <a href="${link}"
+                       style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:14px 36px;border-radius:10px;letter-spacing:-0.2px;">
+                      Verificar e-mail →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;font-size:13px;color:#999999;line-height:1.6;">
+                Se você não criou uma conta no PoupaMais, ignore este e-mail. O link expira em 24 horas.
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="background:#f9f9f9;padding:20px 40px;border-top:1px solid #eeeeee;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#999999;">
+                &copy; ${new Date().getFullYear()} PoupaMais. Todos os direitos reservados.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `.trim(),
+  });
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string): Promise<void> {
   await resend.emails.send({
     from: FROM,

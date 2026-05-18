@@ -47,6 +47,14 @@ export default function SignUpPage() {
         setError(translateSupabaseError(signUpError.message));
         return;
       }
+
+      // Send branded verification e-mail via Resend (fire-and-forget)
+      fetch(`${basePath}/api/auth/send-verification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      }).catch(() => {});
+
       setStep("verify");
     } catch (err: any) {
       setError("Erro ao criar conta. Tente novamente.");
