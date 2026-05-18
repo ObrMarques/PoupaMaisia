@@ -30,13 +30,38 @@ export default function Dashboard() {
     name: MONTH_NAMES[(t.month - 1) % 12],
   }));
 
+  const firstName = user?.name?.split(" ")[0] ?? "Usuário";
+  const initials = user?.name
+    ? user.name.split(" ").map((n: string) => n[0]).slice(0, 2).join("").toUpperCase()
+    : "?";
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+      {/* Profile + actions header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Visão Geral</h1>
-          <p className="text-muted-foreground">Olá, {user?.name}</p>
+        <div className="flex items-center gap-4">
+          {/* Avatar */}
+          <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="font-bold text-lg">{initials}</span>
+            )}
+          </div>
+          {/* Name + email */}
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight leading-tight">
+              Olá, {firstName}! 👋
+            </h1>
+            <p className="text-sm text-muted-foreground">{user?.email}</p>
+          </div>
         </div>
+
         <div className="flex items-center gap-2 w-full md:w-auto">
           <QuickAddTransaction>
             <Button variant="outline" className="flex-1 md:flex-none bg-background">

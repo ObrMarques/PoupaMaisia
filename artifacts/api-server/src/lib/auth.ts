@@ -24,6 +24,13 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
   let users = await db.select().from(usersTable).where(eq(usersTable.supabaseId, supabaseId)).limit(1);
 
+  const providerAvatarUrl: string | null =
+    supabaseUser.user_metadata?.avatar_url ?? null;
+  const providerName: string =
+    (supabaseUser.user_metadata?.full_name || supabaseUser.user_metadata?.name || "").trim() ||
+    supabaseUser.email?.split("@")[0] ||
+    "Usuário";
+
   if (!users.length) {
     const email = supabaseUser.email;
     if (!email) {
@@ -31,28 +38,37 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const rawName =
-      supabaseUser.user_metadata?.full_name ||
-      supabaseUser.user_metadata?.name ||
-      "";
-    const name = rawName.trim() || email.split("@")[0] || "Usuário";
-    const avatarUrl = supabaseUser.user_metadata?.avatar_url ?? null;
-
     // Use ON CONFLICT DO NOTHING to handle the race condition where multiple
     // simultaneous requests all attempt to provision the same user.
     const inserted = await db
       .insert(usersTable)
-      .values({ supabaseId, name, email, avatarUrl, currency: "BRL", language: "pt-BR" })
+      .values({ supabaseId, name: providerName, email, avatarUrl: providerAvatarUrl, currency: "BRL", language: "pt-BR" })
       .onConflictDoNothing()
       .returning();
 
     if (inserted.length) {
       users = inserted;
       // Fire-and-forget welcome email — don't block the request
-      sendWelcomeEmail(email, name).catch(() => {});
+      sendWelcomeEmail(email, providerName).catch(() => {});
     } else {
       // Another concurrent request already inserted the row — fetch it.
       users = await db.select().from(usersTable).where(eq(usersTable.supabaseId, supabaseId)).limit(1);
+    }
+  } else {
+    // Sync avatar and name from provider if they changed (e.g. user connected Google
+    // after creating account with email/password, or updated their Google profile).
+    const existing = users[0]!;
+    const needsUpdate =
+      (providerAvatarUrl && existing.avatarUrl !== providerAvatarUrl) ||
+      (!existing.avatarUrl && providerAvatarUrl);
+
+    if (needsUpdate) {
+      const updated = await db
+        .update(usersTable)
+        .set({ avatarUrl: providerAvatarUrl })
+        .where(eq(usersTable.supabaseId, supabaseId))
+        .returning();
+      if (updated.length) users = updated;
     }
   }
 
