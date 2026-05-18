@@ -1,6 +1,8 @@
-import React, { createContext, useContext } from 'react';
-import { useUser, useClerk } from '@clerk/react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js';
 import { useGetMe, getGetMeQueryKey } from '@workspace/api-client-react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface AppUser {
   id: number;
@@ -17,37 +19,66 @@ export interface AppUser {
 
 interface AuthContextType {
   user: AppUser | null;
+  supabaseUser: SupabaseUser | null;
+  session: Session | null;
   isLoaded: boolean;
   isSignedIn: boolean;
   updateUser: (user: AppUser) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { isLoaded: clerkLoaded, isSignedIn } = useUser();
-  const { signOut } = useClerk();
+  const [session, setSession] = useState<Session | null>(null);
+  const [sessionLoaded, setSessionLoaded] = useState(false);
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setSessionLoaded(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const prevSession = session;
+      setSession(prevSession);
+      if (!prevSession) {
+        qc.clear();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [qc]);
+
+  const isSignedIn = !!session;
 
   const { data: dbUser, isLoading } = useGetMe({
-    query: { queryKey: getGetMeQueryKey(), enabled: !!isSignedIn, retry: 1 },
+    query: {
+      queryKey: getGetMeQueryKey(),
+      enabled: isSignedIn && sessionLoaded,
+      retry: 1,
+    },
   });
 
   const updateUser = (_user: AppUser) => {
     // no-op: user data comes from server via react-query invalidation
   };
 
-  const logout = () => {
-    signOut({ redirectUrl: '/' });
+  const logout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/sign-in';
   };
 
-  const isLoaded = clerkLoaded && (!isSignedIn || !isLoading);
+  const isLoaded = sessionLoaded && (!isSignedIn || !isLoading);
 
   return (
     <AuthContext.Provider value={{
       user: (dbUser as AppUser | undefined) ?? null,
+      supabaseUser: session?.user ?? null,
+      session,
       isLoaded,
-      isSignedIn: !!isSignedIn,
+      isSignedIn,
       updateUser,
       logout,
     }}>

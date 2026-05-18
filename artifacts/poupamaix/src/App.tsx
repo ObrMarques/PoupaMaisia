@@ -1,10 +1,6 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, AuthenticateWithRedirectCallback, useClerk } from "@clerk/react";
-import { ptBR } from "@clerk/localizations";
-import { publishableKeyFromHost } from "@clerk/react/internal";
-import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "./hooks/use-auth";
@@ -27,6 +23,7 @@ const SignUpPage   = lazy(() => import("@/pages/sign-up"));
 const SignInPage   = lazy(() => import("@/pages/sign-in"));
 const Settings     = lazy(() => import("@/pages/settings"));
 const Support      = lazy(() => import("@/pages/support"));
+const AuthCallback = lazy(() => import("@/pages/auth-callback"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -41,79 +38,7 @@ const queryClient = new QueryClient({
   },
 });
 
-// REQUIRED — copy verbatim
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-
-// REQUIRED — copy verbatim. Empty in dev, auto-set in prod.
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
-
-function stripBase(path: string): string {
-  return basePath && path.startsWith(basePath)
-    ? path.slice(basePath.length) || "/"
-    : path;
-}
-
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
-}
-
-const clerkAppearance = {
-  theme: shadcn,
-  cssLayerName: "clerk",
-  options: {
-    logoPlacement: "inside" as const,
-    logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
-    socialButtonsPlacement: "top" as const,
-    socialButtonsVariant: "blockButton" as const,
-  },
-  variables: {
-    colorPrimary: "#111111",
-    colorForeground: "#111111",
-    colorMutedForeground: "#737373",
-    colorDanger: "#ef4444",
-    colorBackground: "#ffffff",
-    colorInput: "#f2f2f2",
-    colorInputForeground: "#111111",
-    colorNeutral: "#e0e0e0",
-    fontFamily: "Inter, sans-serif",
-    borderRadius: "0.5rem",
-  },
-  elements: {
-    rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: "text-[#111111] font-bold",
-    headerSubtitle: "text-[#737373]",
-    socialButtonsBlockButtonText: "text-[#111111] font-medium",
-    formFieldLabel: "text-[#111111] font-medium",
-    footerActionLink: "text-[#111111] font-semibold hover:underline",
-    footerActionText: "text-[#737373]",
-    dividerText: "text-[#737373]",
-    identityPreviewEditButton: "text-[#111111]",
-    formFieldSuccessText: "text-green-600",
-    alertText: "text-[#111111]",
-    logoBox: "flex justify-center",
-    logoImage: "w-10 h-10",
-    socialButtonsBlockButton: "border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5]",
-    formButtonPrimary: "bg-[#111111] hover:bg-[#333333] text-white",
-    formFieldInput: "bg-[#f2f2f2] border-[#e0e0e0] text-[#111111]",
-    footerAction: "bg-transparent",
-    dividerLine: "bg-[#e0e0e0]",
-    alert: "bg-[#fef2f2]",
-    otpCodeFieldInput: "border-[#e0e0e0] bg-[#f2f2f2]",
-    formFieldRow: "",
-    main: "",
-    badge: "!hidden",
-    cardBoxFooter: "!hidden",
-  },
-};
 
 function PageSkeleton() {
   return (
@@ -137,7 +62,6 @@ function SpinnerLoader() {
     </div>
   );
 }
-
 
 function DashboardPrefetcher() {
   const { isSignedIn } = useAuth();
@@ -180,65 +104,6 @@ function HomeRedirect() {
   return isSignedIn ? <Redirect to="/dashboard" /> : <Redirect to="/sign-in" />;
 }
 
-function useHideClerkDevBanner() {
-  useEffect(() => {
-    const CLERK_DEV_STRINGS = ["development mode", "modo de desenvolvimento", "modo desenvolvimento"];
-    const remove = () => {
-      document.querySelectorAll<HTMLElement>("[class*='cl-']").forEach((el) => {
-        const text = el.textContent?.toLowerCase().trim() ?? "";
-        if (CLERK_DEV_STRINGS.some((s) => text === s || text.startsWith(s))) {
-          let target: HTMLElement = el;
-          while (
-            target.parentElement &&
-            target.parentElement !== document.body &&
-            target.parentElement.children.length === 1
-          ) {
-            target = target.parentElement as HTMLElement;
-          }
-          target.style.setProperty("display", "none", "important");
-        }
-      });
-    };
-    remove();
-    const observer = new MutationObserver(remove);
-    observer.observe(document.body, { childList: true, subtree: true });
-    return () => observer.disconnect();
-  }, []);
-}
-
-const googleIcon = (
-  <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
-    <path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.909-2.259c-.806.54-1.837.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/>
-    <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
-    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
-  </svg>
-);
-
-
-
-function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
-  const qc = useQueryClient();
-  const prevUserIdRef = useRef<string | null | undefined>(undefined);
-
-  useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
-      const userId = user?.id ?? null;
-      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
-        qc.clear();
-      }
-      prevUserIdRef.current = userId;
-    });
-    return unsubscribe;
-  }, [addListener, qc]);
-
-  return null;
-}
-
-/**
- * All children here have access to: Clerk, QueryClient, Theme, I18n, Auth
- */
 function AppShell() {
   return (
     <ThemeProvider>
@@ -248,18 +113,14 @@ function AppShell() {
             <DashboardPrefetcher />
             <Switch>
               <Route path="/"             component={HomeRedirect} />
-              <Route path="/sign-in/*?"   component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />
+              <Route path="/sign-in"      component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />
               <Route path="/sign-up"      component={() => <Suspense fallback={<SpinnerLoader />}><SignUpPage /></Suspense>} />
-              <Route path="/sso-callback" component={() => (
-                <AuthenticateWithRedirectCallback
-                  signInForceRedirectUrl={`${basePath}/dashboard`}
-                  signUpForceRedirectUrl={`${basePath}/dashboard`}
-                />
-              )} />
-              {/* legacy routes redirect to sign pages */}
+              <Route path="/auth/callback" component={() => <Suspense fallback={<SpinnerLoader />}><AuthCallback /></Suspense>} />
+              {/* legacy redirects */}
               <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
               <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
               <Route path="/paywall"      component={() => { const [,s] = useLocation(); useEffect(() => s("/dashboard"), []); return null; }} />
+              <Route path="/sso-callback" component={() => { const [,s] = useLocation(); useEffect(() => s("/auth/callback"), []); return null; }} />
               <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
               <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
               <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />
@@ -278,57 +139,15 @@ function AppShell() {
   );
 }
 
-function ClerkProviderWithRoutes() {
-  const [, setLocation] = useLocation();
-
+function App() {
   return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
-      appearance={clerkAppearance}
-      signInUrl={`${basePath}/sign-in`}
-      signUpUrl={`${basePath}/sign-up`}
-      localization={{
-        ...ptBR,
-        signIn: {
-          ...ptBR.signIn,
-          start: {
-            ...ptBR.signIn?.start,
-            title: "Bem-vindo de volta",
-            subtitle: "Entre com sua conta para continuar",
-            actionText: "Não tem uma conta?",
-            actionLink: "Cadastre-se",
-          },
-        },
-        signUp: {
-          ...ptBR.signUp,
-          start: {
-            ...ptBR.signUp?.start,
-            title: "Criar sua conta",
-            subtitle: "Comece sua jornada com o PoupaMais",
-            actionText: "Já tem uma conta?",
-            actionLink: "Entrar",
-          },
-        },
-      }}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-    >
+    <WouterRouter base={basePath}>
       <QueryClientProvider client={queryClient}>
-        <ClerkQueryClientCacheInvalidator />
         <TooltipProvider>
           <AppShell />
           <Toaster />
         </TooltipProvider>
       </QueryClientProvider>
-    </ClerkProvider>
-  );
-}
-
-function App() {
-  return (
-    <WouterRouter base={basePath}>
-      <ClerkProviderWithRoutes />
     </WouterRouter>
   );
 }

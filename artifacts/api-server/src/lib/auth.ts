@@ -1,50 +1,47 @@
 import { Request, Response, NextFunction } from "express";
-import { getAuth, clerkClient } from "@clerk/express";
+import { supabaseAdmin } from "./supabase";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 
-/**
- * JIT-provisions a local user row from the Clerk session.
- * Attaches the full user row to req.user.
- */
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
-  const auth = getAuth(req);
-  const clerkUserId = auth?.userId;
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-  if (!clerkUserId) {
+  if (!token) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
 
-  // Look up or provision the local user row
-  let users = await db.select().from(usersTable).where(eq(usersTable.clerkId, clerkUserId)).limit(1);
+  const { data: { user: supabaseUser }, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !supabaseUser) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const supabaseId = supabaseUser.id;
+
+  let users = await db.select().from(usersTable).where(eq(usersTable.supabaseId, supabaseId)).limit(1);
 
   if (!users.length) {
-    // JIT provision: fetch real user data from Clerk Backend API.
-    // Session claims (JWT) do not include email/name for OAuth users —
-    // clerkClient.users.getUser() works for both email/password and Google OAuth.
-    const clerkUser = await clerkClient.users.getUser(clerkUserId);
-
-    // Resolve primary email — fail fast if absent (prevents empty-string INSERT)
-    const primaryId = clerkUser.primaryEmailAddressId;
-    const emailObj = clerkUser.emailAddresses.find((e) => e.id === primaryId)
-      ?? clerkUser.emailAddresses[0];
-    const email = emailObj?.emailAddress;
-
+    const email = supabaseUser.email;
     if (!email) {
       res.status(422).json({ error: "Conta sem endereço de e-mail associado." });
       return;
     }
 
-    const firstName = clerkUser.firstName ?? "";
-    const lastName = clerkUser.lastName ?? "";
-    const fullName = `${firstName} ${lastName}`.trim();
-    const name = fullName || email.split("@")[0] || "Usuário";
+    const rawName =
+      supabaseUser.user_metadata?.full_name ||
+      supabaseUser.user_metadata?.name ||
+      "";
+    const name = rawName.trim() || email.split("@")[0] || "Usuário";
+    const avatarUrl = supabaseUser.user_metadata?.avatar_url ?? null;
 
     const inserted = await db.insert(usersTable).values({
-      clerkId: clerkUserId,
+      supabaseId,
       name,
       email,
+      avatarUrl,
       currency: "BRL",
       language: "pt-BR",
     }).returning();

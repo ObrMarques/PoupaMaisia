@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
-import { useSignUp, AuthenticateWithRedirectCallback } from "@clerk/react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -16,214 +16,62 @@ const googleIcon = (
 
 type Step = "form" | "verify";
 
-type ClerkErrItem = { code?: string; longMessage?: string; message?: string };
-type ClerkErr = { errors?: ClerkErrItem[] };
-
-const CLERK_PT: Record<string, string> = {
-  // Identificador
-  form_identifier_exists:                        "Esse e-mail já está em uso. Tente outro.",
-  form_identifier_exists__email_address:         "Esse e-mail já está em uso. Tente outro.",
-  form_identifier_exists__username:              "Esse nome de usuário já está em uso.",
-  form_identifier_exists__phone_number:          "Esse número de telefone já está em uso.",
-  form_identifier_not_found:                     "Nenhuma conta encontrada com esse e-mail.",
-  // Senha — criação
-  form_password_pwned:                           "Essa senha foi comprometida em vazamentos. Use uma senha diferente.",
-  form_password_length_too_short:                "A senha deve ter no mínimo 8 caracteres.",
-  form_password_no_digit:                        "A senha deve conter ao menos um número.",
-  form_password_no_uppercase:                    "A senha deve conter ao menos uma letra maiúscula.",
-  form_password_no_special_char:                 "A senha deve conter ao menos um caractere especial.",
-  form_password_not_strong_enough:               "A senha não é forte o suficiente. Use letras, números e símbolos.",
-  form_password_strength_insufficient:           "A senha não é forte o suficiente. Use letras, números e símbolos.",
-  form_password_validation_failed:               "A senha não atende aos requisitos de segurança.",
-  form_password_size_in_bytes_exceeded:          "A senha é muito longa.",
-  // Senha — autenticação
-  form_password_incorrect:                       "Senha incorreta.",
-  form_password_or_identifier_incorrect:         "E-mail ou senha incorretos.",
-  form_password_pwned__sign_in:                  "Essa senha foi comprometida em vazamentos. Redefina sua senha.",
-  form_password_compromised__sign_in:            "Essa senha foi comprometida em vazamentos. Redefina sua senha.",
-  form_password_untrusted__sign_in:              "Essa senha não é confiável. Redefina sua senha.",
-  // Campos do formulário
-  form_param_format_invalid:                     "Formato inválido.",
-  form_param_format_invalid__email_address:      "E-mail inválido. Verifique o formato.",
-  form_param_type_invalid:                       "Tipo de campo inválido.",
-  form_param_type_invalid__email_address:        "E-mail inválido.",
-  form_param_type_invalid__phone_number:         "Número de telefone inválido.",
-  form_param_nil:                                "Campo obrigatório.",
-  form_param_value_invalid:                      "Valor inválido para este campo.",
-  form_param_max_length_exceeded:                "O campo excede o tamanho máximo permitido.",
-  form_param_duplicated:                         "Esse valor já está em uso.",
-  form_param_unknown:                            "Erro de configuração. Tente novamente.",
-  form_param_not_allowed:                        "Parâmetro não permitido nesta solicitação.",
-  // Verificação
-  verification_failed:                           "Código inválido. Tente novamente.",
-  verification_expired:                          "Código expirado. Solicite um novo código.",
-  // Outros
-  strategy_for_user_invalid:                     "Método de autenticação não permitido para essa conta.",
-  not_allowed_access:                            "Acesso não permitido.",
-  session_exists:                                "Você já está autenticado.",
-  rate_limit_exceeded:                           "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
-  captcha_invalid:                               "Verificação de segurança falhou. Tente novamente.",
-  captcha_unavailable:                           "Verificação de segurança indisponível. Tente novamente.",
-};
-
-const CLERK_MSG_PT: [string, string][] = [
-  ["that email address is taken",          "Esse e-mail já está em uso. Tente outro."],
-  ["is already taken",                     "Esse valor já está em uso."],
-  ["identifier not found",                 "Nenhuma conta encontrada com esse e-mail."],
-  ["no account found",                     "Nenhuma conta encontrada com esse e-mail."],
-  ["password has been found in",           "Essa senha foi comprometida em vazamentos. Use uma senha diferente."],
-  ["password is compromised",              "Essa senha foi comprometida em vazamentos. Use uma senha diferente."],
-  ["not strong enough",                    "A senha não é forte o suficiente. Use letras, números e símbolos."],
-  ["password is not strong",               "A senha não é forte o suficiente. Use letras, números e símbolos."],
-  ["password or identifier",               "E-mail ou senha incorretos."],
-  ["incorrect password",                   "Senha incorreta."],
-  ["password is incorrect",                "Senha incorreta."],
-  ["size in bytes exceeded",               "A senha é muito longa."],
-  ["max length exceeded",                  "O campo excede o tamanho máximo permitido."],
-  ["too many requests",                    "Muitas tentativas. Aguarde alguns minutos."],
-  ["too many failed attempts",             "Muitas tentativas incorretas. Aguarde alguns minutos."],
-  ["invalid verification code",            "Código de verificação inválido."],
-  ["verification code expired",            "Código expirado. Solicite um novo."],
-  ["code is incorrect",                    "Código inválido. Tente novamente."],
-  ["is not a valid parameter",             "Erro de configuração. Tente novamente ou entre com Google."],
-  ["not a valid parameter",                "Erro de configuração. Tente novamente ou entre com Google."],
-  ["is not allowed",                       "Campo não permitido para este tipo de conta."],
-  ["email address is invalid",             "E-mail inválido. Verifique o formato."],
-  ["is invalid",                           "Valor inválido. Verifique os dados informados."],
-  ["can't be blank",                       "Campo obrigatório."],
-  ["is required",                          "Campo obrigatório."],
-];
-
-function translateClerkError(item: ClerkErrItem): string {
-  if (item.code && CLERK_PT[item.code]) return CLERK_PT[item.code];
-
-  const raw = (item.longMessage ?? item.message ?? "").toLowerCase();
-  for (const [en, pt] of CLERK_MSG_PT) {
-    if (raw.includes(en)) return pt;
-  }
-
-  return item.longMessage ?? item.message ?? "";
-}
-
-function getErrMsg(err: unknown, fallback: string): string {
-  const e = err as ClerkErr;
-  const item = e?.errors?.[0];
-  if (!item) return fallback;
-  const translated = translateClerkError(item);
-  return translated || fallback;
-}
-
 export default function SignUpPage() {
-  useHideDevBanner();
-  const [location, setLocation] = useLocation();
-  const { signUp, fetchStatus } = useSignUp();
-
+  const [, setLocation] = useLocation();
   const [step, setStep]           = useState<Step>("form");
   const [name, setName]           = useState("");
   const [email, setEmail]         = useState("");
   const [password, setPassword]   = useState("");
-  const [code, setCode]           = useState("");
   const [showPass, setShowPass]   = useState(false);
   const [loading, setLoading]     = useState(false);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError]         = useState("");
 
-  // Clerk OAuth callback — rendered when the route wildcard matches /sign-up/sso-callback
-  if (location.endsWith("/sso-callback")) {
-    return (
-      <AuthenticateWithRedirectCallback
-        signInForceRedirectUrl={`${basePath}/dashboard`}
-        signUpForceRedirectUrl={`${basePath}/dashboard`}
-      />
-    );
-  }
-
-  const busy = loading || fetchStatus === "fetching";
-
-  function isParamError(err: unknown): boolean {
-    const e = err as ClerkErr;
-    const item = e?.errors?.[0];
-    if (!item) return false;
-    if (item.code === "form_param_unknown" || item.code === "form_param_not_allowed") return true;
-    const raw = (item.longMessage ?? item.message ?? "").toLowerCase();
-    return raw.includes("not a valid parameter") || raw.includes("is not allowed");
-  }
+  const inputCls =
+    "w-full px-3.5 py-2.5 rounded-lg bg-[#f2f2f2] border border-[#e0e0e0] text-[#111111] placeholder:text-[#a0a0a0] text-sm focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!signUp) return;
     setLoading(true);
     setError("");
     try {
-      const parts = name.trim().split(/\s+/);
-
-      let createResult = await signUp.create({
-        firstName:    parts[0],
-        lastName:     parts.length > 1 ? parts.slice(1).join(" ") : undefined,
-        emailAddress: email,
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
         password,
+        options: {
+          data: { full_name: name.trim() },
+          emailRedirectTo: `${window.location.origin}${basePath}/auth/callback`,
+        },
       });
-
-      if (createResult.error && isParamError(createResult.error)) {
-        createResult = await signUp.create({ emailAddress: email, password });
-      }
-
-      if (createResult.error) {
-        setError(getErrMsg(createResult.error, "Erro ao criar conta."));
+      if (signUpError) {
+        setError(translateSupabaseError(signUpError.message));
         return;
       }
-
-      const { error: sendErr } = await signUp.verifications.sendEmailCode();
-      if (sendErr) { setError(getErrMsg(sendErr, "Erro ao enviar código.")); return; }
-
       setStep("verify");
-    } catch (err) {
-      setError(getErrMsg(err, "Erro ao criar conta. Tente novamente."));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleVerify(e: React.FormEvent) {
-    e.preventDefault();
-    if (!signUp) return;
-    setLoading(true);
-    setError("");
-    try {
-      const { error: verifyErr } = await signUp.verifications.verifyEmailCode({ code });
-      if (verifyErr) { setError(getErrMsg(verifyErr, "Código inválido.")); return; }
-
-      const { error: finalErr } = await signUp.finalize();
-      if (finalErr) { setError(getErrMsg(finalErr, "Erro ao finalizar cadastro.")); return; }
-
-      setLocation(basePath + "/dashboard");
-    } catch (err) {
-      setError(getErrMsg(err, "Erro ao verificar. Tente novamente."));
+    } catch (err: any) {
+      setError("Erro ao criar conta. Tente novamente.");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleGoogle() {
-    if (!signUp) return;
     setError("");
     setGoogleBusy(true);
     try {
-      const { error: ssoErr } = await signUp.sso({
-        strategy:            "oauth_google",
-        redirectUrl:         `${window.location.origin}${basePath}/sign-up/sso-callback`,
-        redirectCallbackUrl: `${window.location.origin}${basePath}/dashboard`,
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}${basePath}/auth/callback`,
+        },
       });
-      if (ssoErr) setError(getErrMsg(ssoErr, "Erro ao entrar com Google."));
-    } catch (err) {
-      setError(getErrMsg(err, "Erro ao entrar com Google."));
+      if (oauthError) setError(translateSupabaseError(oauthError.message));
+    } catch (err: any) {
+      setError("Erro ao entrar com Google.");
     } finally {
       setGoogleBusy(false);
     }
   }
-
-  const inputCls =
-    "w-full px-3.5 py-2.5 rounded-lg bg-[#f2f2f2] border border-[#e0e0e0] text-[#111111] placeholder:text-[#a0a0a0] text-sm focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
@@ -275,9 +123,9 @@ export default function SignUpPage() {
                     type={showPass ? "text" : "password"}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder="Mínimo 6 caracteres"
                     required
-                    minLength={8}
+                    minLength={6}
                     className={`${inputCls} pr-10`}
                   />
                   <button
@@ -293,14 +141,12 @@ export default function SignUpPage() {
 
               {error && <p className="text-sm text-red-600">{error}</p>}
 
-              <div id="clerk-captcha" />
-
               <button
                 type="submit"
-                disabled={busy || !name.trim() || !email || !password}
+                disabled={loading || !name.trim() || !email || !password}
                 className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {busy && <Loader2 size={15} className="animate-spin" />}
+                {loading && <Loader2 size={15} className="animate-spin" />}
                 Criar conta
               </button>
             </form>
@@ -317,7 +163,7 @@ export default function SignUpPage() {
               disabled={googleBusy}
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] text-sm font-medium text-[#111111] transition-colors disabled:opacity-50"
             >
-              {googleIcon}
+              {googleBusy ? <Loader2 size={16} className="animate-spin" /> : googleIcon}
               Continuar com Google
             </button>
 
@@ -329,65 +175,47 @@ export default function SignUpPage() {
             </p>
           </>
         ) : (
-          <form onSubmit={handleVerify} className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-[#111111]">Código de verificação</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={code}
-                onChange={e => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
-                required
-                maxLength={6}
-                className={`${inputCls} text-center tracking-[0.4em] font-mono`}
-                autoFocus
-              />
-              <p className="text-xs text-[#737373]">Digite o código de 6 dígitos enviado para seu e-mail</p>
+          <div className="space-y-4">
+            <div className="rounded-lg bg-[#f0fdf4] border border-[#86efac] p-4 text-sm text-[#166534]">
+              Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link para ativar sua conta e depois faça login.
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
 
-            <button
-              type="submit"
-              disabled={busy || code.length < 6}
-              className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            <a
+              href={`${basePath}/sign-in`}
+              className="block w-full text-center py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors"
             >
-              {busy && <Loader2 size={15} className="animate-spin" />}
-              Verificar e criar conta
-            </button>
+              Ir para o login
+            </a>
 
             <button
               type="button"
-              onClick={() => { setStep("form"); setError(""); setCode(""); }}
+              onClick={() => { setStep("form"); setError(""); }}
               className="w-full text-sm text-[#737373] hover:text-[#111111] transition-colors py-1"
             >
               ← Voltar
             </button>
-          </form>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function useHideDevBanner() {
-  useEffect(() => {
-    const STRINGS = ["development mode", "modo de desenvolvimento", "modo desenvolvimento"];
-    const remove = () => {
-      document.querySelectorAll<HTMLElement>("[class*='cl-']").forEach(el => {
-        const text = el.textContent?.toLowerCase().trim() ?? "";
-        if (STRINGS.some(s => text === s || text.startsWith(s))) {
-          let t: HTMLElement = el;
-          while (t.parentElement && t.parentElement !== document.body && t.parentElement.children.length === 1)
-            t = t.parentElement as HTMLElement;
-          t.style.setProperty("display", "none", "important");
-        }
-      });
-    };
-    remove();
-    const obs = new MutationObserver(remove);
-    obs.observe(document.body, { childList: true, subtree: true });
-    return () => obs.disconnect();
-  }, []);
+function translateSupabaseError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login credentials") || m.includes("invalid email or password"))
+    return "E-mail ou senha incorretos.";
+  if (m.includes("email not confirmed"))
+    return "E-mail não confirmado. Verifique sua caixa de entrada.";
+  if (m.includes("too many requests"))
+    return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
+  if (m.includes("user not found"))
+    return "Nenhuma conta encontrada com esse e-mail.";
+  if (m.includes("email already in use") || m.includes("already registered") || m.includes("user already registered"))
+    return "Esse e-mail já está em uso. Tente outro.";
+  if (m.includes("password should be at least"))
+    return "A senha deve ter no mínimo 6 caracteres.";
+  return msg;
 }
