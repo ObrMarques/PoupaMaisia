@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
 
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -14,7 +13,10 @@ const googleIcon = (
   </svg>
 );
 
-type Step = "form" | "verify";
+type Step = "form" | "otp";
+
+const OTP_LENGTH = 6;
+const RESEND_COOLDOWN = 60; // seconds
 
 export default function SignUpPage() {
   const [, setLocation] = useLocation();
@@ -27,54 +29,153 @@ export default function SignUpPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError]         = useState("");
 
+  // OTP state
+  const [digits, setDigits]       = useState<string[]>(Array(OTP_LENGTH).fill(""));
+  const [verifying, setVerifying] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
   const inputCls =
     "w-full px-3.5 py-2.5 rounded-lg bg-[#f2f2f2] border border-[#e0e0e0] text-[#111111] placeholder:text-[#a0a0a0] text-sm focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
+
+  // Cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const t = setInterval(() => setResendCooldown(c => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(t);
+  }, [resendCooldown]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: name.trim() },
-          emailRedirectTo: `${window.location.origin}${basePath}/auth/callback`,
-        },
-      });
-      if (signUpError) {
-        setError(translateSupabaseError(signUpError.message));
-        return;
-      }
-
-      // Send branded verification e-mail via Resend (fire-and-forget)
-      fetch(`${basePath}/api/auth/send-verification`, {
+      const res = await fetch(`${basePath}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      }).catch(() => {});
-
-      setStep("verify");
-    } catch (err: any) {
-      setError("Erro ao criar conta. Tente novamente.");
+        body: JSON.stringify({ name: name.trim(), email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Erro ao criar conta. Tente novamente.");
+        return;
+      }
+      setDigits(Array(OTP_LENGTH).fill(""));
+      setResendCooldown(RESEND_COOLDOWN);
+      setStep("otp");
+      setTimeout(() => inputRefs.current[0]?.focus(), 100);
+    } catch {
+      setError("Sem conexão com o servidor. Tente novamente.");
     } finally {
       setLoading(false);
     }
   }
 
+  function handleDigitChange(index: number, value: string) {
+    const digit = value.replace(/\D/g, "").slice(-1);
+    const next = [...digits];
+    next[index] = digit;
+    setDigits(next);
+    if (digit && index < OTP_LENGTH - 1) {
+      inputRefs.current[index + 1]?.focus();
+    }
+    // Auto-verify when all digits filled
+    if (digit && next.every(d => d !== "") && next.join("").length === OTP_LENGTH) {
+      handleVerifyOtp(next.join(""));
+    }
+  }
+
+  function handleDigitKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Backspace") {
+      if (digits[index]) {
+        const next = [...digits];
+        next[index] = "";
+        setDigits(next);
+      } else if (index > 0) {
+        inputRefs.current[index - 1]?.focus();
+      }
+    }
+    if (e.key === "ArrowLeft" && index > 0) inputRefs.current[index - 1]?.focus();
+    if (e.key === "ArrowRight" && index < OTP_LENGTH - 1) inputRefs.current[index + 1]?.focus();
+  }
+
+  function handleDigitPaste(e: React.ClipboardEvent) {
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, OTP_LENGTH);
+    if (pasted.length === OTP_LENGTH) {
+      const next = pasted.split("");
+      setDigits(next);
+      inputRefs.current[OTP_LENGTH - 1]?.focus();
+      setTimeout(() => handleVerifyOtp(pasted), 0);
+    }
+    e.preventDefault();
+  }
+
+  async function handleVerifyOtp(code?: string) {
+    const otp = code ?? digits.join("");
+    if (otp.length < OTP_LENGTH) {
+      setError("Digite todos os 6 dígitos do código.");
+      return;
+    }
+    setVerifying(true);
+    setError("");
+    try {
+      const res = await fetch(`${basePath}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Código inválido.");
+        return;
+      }
+      // Success → redirect to sign-in
+      setLocation(`${basePath}/sign-in?verified=1`);
+    } catch {
+      setError("Sem conexão com o servidor. Tente novamente.");
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  async function handleResend() {
+    if (resendCooldown > 0 || resending) return;
+    setResending(true);
+    setError("");
+    try {
+      const res = await fetch(`${basePath}/api/auth/resend-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Erro ao reenviar código.");
+        return;
+      }
+      setDigits(Array(OTP_LENGTH).fill(""));
+      setResendCooldown(RESEND_COOLDOWN);
+      inputRefs.current[0]?.focus();
+    } catch {
+      setError("Sem conexão com o servidor.");
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleGoogle() {
+    // Import supabase only for Google OAuth (unchanged)
+    const { supabase } = await import("@/lib/supabase");
     setError("");
     setGoogleBusy(true);
     try {
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: {
-          redirectTo: `${window.location.origin}${basePath}/auth/callback`,
-        },
+        options: { redirectTo: `${window.location.origin}${basePath}/auth/callback` },
       });
-      if (oauthError) setError(translateSupabaseError(oauthError.message));
-    } catch (err: any) {
+      if (oauthError) setError(translateError(oauthError.message));
+    } catch {
       setError("Erro ao entrar com Google.");
     } finally {
       setGoogleBusy(false);
@@ -93,7 +194,7 @@ export default function SignUpPage() {
           <p className="text-sm text-[#737373]">
             {step === "form"
               ? "Comece sua jornada com o PoupaMais"
-              : `Código enviado para ${email}`}
+              : `Insira o código enviado para ${email}`}
           </p>
         </div>
 
@@ -155,7 +256,7 @@ export default function SignUpPage() {
                 className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 size={15} className="animate-spin" />}
-                Criar conta
+                {loading ? "Criando conta…" : "Criar conta"}
               </button>
             </form>
 
@@ -183,27 +284,64 @@ export default function SignUpPage() {
             </p>
           </>
         ) : (
-          <div className="space-y-4">
-            <div className="rounded-lg bg-[#f0fdf4] border border-[#86efac] p-4 text-sm text-[#166534]">
-              Enviamos um link de confirmação para <strong>{email}</strong>. Clique no link para ativar sua conta e depois faça login.
+          <div className="space-y-6">
+            {/* OTP digit inputs */}
+            <div className="flex justify-center gap-2.5">
+              {digits.map((digit, i) => (
+                <input
+                  key={i}
+                  ref={el => { inputRefs.current[i] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleDigitChange(i, e.target.value)}
+                  onKeyDown={e => handleDigitKeyDown(i, e)}
+                  onPaste={i === 0 ? handleDigitPaste : undefined}
+                  disabled={verifying}
+                  className="w-11 h-14 text-center text-xl font-bold rounded-xl border-2 border-[#e0e0e0] bg-[#f9f9f9] text-[#111111] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors disabled:opacity-50"
+                />
+              ))}
             </div>
 
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <a
-              href={`${basePath}/sign-in`}
-              className="block w-full text-center py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors"
-            >
-              Ir para o login
-            </a>
+            {error && (
+              <p className="text-sm text-red-600 text-center">{error}</p>
+            )}
 
             <button
               type="button"
-              onClick={() => { setStep("form"); setError(""); }}
-              className="w-full text-sm text-[#737373] hover:text-[#111111] transition-colors py-1"
+              onClick={() => handleVerifyOtp()}
+              disabled={verifying || digits.some(d => !d)}
+              className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              ← Voltar
+              {verifying && <Loader2 size={15} className="animate-spin" />}
+              {verifying ? "Verificando…" : "Confirmar código"}
             </button>
+
+            <div className="flex items-center justify-between text-sm">
+              <button
+                type="button"
+                onClick={() => { setStep("form"); setError(""); setDigits(Array(OTP_LENGTH).fill("")); }}
+                className="text-[#737373] hover:text-[#111111] transition-colors"
+              >
+                ← Voltar
+              </button>
+
+              <button
+                type="button"
+                onClick={handleResend}
+                disabled={resendCooldown > 0 || resending}
+                className="flex items-center gap-1.5 text-[#737373] hover:text-[#111111] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resending
+                  ? <Loader2 size={13} className="animate-spin" />
+                  : <RefreshCw size={13} />}
+                {resendCooldown > 0
+                  ? `Reenviar em ${resendCooldown}s`
+                  : "Reenviar código"}
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -211,7 +349,7 @@ export default function SignUpPage() {
   );
 }
 
-function translateSupabaseError(msg: string): string {
+function translateError(msg: string): string {
   const m = msg.toLowerCase();
   if (m.includes("invalid login credentials") || m.includes("invalid email or password"))
     return "E-mail ou senha incorretos.";
@@ -221,7 +359,7 @@ function translateSupabaseError(msg: string): string {
     return "Muitas tentativas. Aguarde alguns minutos e tente novamente.";
   if (m.includes("user not found"))
     return "Nenhuma conta encontrada com esse e-mail.";
-  if (m.includes("email already in use") || m.includes("already registered") || m.includes("user already registered"))
+  if (m.includes("already registered") || m.includes("already been registered"))
     return "Esse e-mail já está em uso. Tente outro.";
   if (m.includes("password should be at least"))
     return "A senha deve ter no mínimo 6 caracteres.";
