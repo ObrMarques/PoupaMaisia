@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
@@ -52,28 +52,38 @@ export default function Settings() {
 
   const [resetState, setResetState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [profileSaved, setProfileSaved] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
-  // Sync local state when user data arrives asynchronously (avoids empty initial value)
+  // Track whether the user has edited the name field.
+  // Prevents background query refetches from overwriting what they're typing.
+  const nameDirtyRef = useRef(false);
+
+  // Sync local state when user data arrives asynchronously (avoids empty initial value).
+  // Only syncs the name when the user has NOT started editing, so a background
+  // refetch cannot reset the input mid-type.
   useEffect(() => {
-    if (user?.name) setName(user.name);
+    if (user?.name && !nameDirtyRef.current) setName(user.name);
     if (user?.currency) setCurrency(user.currency);
   }, [user?.name, user?.currency]);
 
   const handleSaveProfile = () => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
+    setProfileError(null);
     updateMutation.mutate(
       { data: { name: trimmedName } },
       {
         onSuccess: (updated) => {
-          // Update local cache immediately so every component sees the new name
+          nameDirtyRef.current = false;
           updateUser(updated);
-          // Invalidate so the next background fetch pulls fresh data from DB
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
           setProfileSaved(true);
           setTimeout(() => setProfileSaved(false), 3500);
         },
-        onError: () => {},
+        onError: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : "Erro ao salvar. Tente novamente.";
+          setProfileError(msg);
+        },
       }
     );
   };
@@ -202,7 +212,7 @@ export default function Settings() {
                 <Input
                   id="input-name"
                   value={name}
-                  onChange={e => setName(e.target.value)}
+                  onChange={e => { nameDirtyRef.current = true; setName(e.target.value); }}
                   className="bg-background"
                   data-testid="input-name"
                 />
@@ -224,19 +234,27 @@ export default function Settings() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={handleSaveProfile}
-                disabled={updateMutation.isPending || !name.trim()}
-                data-testid="button-save-profile"
-              >
-                {updateMutation.isPending ? t("common.loading") : t("settings.saveProfile")}
-              </Button>
-              {profileSaved && (
-                <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
-                  <Check className="w-4 h-4" />
-                  Salvo com sucesso
-                </span>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleSaveProfile}
+                  disabled={updateMutation.isPending || !name.trim()}
+                  data-testid="button-save-profile"
+                >
+                  {updateMutation.isPending ? t("common.loading") : t("settings.saveProfile")}
+                </Button>
+                {profileSaved && (
+                  <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+                    <Check className="w-4 h-4" />
+                    Salvo com sucesso
+                  </span>
+                )}
+              </div>
+              {profileError && (
+                <p className="flex items-center gap-1.5 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {profileError}
+                </p>
               )}
             </div>
           </CardContent>
