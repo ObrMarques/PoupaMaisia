@@ -1,43 +1,9 @@
-import { useState, useCallback } from "react";
-import { Building2, RefreshCw, Unlink, Loader2 } from "lucide-react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Building2, RefreshCw, Unlink, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
-declare global {
-  interface Window {
-    PluggyConnect: new (options: {
-      connectToken: string;
-      includeSandbox?: boolean;
-      onSuccess: (data: { item: { id: string } }) => void;
-      onError?: (error: any) => void;
-      onClose?: () => void;
-    }) => { init: () => void };
-  }
-}
-
-const PLUGGY_CDN = "https://cdn.pluggy.ai/pluggy-connect/v2/pluggy-connect.js";
-
-function loadPluggyScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (window.PluggyConnect) {
-      resolve();
-      return;
-    }
-    const existing = document.querySelector(`script[src="${PLUGGY_CDN}"]`);
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("Falha ao carregar script Pluggy")));
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = PLUGGY_CDN;
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Falha ao carregar script Pluggy"));
-    document.head.appendChild(script);
-  });
-}
-
+const PLUGGY_PORTAL = "https://connect.pluggy.ai";
 const BASE = import.meta.env.BASE_URL?.replace(/\/$/, "") || "";
 
 async function fetchWithAuth(path: string, options: RequestInit = {}) {
@@ -55,103 +21,180 @@ async function fetchWithAuth(path: string, options: RequestInit = {}) {
   });
 }
 
+// ─── Pluggy iframe modal ────────────────────────────────────────────────────
+
+interface PluggyModalProps {
+  connectToken: string;
+  onSuccess: (itemId: string) => void;
+  onError: (err: string) => void;
+  onClose: () => void;
+}
+
+function PluggyModal({ connectToken, onSuccess, onError, onClose }: PluggyModalProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const src = `${PLUGGY_PORTAL}?connectToken=${encodeURIComponent(connectToken)}&includeSandbox=true`;
+
+  useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      // Only trust messages from the Pluggy portal
+      if (!event.origin.includes("pluggy.ai")) return;
+
+      const msg = event.data;
+      if (!msg || typeof msg !== "object") return;
+
+      const type: string = msg.type ?? msg.event ?? "";
+
+      if (type === "success" || type === "pluggyConnect::success") {
+        const itemId: string = msg.data?.item?.id ?? msg.itemId ?? msg.item?.id ?? "";
+        if (itemId) onSuccess(itemId);
+      } else if (type === "error" || type === "pluggyConnect::error") {
+        onError(msg.data?.message ?? msg.message ?? "Erro na conexão bancária");
+      } else if (type === "close" || type === "pluggyConnect::close") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [connectToken, onSuccess, onError, onClose]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="relative w-full max-w-sm h-[600px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-white">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-gray-600" />
+            <span className="text-sm font-medium text-gray-800">Conectar banco</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full hover:bg-gray-100 transition-colors"
+            aria-label="Fechar"
+          >
+            <X className="w-4 h-4 text-gray-500" />
+          </button>
+        </div>
+        <iframe
+          ref={iframeRef}
+          src={src}
+          title="Pluggy Connect"
+          className="flex-1 w-full border-0"
+          allow="camera; microphone"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── PluggyConnectButton ────────────────────────────────────────────────────
+
 interface PluggyConnectButtonProps {
   onConnected: () => void;
 }
 
 export function PluggyConnectButton({ onConnected }: PluggyConnectButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [connectToken, setConnectToken] = useState<string | null>(null);
   const { toast } = useToast();
 
   const openWidget = useCallback(async () => {
     setLoading(true);
     try {
-      await loadPluggyScript();
-
-      if (!window.PluggyConnect) {
-        throw new Error("Widget Pluggy não disponível após carregamento");
-      }
-
       const resp = await fetchWithAuth("/api/pluggy/create-connect-token", { method: "POST" });
       const data = await resp.json();
 
       if (!resp.ok || data.error) {
         throw new Error(data.error ?? "Falha ao obter token de conexão");
       }
+      if (!data.accessToken) {
+        throw new Error("Token de conexão inválido recebido do servidor");
+      }
 
-      const { accessToken } = data;
-      if (!accessToken) throw new Error("Token de conexão inválido");
-
-      const widget = new window.PluggyConnect({
-        connectToken: accessToken,
-        includeSandbox: true,
-        onSuccess: async ({ item }) => {
-          setLoading(true);
-          try {
-            const connectResp = await fetchWithAuth("/api/pluggy/connect", {
-              method: "POST",
-              body: JSON.stringify({ itemId: item.id }),
-            });
-            const result = await connectResp.json();
-            if (result.ok) {
-              toast({
-                title: "Banco conectado!",
-                description: `${result.walletsCreated} conta(s) importada(s) com sucesso.`,
-              });
-              onConnected();
-            } else {
-              throw new Error(result.error ?? "Falha ao importar contas");
-            }
-          } catch (err: any) {
-            toast({
-              title: "Erro ao importar",
-              description: err.message ?? "Não foi possível importar as contas bancárias.",
-              variant: "destructive",
-            });
-          } finally {
-            setLoading(false);
-          }
-        },
-        onError: (err) => {
-          console.error("Pluggy widget error:", err);
-          toast({
-            title: "Erro no widget",
-            description: "Ocorreu um erro ao conectar o banco. Tente novamente.",
-            variant: "destructive",
-          });
-          setLoading(false);
-        },
-        onClose: () => setLoading(false),
-      });
-
-      widget.init();
+      setConnectToken(data.accessToken);
     } catch (err: any) {
-      console.error("Failed to open Pluggy widget:", err);
       toast({
-        title: "Erro ao abrir widget",
-        description: err.message ?? "Não foi possível abrir o conector bancário.",
+        title: "Erro ao conectar banco",
+        description: err.message ?? "Não foi possível iniciar a conexão bancária.",
         variant: "destructive",
       });
       setLoading(false);
     }
+  }, [toast]);
+
+  const handleSuccess = useCallback(async (itemId: string) => {
+    setConnectToken(null);
+    setLoading(true);
+    try {
+      const resp = await fetchWithAuth("/api/pluggy/connect", {
+        method: "POST",
+        body: JSON.stringify({ itemId }),
+      });
+      const result = await resp.json();
+      if (result.ok) {
+        toast({
+          title: "Banco conectado!",
+          description: `${result.walletsCreated} conta(s) importada(s) com sucesso.`,
+        });
+        onConnected();
+      } else {
+        throw new Error(result.error ?? "Falha ao importar contas");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Erro ao importar contas",
+        description: err.message ?? "Não foi possível importar as contas bancárias.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   }, [onConnected, toast]);
 
+  const handleError = useCallback((msg: string) => {
+    setConnectToken(null);
+    setLoading(false);
+    toast({
+      title: "Erro na conexão",
+      description: msg,
+      variant: "destructive",
+    });
+  }, [toast]);
+
+  const handleClose = useCallback(() => {
+    setConnectToken(null);
+    setLoading(false);
+  }, []);
+
   return (
-    <Button
-      variant="outline"
-      onClick={openWidget}
-      disabled={loading}
-      className="gap-2"
-    >
-      {loading ? (
-        <Loader2 className="w-4 h-4 animate-spin" />
-      ) : (
-        <Building2 className="w-4 h-4" />
+    <>
+      <Button
+        variant="outline"
+        onClick={openWidget}
+        disabled={loading}
+        className="gap-2"
+      >
+        {loading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Building2 className="w-4 h-4" />
+        )}
+        {loading ? "Conectando..." : "Conectar banco"}
+      </Button>
+
+      {connectToken && (
+        <PluggyModal
+          connectToken={connectToken}
+          onSuccess={handleSuccess}
+          onError={handleError}
+          onClose={handleClose}
+        />
       )}
-      {loading ? "Conectando..." : "Conectar banco"}
-    </Button>
+    </>
   );
 }
+
+// ─── PluggySyncButton ───────────────────────────────────────────────────────
 
 interface PluggySyncButtonProps {
   walletId: number;
@@ -204,6 +247,8 @@ export function PluggySyncButton({ walletId, onSynced }: PluggySyncButtonProps) 
     </Button>
   );
 }
+
+// ─── PluggyDisconnectButton ─────────────────────────────────────────────────
 
 interface PluggyDisconnectButtonProps {
   walletId: number;
