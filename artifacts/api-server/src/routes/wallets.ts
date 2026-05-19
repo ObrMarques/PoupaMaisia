@@ -17,6 +17,8 @@ function serializeWallet(w: any) {
     icon: w.icon,
     initialBalance,
     balance: initialBalance + txBalance,
+    pluggyAccountId: w.pluggy_account_id ?? w.pluggyAccountId ?? null,
+    pluggyItemId: w.pluggy_item_id ?? w.pluggyItemId ?? null,
     createdAt: w.created_at ? new Date(w.created_at).toISOString() : w.createdAt,
   };
 }

@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { UpgradeModal } from "@/components/upgrade-modal";
-import { Plus, Pencil, Trash2, Wallet } from "lucide-react";
+import { PluggyConnectButton, PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
+import { Plus, Pencil, Trash2, Wallet, Building2 } from "lucide-react";
 
 const PRESET_COLORS = [
   "#1A1A1A", "#3B82F6", "#10B981", "#F59E0B",
@@ -100,110 +101,116 @@ export default function Wallets() {
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 animate-in fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Carteiras</h1>
           <p className="text-muted-foreground">Gerencie suas contas e fontes de dinheiro.</p>
         </div>
 
-        <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreate} data-testid="button-add-wallet">
-              <Plus className="w-4 h-4 mr-2" /> Nova Carteira
-            </Button>
-          </DialogTrigger>
-          <DialogContent aria-describedby={undefined} className="sm:max-w-[440px]">
-            <DialogHeader>
-              <DialogTitle>{editingId !== null ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Nome</Label>
-                <Input
-                  placeholder="Ex: Conta Corrente, Poupança..."
-                  value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="bg-background"
-                  autoFocus
-                />
-              </div>
+        <div className="flex gap-2 w-full md:w-auto">
+          {isPremium && (
+            <PluggyConnectButton onConnected={invalidate} />
+          )}
 
-              <div className="space-y-2">
-                <Label>Saldo inicial</Label>
-                <CurrencyInput
-                  value={form.initialBalance}
-                  onValueChange={v => setForm(f => ({ ...f, initialBalance: v }))}
-                  className="bg-background"
-                  placeholder="R$ 0,00"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Valor que você já possui nessa conta antes de registrar transações.
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Ícone</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_ICONS.map(icon => (
-                    <button
-                      key={icon}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, icon }))}
-                      className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-colors ${
-                        form.icon === icon ? "bg-secondary ring-2 ring-foreground" : "bg-secondary/50 hover:bg-secondary"
-                      }`}
-                    >
-                      {icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Cor</Label>
-                <div className="flex flex-wrap gap-2">
-                  {PRESET_COLORS.map(color => (
-                    <button
-                      key={color}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, color }))}
-                      className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
-                        form.color === color ? "ring-2 ring-offset-2 ring-foreground scale-110" : ""
-                      }`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0"
-                  style={{ backgroundColor: `${form.color}22`, border: `2px solid ${form.color}` }}
-                >
-                  {form.icon}
-                </div>
-                <div>
-                  <p className="font-medium">{form.name || "Nome da carteira"}</p>
-                  {form.initialBalance && parseFloat(form.initialBalance) !== 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      Saldo inicial: {formatCurrency(parseFloat(form.initialBalance), currency)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-              <Button
-                onClick={handleSave}
-                disabled={!form.name.trim() || createMutation.isPending || updateMutation.isPending}
-              >
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+          <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
+            <DialogTrigger asChild>
+              <Button onClick={openCreate} data-testid="button-add-wallet">
+                <Plus className="w-4 h-4 mr-2" /> Nova Carteira
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent aria-describedby={undefined} className="sm:max-w-[440px]">
+              <DialogHeader>
+                <DialogTitle>{editingId !== null ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Nome</Label>
+                  <Input
+                    placeholder="Ex: Conta Corrente, Poupança..."
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    className="bg-background"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Saldo inicial</Label>
+                  <CurrencyInput
+                    value={form.initialBalance}
+                    onValueChange={v => setForm(f => ({ ...f, initialBalance: v }))}
+                    className="bg-background"
+                    placeholder="R$ 0,00"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Valor que você já possui nessa conta antes de registrar transações.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Ícone</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_ICONS.map(icon => (
+                      <button
+                        key={icon}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, icon }))}
+                        className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-colors ${
+                          form.icon === icon ? "bg-secondary ring-2 ring-foreground" : "bg-secondary/50 hover:bg-secondary"
+                        }`}
+                      >
+                        {icon}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Cor</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRESET_COLORS.map(color => (
+                      <button
+                        key={color}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, color }))}
+                        className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
+                          form.color === color ? "ring-2 ring-offset-2 ring-foreground scale-110" : ""
+                        }`}
+                        style={{ backgroundColor: color }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0"
+                    style={{ backgroundColor: `${form.color}22`, border: `2px solid ${form.color}` }}
+                  >
+                    {form.icon}
+                  </div>
+                  <div>
+                    <p className="font-medium">{form.name || "Nome da carteira"}</p>
+                    {form.initialBalance && parseFloat(form.initialBalance) !== 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Saldo inicial: {formatCurrency(parseFloat(form.initialBalance), currency)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button
+                  onClick={handleSave}
+                  disabled={!form.name.trim() || createMutation.isPending || updateMutation.isPending}
+                >
+                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {(wallets ?? []).length > 0 && (
@@ -232,9 +239,14 @@ export default function Wallets() {
             <CardContent className="p-12 text-center space-y-3">
               <div className="text-4xl">💼</div>
               <p className="text-muted-foreground">Nenhuma carteira criada ainda.</p>
-              <Button variant="outline" onClick={openCreate} className="bg-background">
-                <Plus className="w-4 h-4 mr-2" /> Criar primeira carteira
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button variant="outline" onClick={openCreate} className="bg-background">
+                  <Plus className="w-4 h-4 mr-2" /> Criar primeira carteira
+                </Button>
+                {isPremium && (
+                  <PluggyConnectButton onConnected={invalidate} />
+                )}
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -243,13 +255,25 @@ export default function Wallets() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0"
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0 relative"
                     style={{ backgroundColor: `${w.color}22`, border: `2px solid ${w.color}` }}
                   >
                     {w.icon}
+                    {w.pluggyAccountId && (
+                      <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
+                        <Building2 className="w-2.5 h-2.5 text-muted-foreground" />
+                      </span>
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold truncate">{w.name}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold truncate">{w.name}</p>
+                      {w.pluggyAccountId && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-secondary border border-border text-muted-foreground font-medium">
+                          Open Finance
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center gap-3">
                       <p className={`text-sm font-medium tabular-nums ${w.balance >= 0 ? "text-[#00C851]" : "text-[#FF4444]"}`}>
                         {formatCurrency(w.balance, currency)}
@@ -262,6 +286,12 @@ export default function Wallets() {
                     </div>
                   </div>
                   <div className="flex gap-1 shrink-0">
+                    {w.pluggyAccountId && (
+                      <>
+                        <PluggySyncButton walletId={w.id} onSynced={invalidate} />
+                        <PluggyDisconnectButton walletId={w.id} onDisconnected={invalidate} />
+                      </>
+                    )}
                     <Button
                       variant="ghost" size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"

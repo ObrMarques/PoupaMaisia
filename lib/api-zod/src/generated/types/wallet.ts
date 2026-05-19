@@ -14,5 +14,9 @@ export interface Wallet {
   icon: string;
   initialBalance: number;
   balance: number;
+  /** @nullable */
+  pluggyAccountId?: string | null;
+  /** @nullable */
+  pluggyItemId?: string | null;
   createdAt: string;
 }

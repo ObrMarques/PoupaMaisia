@@ -9,6 +9,8 @@ export const walletsTable = pgTable("wallets", {
   color: text("color").notNull().default("#1A1A1A"),
   icon: text("icon").notNull().default("💼"),
   initialBalance: numeric("initial_balance").notNull().default("0"),
+  pluggyItemId: text("pluggy_item_id"),
+  pluggyAccountId: text("pluggy_account_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

@@ -1196,6 +1196,10 @@ components:
           type: number
         balance:
           type: number
+        pluggyAccountId:
+          type: ["string", "null"]
+        pluggyItemId:
+          type: ["string", "null"]
         createdAt:
           type: string
 

@@ -573,6 +573,8 @@ export const GetWalletsResponseItem = zod.object({
   "icon": zod.string(),
   "initialBalance": zod.number(),
   "balance": zod.number(),
+  "pluggyAccountId": zod.string().nullish(),
+  "pluggyItemId": zod.string().nullish(),
   "createdAt": zod.string()
 })
 export const GetWalletsResponse = zod.array(GetWalletsResponseItem)
@@ -614,6 +616,8 @@ export const UpdateWalletResponse = zod.object({
   "icon": zod.string(),
   "initialBalance": zod.number(),
   "balance": zod.number(),
+  "pluggyAccountId": zod.string().nullish(),
+  "pluggyItemId": zod.string().nullish(),
   "createdAt": zod.string()
 })
 

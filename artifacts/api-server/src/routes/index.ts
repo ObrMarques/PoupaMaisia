@@ -10,6 +10,7 @@ import walletsRouter from "./wallets";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
 import stripeRouter from "./stripe";
+import pluggyRouter from "./pluggy";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(walletsRouter);
 router.use(dashboardRouter);
 router.use(aiRouter);
 router.use(stripeRouter);
+router.use(pluggyRouter);
 
 export default router;
