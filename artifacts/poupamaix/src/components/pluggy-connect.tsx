@@ -32,7 +32,7 @@ interface PluggyModalProps {
 
 function PluggyModal({ connectToken, onSuccess, onError, onClose }: PluggyModalProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const src = `${PLUGGY_PORTAL}?connectToken=${encodeURIComponent(connectToken)}&includeSandbox=true`;
+  const src = `${PLUGGY_PORTAL}?connect_token=${encodeURIComponent(connectToken)}&includeSandbox=true`;
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
