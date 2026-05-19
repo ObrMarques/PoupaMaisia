@@ -112,6 +112,7 @@ export function PluggyConnectButton({ onConnected }: PluggyConnectButtonProps) {
       }
 
       setConnectToken(data.accessToken);
+      setLoading(false);
     } catch (err: any) {
       toast({
         title: "Erro ao conectar banco",
