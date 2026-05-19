@@ -2,6 +2,8 @@ import { Bot, Bell, Wallet, Target, Lock, Star, ChevronRight } from "lucide-reac
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 
+const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/test_fZuaEQfTB7AHem6cA5frW01";
+
 const benefits = [
   {
     icon: Bot,
@@ -93,10 +95,12 @@ export default function Premium() {
           <p className="text-xs text-muted-foreground">7 dias grátis · Cancele quando quiser</p>
         </div>
 
-        <Button className="w-full h-12 text-sm font-semibold">
-          Começar 7 dias grátis
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </Button>
+        <a href={STRIPE_CHECKOUT_URL} target="_blank" rel="noopener noreferrer" className="block w-full">
+          <Button className="w-full h-12 text-sm font-semibold">
+            Começar 7 dias grátis
+            <ChevronRight className="w-4 h-4 ml-1" />
+          </Button>
+        </a>
 
         <p className="text-center text-xs text-muted-foreground">
           Já assinante?{" "}

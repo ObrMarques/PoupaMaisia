@@ -1,6 +1,7 @@
 import { Crown, X, ChevronRight, Lock } from "lucide-react";
-import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+
+const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/test_fZuaEQfTB7AHem6cA5frW01";
 
 interface UpgradeModalProps {
   open: boolean;
@@ -52,12 +53,12 @@ export function UpgradeModal({ open, onClose, feature }: UpgradeModalProps) {
           </p>
 
           <div className="w-full space-y-2 pt-1">
-            <Link href="/premium" onClick={onClose} className="block w-full">
+            <a href={STRIPE_CHECKOUT_URL} target="_blank" rel="noopener noreferrer" className="block w-full" onClick={onClose}>
               <Button className="w-full h-11 bg-white text-black hover:bg-white/90 font-semibold text-sm">
-                Ver plano Premium
+                Assinar agora — R$ 9,90/mês
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
-            </Link>
+            </a>
             <Button
               variant="ghost"
               onClick={onClose}
