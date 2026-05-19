@@ -9,9 +9,9 @@ export interface SubscriptionStatus {
 
 export function useSubscription(): SubscriptionStatus {
   return {
-    hasAccess: true,
+    hasAccess: false,
     isInTrial: false,
-    isPremium: true,
+    isPremium: false,
     trialDaysLeft: 0,
     trialDaysTotal: 0,
     trialExpired: false,

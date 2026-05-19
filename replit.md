@@ -62,7 +62,7 @@ Aplicativo premium de gestão financeira pessoal com interface em português do 
 
 - Portuguese Brazil interface throughout — all copy, errors, and AI responses in pt-BR
 - Premium minimalist design: black/white branding, dark/light theme
-- App is completely free — no paywall, no subscription logic
+- Freemium model: free plan has limits (2 carteiras, 2 metas, PoupaAI bloqueado, Alertas bloqueados). Premium R$ 9,90/mês. `useSubscription()` returns `isPremium: false` by default — flip to `true` to enable premium. UpgradeModal component in `src/components/upgrade-modal.tsx`
 - Mobile-first responsive layout
 
 ## Gotchas

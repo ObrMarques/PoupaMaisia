@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb } from "lucide-react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { Link } from "wouter";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -180,6 +182,7 @@ async function fetchMessages(convId: number) {
 
 export default function AIPage() {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const [conversations, setConversations]   = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId]     = useState<number | null>(null);
   const [messages, setMessages]             = useState<Message[]>([]);
@@ -355,6 +358,32 @@ export default function AIPage() {
   }, [streaming, activeConvId]);
 
   const isEmptyChat = messages.length === 0 && !loadingHistory;
+
+  if (!isPremium) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full p-6 text-center gap-6">
+        <div className="w-16 h-16 rounded-2xl bg-foreground flex items-center justify-center shadow-lg">
+          <Crown className="w-8 h-8 text-background" />
+        </div>
+        <div className="space-y-2 max-w-xs">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border text-xs text-muted-foreground mb-1">
+            <Lock className="w-3 h-3" />
+            Disponível no Premium
+          </div>
+          <h2 className="text-xl font-bold">PoupaAI exclusivo</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Seu assistente financeiro inteligente. Analisa seus dados reais e responde em tempo real — disponível apenas no plano Premium.
+          </p>
+        </div>
+        <Link href="/premium">
+          <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-background text-sm font-semibold hover:opacity-90 active:scale-95 transition-all">
+            Ver plano Premium
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full overflow-hidden">

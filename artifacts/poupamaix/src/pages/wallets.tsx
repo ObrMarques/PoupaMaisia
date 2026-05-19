@@ -6,6 +6,7 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { Plus, Pencil, Trash2, Wallet } from "lucide-react";
 
 const PRESET_COLORS = [
@@ -32,10 +34,13 @@ interface WalletFormState {
 
 const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "💰", initialBalance: "" };
 
+const FREE_WALLET_LIMIT = 2;
+
 export default function Wallets() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const currency = user?.currency || "BRL";
+  const { isPremium } = useSubscription();
 
   const { data: wallets, isLoading } = useGetWallets();
   const createMutation = useCreateWallet();
@@ -46,6 +51,7 @@ export default function Wallets() {
   const [editingId, setEditingId]     = useState<number | null>(null);
   const [form, setForm]               = useState<WalletFormState>(defaultForm);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: 'all' });
@@ -55,6 +61,10 @@ export default function Wallets() {
   };
 
   const openCreate = () => {
+    if (!isPremium && (wallets?.length ?? 0) >= FREE_WALLET_LIMIT) {
+      setShowUpgrade(true);
+      return;
+    }
     setEditingId(null);
     setForm(defaultForm);
     setIsModalOpen(true);
@@ -294,6 +304,12 @@ export default function Wallets() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="Carteiras ilimitadas"
+      />
     </div>
   );
 }

@@ -5,7 +5,9 @@ import {
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
+import { useSubscription } from "@/hooks/use-subscription";
 import { useQueryClient } from "@tanstack/react-query";
+import { UpgradeModal } from "@/components/upgrade-modal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -143,10 +145,12 @@ function GoalForm({
   );
 }
 
+const FREE_GOAL_LIMIT = 2;
+
 export default function Goals() {
   const { user } = useAuth();
+  const { isPremium } = useSubscription();
   const queryClient = useQueryClient();
-
 
   const { data: goals, isLoading } = useGetGoals();
   const createMutation     = useCreateGoal();
@@ -160,6 +164,7 @@ export default function Goals() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedGoalId, setSelectedGoalId]       = useState<number | null>(null);
   const [contributeAmount, setContributeAmount]   = useState("");
+  const [showUpgrade, setShowUpgrade]             = useState(false);
 
   const [name, setName]                 = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -180,6 +185,10 @@ export default function Goals() {
   };
 
   const openCreate = () => {
+    if (!isPremium && (goals?.length ?? 0) >= FREE_GOAL_LIMIT) {
+      setShowUpgrade(true);
+      return;
+    }
     resetForm(); setIsFormOpen(true);
   };
 
@@ -446,6 +455,12 @@ export default function Goals() {
           })
         )}
       </div>
+
+      <UpgradeModal
+        open={showUpgrade}
+        onClose={() => setShowUpgrade(false)}
+        feature="Metas ilimitadas"
+      />
     </div>
   );
 }
