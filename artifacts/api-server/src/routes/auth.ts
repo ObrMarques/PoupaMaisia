@@ -10,6 +10,8 @@ const router = Router();
 // ─── GET /auth/me ────────────────────────────────────────────────────────────
 router.get("/auth/me", authMiddleware, (req, res) => {
   const user = getUser(req);
+  const ownerEmail = process.env.OWNER_EMAIL;
+  const isOwner = ownerEmail ? user.email === ownerEmail : false;
   res.json({
     id: user.id,
     name: user.name,
@@ -17,7 +19,7 @@ router.get("/auth/me", authMiddleware, (req, res) => {
     avatarUrl: user.avatarUrl,
     currency: user.currency,
     language: user.language,
-    isPremium: user.isPremium,
+    isPremium: isOwner ? true : user.isPremium,
     premiumExpiresAt: user.premiumExpiresAt?.toISOString() ?? null,
     onboardingCompleted: user.onboardingCompleted,
     createdAt: user.createdAt.toISOString(),

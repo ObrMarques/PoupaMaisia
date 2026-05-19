@@ -44,3 +44,4 @@ channel = "stable-25_05"
 [userenv.shared]
 VITE_SUPABASE_URL = "https://jwiopocxnqgbtzpiljuw.supabase.co"
 VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aW9wb2N4bnFnYnR6cGlsanV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkwNjk4NjYsImV4cCI6MjA5NDY0NTg2Nn0.bsfmEC8PiRGqUmF72eNjWPV4Lop9J5AeQmwsVEX-mhs"
+OWNER_EMAIL = "darkmachado77@gmail.com"
