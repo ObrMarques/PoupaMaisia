@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Building2, RefreshCw, Unlink, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useGetMe } from "@workspace/api-client-react";
 
 declare global {
   interface Window {

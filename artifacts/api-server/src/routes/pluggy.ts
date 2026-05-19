@@ -12,9 +12,9 @@ import {
 
 const router = Router();
 
-// ─── POST /pluggy/connect-token ───────────────────────────────────────────────
+// ─── POST /pluggy/create-connect-token (alias: /pluggy/connect-token) ────────
 // Returns a short-lived connect token for the Pluggy Widget
-router.post("/pluggy/connect-token", authMiddleware, async (req, res) => {
+router.post(["/pluggy/create-connect-token", "/pluggy/connect-token"], authMiddleware, async (req, res) => {
   try {
     const { itemId } = req.body as { itemId?: string };
     const token = await createConnectToken(itemId);
