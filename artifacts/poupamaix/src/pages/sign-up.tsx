@@ -183,8 +183,8 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
-      <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg p-8 space-y-6">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-3 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl w-full max-w-[440px] overflow-hidden shadow-lg p-5 sm:p-8 space-y-5 sm:space-y-6">
 
         <div className="space-y-1 text-center">
           <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
@@ -286,7 +286,7 @@ export default function SignUpPage() {
         ) : (
           <div className="space-y-6">
             {/* OTP digit inputs */}
-            <div className="flex justify-center gap-2.5">
+            <div className="flex justify-center gap-1.5 sm:gap-2.5">
               {digits.map((digit, i) => (
                 <input
                   key={i}
@@ -300,7 +300,7 @@ export default function SignUpPage() {
                   onKeyDown={e => handleDigitKeyDown(i, e)}
                   onPaste={i === 0 ? handleDigitPaste : undefined}
                   disabled={verifying}
-                  className="w-11 h-14 text-center text-xl font-bold rounded-xl border-2 border-[#e0e0e0] bg-[#f9f9f9] text-[#111111] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors disabled:opacity-50"
+                  className="w-10 h-12 sm:w-11 sm:h-14 text-center text-lg sm:text-xl font-bold rounded-xl border-2 border-[#e0e0e0] bg-[#f9f9f9] text-[#111111] focus:outline-none focus:border-[#111111] focus:bg-white transition-colors disabled:opacity-50"
                 />
               ))}
             </div>

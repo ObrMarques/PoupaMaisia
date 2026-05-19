@@ -34,8 +34,8 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4 py-8">
-      <div className="bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg p-8 space-y-6">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-3 sm:px-6 py-8">
+      <div className="bg-white rounded-2xl w-full max-w-[440px] overflow-hidden shadow-lg p-5 sm:p-8 space-y-5 sm:space-y-6">
 
         <div className="space-y-1 text-center">
           <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
