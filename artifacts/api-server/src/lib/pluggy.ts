@@ -29,10 +29,15 @@ export async function getPluggyApiKey(): Promise<string> {
   return cachedApiKey;
 }
 
-export async function createConnectToken(itemId?: string): Promise<string> {
+export async function createConnectToken(opts: {
+  clientUserId: string;
+  itemId?: string;
+}): Promise<string> {
   const apiKey = await getPluggyApiKey();
-  const body: Record<string, any> = {};
-  if (itemId) body.itemId = itemId;
+  const body: Record<string, any> = {
+    clientUserId: opts.clientUserId,
+  };
+  if (opts.itemId) body.itemId = opts.itemId;
 
   const response = await axios.post(`${PLUGGY_BASE}/connect_token`, body, {
     headers: { "X-API-KEY": apiKey },

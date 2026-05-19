@@ -16,8 +16,9 @@ const router = Router();
 // Returns a short-lived connect token for the Pluggy Widget
 router.post(["/pluggy/create-connect-token", "/pluggy/connect-token"], authMiddleware, async (req, res) => {
   try {
+    const user = getUser(req);
     const { itemId } = req.body as { itemId?: string };
-    const token = await createConnectToken(itemId);
+    const token = await createConnectToken({ clientUserId: String(user.id), itemId });
     res.json({ accessToken: token });
   } catch (err: any) {
     logger.error({ err }, "pluggy: failed to create connect token");
