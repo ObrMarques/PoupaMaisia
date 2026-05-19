@@ -10,8 +10,8 @@ const router = Router();
 // ─── GET /auth/me ────────────────────────────────────────────────────────────
 router.get("/auth/me", authMiddleware, (req, res) => {
   const user = getUser(req);
-  const ownerEmail = process.env.OWNER_EMAIL;
-  const isOwner = ownerEmail ? user.email === ownerEmail : false;
+  const ownerEmails = (process.env.OWNER_EMAIL ?? "").split(",").map(e => e.trim()).filter(Boolean);
+  const isOwner = ownerEmails.includes(user.email);
   res.json({
     id: user.id,
     name: user.name,
