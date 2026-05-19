@@ -3,7 +3,7 @@ import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, Plus } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, Plus, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
@@ -50,6 +50,11 @@ export default function Dashboard() {
             <Button className="w-full bg-primary text-primary-foreground">
               <Sparkles className="w-4 h-4 mr-2" />
               Perguntar ao PoupaAI
+            </Button>
+          </Link>
+          <Link href="/premium" className="hidden md:flex">
+            <Button variant="outline" size="icon" className="bg-background shrink-0" aria-label="Alertas inteligentes">
+              <Bell className="w-4 h-4" />
             </Button>
           </Link>
         </div>

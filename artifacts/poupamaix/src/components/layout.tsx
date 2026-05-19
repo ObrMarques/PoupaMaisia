@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard, Receipt, Target, Wallet, PieChart,
-  Sparkles, Settings, LogOut, HelpCircle, ArrowLeft, Menu, X
+  Sparkles, Settings, LogOut, HelpCircle, ArrowLeft, Menu, X, Bell
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/contexts/i18n-context";
@@ -297,13 +297,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             {isHome ? "PoupaMais" : pageTitle}
           </span>
 
-          <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
-            {user?.avatarUrl ? (
-              <img src={user.avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
-            ) : (
-              <span className="font-medium text-xs">{user?.name?.charAt(0).toUpperCase()}</span>
-            )}
-          </div>
+          <Link href="/premium">
+            <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center shrink-0 hover:bg-secondary/80 transition-colors">
+              <Bell className="w-4 h-4 text-muted-foreground" />
+            </div>
+          </Link>
         </div>
 
         {/* Desktop back button */}
