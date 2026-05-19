@@ -34,9 +34,9 @@ export default function Reports() {
           <h1 className="text-3xl font-bold tracking-tight">Relatórios</h1>
           <p className="text-muted-foreground">Analise seus hábitos financeiros em profundidade.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full md:w-auto">
           <Select value={month.toString()} onValueChange={(v) => setMonth(parseInt(v))}>
-            <SelectTrigger className="w-[140px] bg-background">
+            <SelectTrigger className="flex-1 md:w-[140px] bg-background">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -46,7 +46,7 @@ export default function Reports() {
             </SelectContent>
           </Select>
           <Select value={year.toString()} onValueChange={(v) => setYear(parseInt(v))}>
-            <SelectTrigger className="w-[100px] bg-background">
+            <SelectTrigger className="w-[90px] md:w-[100px] bg-background">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -65,7 +65,7 @@ export default function Reports() {
             <CardDescription>Para onde foi seu dinheiro este mês</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[300px] overflow-hidden">
               {loadingSpending ? (
                 <Skeleton className="h-full w-full rounded-full" />
               ) : spending?.length === 0 ? (
@@ -124,7 +124,7 @@ export default function Reports() {
               <CardDescription>Receitas e despesas ao longo do tempo</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[250px]">
+              <div className="h-[250px] overflow-hidden">
                 {loadingTrend ? (
                   <Skeleton className="h-full w-full" />
                 ) : (
@@ -158,7 +158,7 @@ export default function Reports() {
               <CardDescription>Valor economizado por mês</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[250px]">
+              <div className="h-[250px] overflow-hidden">
                 {loadingTrend ? (
                   <Skeleton className="h-full w-full" />
                 ) : (

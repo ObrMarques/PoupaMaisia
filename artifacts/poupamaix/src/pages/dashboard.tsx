@@ -104,14 +104,14 @@ export default function Dashboard() {
               <CardDescription>Receitas x Despesas ao longo do tempo</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="h-[300px]">
+              <div className="h-[300px] overflow-hidden">
                 {loadingTrend ? (
                   <Skeleton className="h-full w-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={trendData}>
-                      <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                      <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${currency === 'BRL' ? 'R$' : '$'}${value}`} />
+                    <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
+                      <XAxis dataKey="name" stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
+                      <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} width={48} tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(0)}k` : `${value}`} />
                       <RechartsTooltip cursor={{fill: 'transparent'}} contentStyle={tooltipStyle} />
                       <Bar dataKey="income" name="Receitas" fill="#00C851" radius={[4, 4, 0, 0]} />
                       <Bar dataKey="expenses" name="Despesas" fill="#FF4444" radius={[4, 4, 0, 0]} />
@@ -131,7 +131,7 @@ export default function Dashboard() {
               <CardTitle>Gastos por Categoria</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="h-[200px]">
+              <div className="h-[200px] overflow-hidden">
                 {loadingSpending ? (
                   <Skeleton className="h-full w-full rounded-full" />
                 ) : (

@@ -258,7 +258,7 @@ export default function Transactions() {
         </div>
         <div className="flex gap-2 w-full md:w-auto">
           <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="w-[160px] bg-background">
+            <SelectTrigger className="flex-1 md:w-[160px] bg-background">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Filtrar" />
             </SelectTrigger>

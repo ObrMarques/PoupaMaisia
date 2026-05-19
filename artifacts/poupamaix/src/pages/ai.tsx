@@ -369,10 +369,9 @@ export default function AIPage() {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed md:relative inset-y-0 left-0 z-40 md:z-auto",
-          "w-64 flex flex-col bg-card border-r border-border",
-          "transition-transform duration-200",
-          showSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          "md:relative md:flex inset-y-0 left-0 z-40 md:z-auto",
+          "w-64 flex-col bg-card border-r border-border",
+          showSidebar ? "fixed flex" : "hidden md:flex"
         )}
       >
         <div className="flex items-center justify-between p-4 border-b border-border">
