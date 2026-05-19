@@ -39,12 +39,11 @@ export default function Premium() {
         <div className="w-14 h-14 rounded-2xl bg-foreground flex items-center justify-center mx-auto shadow-lg">
           <Star className="w-7 h-7 text-background fill-background" />
         </div>
-        <h1 className="text-3xl font-bold tracking-tight">PoupaMais Prêmio</h1>
+        <h1 className="text-3xl font-bold tracking-tight">PoupaMais Premium</h1>
         <p className="text-muted-foreground max-w-sm mx-auto">
           Desbloqueie todo o potencial do PoupaMais e transforme sua vida financeira.
         </p>
       </div>
-
       {/* Benefits list */}
       <div className="space-y-3">
         {benefits.map((benefit) => {
@@ -86,7 +85,6 @@ export default function Premium() {
           );
         })}
       </div>
-
       {/* CTA */}
       <div className="space-y-3 pb-4">
         <div className="p-4 rounded-2xl border border-border bg-card text-center space-y-1">
