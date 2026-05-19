@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { UpgradeModal } from "@/components/upgrade-modal";
-import { PluggyConnectButton, PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
+import { PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
 import { Plus, Pencil, Trash2, Wallet, Building2 } from "lucide-react";
 
 const PRESET_COLORS = [
@@ -108,10 +108,6 @@ export default function Wallets() {
         </div>
 
         <div className="flex gap-2 w-full md:w-auto">
-          {isPremium && (
-            <PluggyConnectButton onConnected={invalidate} />
-          )}
-
           <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
             <DialogTrigger asChild>
               <Button onClick={openCreate} data-testid="button-add-wallet">
@@ -243,9 +239,6 @@ export default function Wallets() {
                 <Button variant="outline" onClick={openCreate} className="bg-background">
                   <Plus className="w-4 h-4 mr-2" /> Criar primeira carteira
                 </Button>
-                {isPremium && (
-                  <PluggyConnectButton onConnected={invalidate} />
-                )}
               </div>
             </CardContent>
           </Card>
