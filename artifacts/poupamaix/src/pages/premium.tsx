@@ -88,7 +88,7 @@ export default function Premium() {
       {/* CTA */}
       <div className="space-y-3 pb-4">
         <div className="p-4 rounded-2xl border border-border bg-card text-center space-y-1">
-          <p className="text-xs text-muted-foreground">Plano Prêmio</p>
+          <p className="text-xs text-muted-foreground">Plano Premium</p>
           <p className="text-2xl font-bold">R$ 9,90<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
           <p className="text-xs text-muted-foreground">7 dias grátis · Cancele quando quiser</p>
         </div>
