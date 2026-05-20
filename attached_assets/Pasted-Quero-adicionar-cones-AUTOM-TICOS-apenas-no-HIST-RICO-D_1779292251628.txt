@@ -1,0 +1,91 @@
+Quero adicionar ícones AUTOMÁTICOS apenas no HISTÓRICO DE TRANSAÇÕES do aplicativo PoupaMais.
+
+IMPORTANTE:
+- NÃO quero ícones no modal/lista de seleção de categorias.
+- A tela “Selecionar Categoria” deve continuar apenas com texto simples.
+- Os ícones devem aparecer SOMENTE depois que a transação for criada, dentro do histórico/lista de transações.
+- O ícone deve mudar automaticamente de acordo com a categoria da transação.
+
+Exemplo visual desejado no histórico:
+
+🍔 Alimentação
+🛒 Mercado
+💊 Farmácia
+🚌 Transporte
+⛽ Combustível
+🚖 Uber
+🏠 Moradia
+💧 Água
+⚡ Energia
+🌐 Internet
+🎬 Streaming
+📚 Educação
+🎓 Faculdade
+🎉 Lazer
+✈️ Viagens
+🛍️ Compras
+❤️ Saúde
+💪 Academia
+📦 Assinaturas
+🐾 Pets
+🧾 Impostos
+💳 Cartão de crédito
+📈 Investimentos
+💰 Salário
+💻 Freelance
+📊 Rendimentos
+🎁 Presente
+📁 Outros
+➕ Categoria personalizada
+
+Quero usar ícones profissionais da biblioteca Lucide React.
+
+Mapeamento dos ícones:
+
+const categoryIcons = {
+  "Alimentação": UtensilsCrossed,
+  "Mercado": ShoppingCart,
+  "Farmácia": Pill,
+  "Transporte": Bus,
+  "Combustível": Fuel,
+  "Uber": CarTaxiFront,
+  "Moradia": House,
+  "Água": Droplets,
+  "Energia": Zap,
+  "Internet": Wifi,
+  "Streaming": MonitorPlay,
+  "Educação": BookOpen,
+  "Faculdade": GraduationCap,
+  "Lazer": PartyPopper,
+  "Viagens": Plane,
+  "Compras": ShoppingBag,
+  "Saúde": HeartPulse,
+  "Academia": Dumbbell,
+  "Assinaturas": Repeat,
+  "Pets": PawPrint,
+  "Impostos": ReceiptText,
+  "Cartão de crédito": CreditCard,
+  "Investimentos": TrendingUp,
+  "Salário": Wallet,
+  "Freelance": Laptop,
+  "Rendimentos": BarChart3,
+  "Presente": Gift,
+  "Outros": Folder,
+  "Categoria personalizada": PlusCircle,
+};
+
+Regras:
+- Caso a categoria não exista no objeto, usar Folder como padrão.
+- Os ícones devem aparecer ao lado esquerdo do nome da transação.
+- Manter alinhamento moderno e profissional.
+- Usar tamanho entre 18px e 22px.
+- Manter suporte ao tema dark.
+- Não alterar a lógica de criação das categorias.
+- Não alterar o modal “Selecionar Categoria”.
+- Apenas melhorar visualmente o histórico de transações.
+
+Exemplo esperado no histórico:
+
+[🍔] McDonald's ........ R$ 45
+[⛽] Posto Shell ........ R$ 120
+[💰] Salário ............ R$ 3.000

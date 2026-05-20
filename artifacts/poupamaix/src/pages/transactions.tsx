@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
+import { CategoryIcon } from "@/components/category-icon";
 import { Plus, Filter, Trash2, Pencil, ChevronRight, Wallet, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -394,12 +395,7 @@ export default function Transactions() {
                   data-testid={`row-transaction-${t.id}`}
                 >
                   <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
-                    <div
-                      className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 font-semibold text-xs"
-                      style={{ backgroundColor: `${t.categoryColor || "#6C5CE7"}20`, color: t.categoryColor || "#6C5CE7" }}
-                    >
-                      {(t.categoryName || "?").charAt(0).toUpperCase()}
-                    </div>
+                    <CategoryIcon name={t.categoryName || ""} color={t.categoryColor || "#6C5CE7"} />
                     <div className="min-w-0">
                       <p className="font-medium text-foreground truncate">{t.description || t.categoryName}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
