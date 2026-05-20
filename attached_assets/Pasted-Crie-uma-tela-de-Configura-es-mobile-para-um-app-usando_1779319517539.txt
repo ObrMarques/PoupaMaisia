@@ -1,0 +1,73 @@
+Crie uma tela de Configurações mobile para um app, usando React Native ou HTML/CSS mobile-first. A tela deve ter as seguintes seções e funcionalidades:
+
+---
+
+## Estrutura da tela
+
+### Header fixo
+- Seta de voltar (ícone) à esquerda
+- Título "Configurações" centralizado
+
+---
+
+### Seção: Perfil
+- Avatar circular com inicial do usuário (letra "W") e fundo roxo escuro
+- Ícone de câmera sobreposto no canto inferior direito do avatar para trocar foto
+- Nome completo: (campo editável)
+- E-mail: (campo desabilitado com badge "não editável" + ícone de cadeado)
+- Botão "Salvar alterações"
+
+---
+
+### Seção: Aparência
+- Item: "Modo escuro" → subtítulo "Fundo preto, textos brancos" → ícone de lua roxa → toggle switch (ligado por padrão)
+- Item: "Idioma" → subtítulo "Português (Brasil)" → ícone de idioma âmbar → chevron direita
+
+---
+
+### Seção: Notificações
+- Item: "Notificações push" → subtítulo "Alertas e atualizações" → ícone de sino verde → toggle switch (desligado por padrão)
+- Item: "E-mails promocionais" → subtítulo "Novidades e ofertas" → ícone de e-mail azul → toggle switch (desligado por padrão)
+
+---
+
+### Seção: Legal
+- Item: "Termos de uso" → subtítulo "Regras e condições do serviço" → ícone de documento → chevron direita → ao clicar, abre tela/modal com o conteúdo dos termos
+- Item: "Política de privacidade" → subtítulo "Como seus dados são usados" → ícone de escudo → chevron direita → ao clicar, abre tela/modal com a política
+- Item: "Política de cookies" → subtítulo "Preferências de rastreamento" → ícone de cookie → chevron direita
+
+---
+
+### Seção: Conta
+- Item: "Sair da conta" → ícone de logout cinza → chevron direita
+- Item: "Excluir conta" → ícone de lixeira VERMELHO → texto em vermelho → chevron direita → ao clicar, exibir alerta de confirmação
+
+---
+
+### Rodapé
+- Texto centralizado: "Versão 1.0.0 · © 2026"
+
+---
+
+## Estilo visual
+- Fundo geral: cinza muito claro (#F5F5F5)
+- Cards brancos com borda sutil (0.5px) e bordas arredondadas (12px)
+- Cada item de lista com ícone colorido em fundo suave (ex: ícone azul em fundo azul claro)
+- Separadores finos entre itens dentro do mesmo card
+- Toggle switches funcionais
+- Suporte a modo escuro
+- Tipografia limpa, sem serifa
+- Layout 100% responsivo para telas mobile (375px–430px de largura)
+
+---
+
+## Comportamentos esperados
+- Toggle de "Modo escuro" alterna o tema da tela inteira
+- Campos do perfil são editáveis (exceto e-mail)
+- Botão "Salvar alterações" exibe feedback (ex: toast "Salvo com sucesso!")
+- "Excluir conta" abre um diálogo de confirmação antes de prosseguir
+- Itens com chevron navegam para subpáginas ou abrem modais
+
+---
+
+Use boas práticas de UX mobile, acessibilidade (aria-labels, contrastes adequados) e código limpo e organizado.
