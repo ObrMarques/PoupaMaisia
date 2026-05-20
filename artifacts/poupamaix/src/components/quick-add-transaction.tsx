@@ -214,12 +214,6 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                           className={`w-full text-left px-3 py-2.5 text-sm hover:bg-secondary transition-colors flex items-center gap-2 ${walletId === w.id ? "font-medium bg-secondary/50" : ""}`}
                           onClick={() => { setWalletId(w.id); setWalletMenuOpen(false); setWalletError(false); }}
                         >
-                          <span
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-sm shrink-0"
-                            style={{ backgroundColor: `${w.color}22`, border: `1.5px solid ${w.color}` }}
-                          >
-                            {w.icon}
-                          </span>
                           <span className="flex-1 truncate">{w.name}</span>
                         </button>
                       ))}
