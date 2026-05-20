@@ -15,7 +15,7 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear  = month === 1 ? year - 1 : year;
 
-  // Monthly/all-time income & expenses from ALL transactions (no wallet filter)
+  // All figures based solely on current-month transactions
   const txResult = await db.execute(sql`
     SELECT
       SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_income,
@@ -27,26 +27,11 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
     WHERE user_id = ${user.id}
   `);
 
-  // Total balance = sum of all wallet balances (initial_balance + income - expense per wallet)
-  const balanceResult = await db.execute(sql`
-    SELECT
-      COALESCE(SUM(w.initial_balance::numeric), 0) +
-      COALESCE(SUM(
-        CASE WHEN t.type = 'income'  THEN  t.amount::numeric
-             WHEN t.type = 'expense' THEN -t.amount::numeric
-             ELSE 0 END
-      ), 0) AS total_balance
-    FROM wallets w
-    LEFT JOIN transactions t ON t.wallet_id = w.id
-    WHERE w.user_id = ${user.id}
-  `);
+  const r = (txResult.rows[0] ?? {}) as any;
 
-  const r  = (txResult.rows[0]     ?? {}) as any;
-  const br = (balanceResult.rows[0] ?? {}) as any;
-
-  const totalBalance     = parseFloat(br.total_balance   || "0");
   const monthlyIncome    = parseFloat(r.monthly_income   || "0");
   const monthlyExpenses  = parseFloat(r.monthly_expenses || "0");
+  const totalBalance     = monthlyIncome - monthlyExpenses; // saldo do mês
   const monthlySavings   = monthlyIncome - monthlyExpenses;
   const savingsRate      = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
 
