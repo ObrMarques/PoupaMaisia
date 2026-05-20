@@ -5,8 +5,7 @@ import { authMiddleware, getUser } from "../lib/auth";
 
 const router = Router();
 
-const CACHE_SHORT  = "no-cache, no-store, must-revalidate";
-const CACHE_MEDIUM = "no-cache, no-store, must-revalidate";
+const CACHE_NONE = "no-cache, no-store, must-revalidate";
 
 router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   const user = getUser(req);
@@ -16,37 +15,51 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear  = month === 1 ? year - 1 : year;
 
-  const result = await db.execute(sql`
+  // Monthly/all-time income & expenses from ALL transactions (no wallet filter)
+  const txResult = await db.execute(sql`
     SELECT
-      SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END) AS total_income,
-      SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END) AS total_expenses,
-      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year}      THEN amount::numeric ELSE 0 END) AS monthly_income,
-      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year}      THEN amount::numeric ELSE 0 END) AS monthly_expenses,
+      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_income,
+      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_expenses,
       SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_income,
       SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_expenses,
       COUNT(CASE WHEN EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year} THEN 1 END) AS tx_count
     FROM transactions
-    WHERE user_id = ${user.id} AND wallet_id IS NULL
+    WHERE user_id = ${user.id}
   `);
 
-  const r = (result.rows[0] ?? {}) as any;
-  const totalIncome      = parseFloat(r.total_income    || "0");
-  const totalExpenses    = parseFloat(r.total_expenses  || "0");
-  const monthlyIncome    = parseFloat(r.monthly_income  || "0");
+  // Total balance = sum of all wallet balances (initial_balance + income - expense per wallet)
+  const balanceResult = await db.execute(sql`
+    SELECT
+      COALESCE(SUM(w.initial_balance::numeric), 0) +
+      COALESCE(SUM(
+        CASE WHEN t.type = 'income'  THEN  t.amount::numeric
+             WHEN t.type = 'expense' THEN -t.amount::numeric
+             ELSE 0 END
+      ), 0) AS total_balance
+    FROM wallets w
+    LEFT JOIN transactions t ON t.wallet_id = w.id
+    WHERE w.user_id = ${user.id}
+  `);
+
+  const r  = (txResult.rows[0]     ?? {}) as any;
+  const br = (balanceResult.rows[0] ?? {}) as any;
+
+  const totalBalance     = parseFloat(br.total_balance   || "0");
+  const monthlyIncome    = parseFloat(r.monthly_income   || "0");
   const monthlyExpenses  = parseFloat(r.monthly_expenses || "0");
   const monthlySavings   = monthlyIncome - monthlyExpenses;
   const savingsRate      = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
 
-  res.set("Cache-Control", CACHE_SHORT);
+  res.set("Cache-Control", CACHE_NONE);
   res.json({
-    totalBalance:           totalIncome - totalExpenses,
+    totalBalance,
     monthlyIncome,
     monthlyExpenses,
     monthlySavings,
-    savingsRate:            Math.round(savingsRate * 100) / 100,
-    transactionCount:       parseInt(r.tx_count || "0"),
-    previousMonthExpenses:  parseFloat(r.prev_expenses || "0"),
-    previousMonthIncome:    parseFloat(r.prev_income   || "0"),
+    savingsRate:           Math.round(savingsRate * 100) / 100,
+    transactionCount:      parseInt(r.tx_count || "0"),
+    previousMonthExpenses: parseFloat(r.prev_expenses || "0"),
+    previousMonthIncome:   parseFloat(r.prev_income   || "0"),
   });
 });
 
@@ -56,6 +69,7 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
   const month = req.query.month ? parseInt(req.query.month as string) : now.getMonth() + 1;
   const year  = req.query.year  ? parseInt(req.query.year  as string) : now.getFullYear();
 
+  // All expense transactions (no wallet filter)
   const result = await db.execute(sql`
     SELECT
       t.category_id,
@@ -68,7 +82,6 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
     LEFT JOIN categories c ON c.id = t.category_id
     WHERE t.user_id = ${user.id}
       AND t.type = 'expense'
-      AND t.wallet_id IS NULL
       AND EXTRACT(MONTH FROM t.date) = ${month}
       AND EXTRACT(YEAR  FROM t.date) = ${year}
     GROUP BY t.category_id, c.name, c.color, c.icon
@@ -78,17 +91,17 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
   const rows = result.rows as any[];
   const totalAmount = rows.reduce((s, r) => s + parseFloat(r.total_amount || "0"), 0);
 
-  res.set("Cache-Control", CACHE_SHORT);
+  res.set("Cache-Control", CACHE_NONE);
   res.json(rows.map(r => ({
-    categoryId:        r.category_id,
-    categoryName:      r.category_name  ?? "Outros",
-    categoryColor:     r.category_color ?? "#666666",
-    categoryIcon:      r.category_icon  ?? "",
-    amount:            parseFloat(r.total_amount || "0"),
-    percentage:        totalAmount > 0
+    categoryId:       r.category_id,
+    categoryName:     r.category_name  ?? "Outros",
+    categoryColor:    r.category_color ?? "#666666",
+    categoryIcon:     r.category_icon  ?? "",
+    amount:           parseFloat(r.total_amount || "0"),
+    percentage:       totalAmount > 0
       ? Math.round((parseFloat(r.total_amount || "0") / totalAmount) * 10000) / 100
       : 0,
-    transactionCount:  parseInt(r.tx_count || "0"),
+    transactionCount: parseInt(r.tx_count || "0"),
   })));
 });
 
@@ -98,6 +111,7 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
   const cutoff = sixMonthsAgo.toISOString().split("T")[0];
 
+  // All transactions (no wallet filter)
   const result = await db.execute(sql`
     SELECT
       EXTRACT(MONTH FROM date)::int AS month,
@@ -105,7 +119,7 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
       SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END) AS income,
       SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END) AS expenses
     FROM transactions
-    WHERE user_id = ${user.id} AND date >= ${cutoff} AND wallet_id IS NULL
+    WHERE user_id = ${user.id} AND date >= ${cutoff}
     GROUP BY EXTRACT(MONTH FROM date), EXTRACT(YEAR FROM date)
     ORDER BY year ASC, month ASC
   `);
@@ -127,29 +141,33 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
     trend.push({ ...data, savings: data.income - data.expenses });
   }
 
-  res.set("Cache-Control", CACHE_MEDIUM);
+  res.set("Cache-Control", CACHE_NONE);
   res.json(trend);
 });
 
 router.get("/dashboard/recent-transactions", authMiddleware, async (req, res) => {
   const user = getUser(req);
 
+  // All transactions (no wallet filter), including wallet info
   const result = await db.execute(sql`
     SELECT
       t.id, t.user_id, t.type, t.amount::numeric AS amount, t.description,
       t.date, t.time, t.category_id, t.is_recurring, t.recurring_period,
-      t.installments, t.installment_number, t.card_id, t.notes, t.created_at,
+      t.installments, t.installment_number, t.card_id, t.wallet_id, t.notes, t.created_at,
       c.name  AS category_name,
       c.color AS category_color,
-      c.icon  AS category_icon
+      c.icon  AS category_icon,
+      w.name  AS wallet_name,
+      w.color AS wallet_color
     FROM transactions t
     LEFT JOIN categories c ON c.id = t.category_id
-    WHERE t.user_id = ${user.id} AND t.wallet_id IS NULL
+    LEFT JOIN wallets    w ON w.id = t.wallet_id
+    WHERE t.user_id = ${user.id}
     ORDER BY t.date DESC, t.created_at DESC
     LIMIT 10
   `);
 
-  res.set("Cache-Control", CACHE_SHORT);
+  res.set("Cache-Control", CACHE_NONE);
   res.json((result.rows as any[]).map(r => ({
     id:               r.id,
     userId:           r.user_id,
@@ -157,17 +175,20 @@ router.get("/dashboard/recent-transactions", authMiddleware, async (req, res) =>
     amount:           parseFloat(r.amount || "0"),
     description:      r.description,
     date:             r.date,
-    time:             r.time ?? null,
+    time:             r.time             ?? null,
     categoryId:       r.category_id,
-    categoryName:     r.category_name  ?? "Outros",
-    categoryColor:    r.category_color ?? "#666666",
-    categoryIcon:     r.category_icon  ?? "",
+    categoryName:     r.category_name    ?? "Outros",
+    categoryColor:    r.category_color   ?? "#666666",
+    categoryIcon:     r.category_icon    ?? "",
     isRecurring:      r.is_recurring,
-    recurringPeriod:  r.recurring_period   ?? null,
-    installments:     r.installments       ?? null,
+    recurringPeriod:  r.recurring_period ?? null,
+    installments:     r.installments     ?? null,
     installmentNumber: r.installment_number ?? null,
-    cardId:           r.card_id  ?? null,
-    notes:            r.notes    ?? null,
+    cardId:           r.card_id          ?? null,
+    walletId:         r.wallet_id        ?? null,
+    walletName:       r.wallet_name      ?? null,
+    walletColor:      r.wallet_color     ?? null,
+    notes:            r.notes            ?? null,
     createdAt:        new Date(r.created_at).toISOString(),
   })));
 });
