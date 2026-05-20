@@ -14,6 +14,127 @@ import { ai } from "@workspace/integrations-gemini-ai";
 
 const router = Router();
 
+// ── Transaction detection ────────────────────────────────────────────────────
+
+interface DetectedTransaction {
+  id: number;
+  type: "income" | "expense";
+  amount: number;
+  description: string;
+  categoryId: number;
+  categoryName: string;
+  categoryColor: string;
+  date: string;
+  walletId: number;
+}
+
+async function detectAndSaveTransaction(
+  userId: number,
+  message: string
+): Promise<DetectedTransaction | null> {
+  const [categories, wallets] = await Promise.all([
+    db
+      .select()
+      .from(categoriesTable)
+      .where(sql`${categoriesTable.userId} IS NULL OR ${categoriesTable.userId} = ${userId}`),
+    db
+      .select()
+      .from(walletsTable)
+      .where(eq(walletsTable.userId, userId))
+      .limit(1),
+  ]);
+
+  if (!wallets.length) return null;
+
+  const today = new Date().toISOString().split("T")[0];
+  const catNames = categories.map((c) => c.name).join(", ");
+
+  const extractionPrompt = `Analise a mensagem e identifique se o usuário está registrando uma transação financeira.
+
+Categorias disponíveis: ${catNames}
+
+Se for uma transação, responda APENAS com JSON válido (sem markdown):
+{"tipo":"despesa" ou "receita","valor":number,"categoria":"nome exato da lista acima","descricao":"texto curto","data":"${today}"}
+
+Se NÃO for registro de transação (pergunta, análise, dúvida etc.), responda apenas: null
+
+Mensagem: "${message.replace(/"/g, "'")}"`;
+
+  let rawJson = "";
+  try {
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: extractionPrompt }] }],
+      config: { maxOutputTokens: 200 },
+    });
+    rawJson = result.text?.trim() ?? "";
+  } catch {
+    return null;
+  }
+
+  if (!rawJson || rawJson === "null") return null;
+
+  // Strip markdown code fences if present
+  const cleaned = rawJson.replace(/^```[a-z]*\n?/i, "").replace(/```$/m, "").trim();
+
+  let parsed: { tipo: string; valor: number; categoria: string; descricao: string; data: string };
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    return null;
+  }
+
+  if (!parsed.tipo || !parsed.valor || !parsed.categoria) return null;
+
+  const type = parsed.tipo === "receita" ? "income" : "expense";
+  const amount = Math.abs(Number(parsed.valor));
+  if (!amount || isNaN(amount)) return null;
+
+  // Match category (case-insensitive, partial match)
+  const match =
+    categories.find(
+      (c) => c.name.toLowerCase() === parsed.categoria.toLowerCase()
+    ) ??
+    categories.find((c) =>
+      c.name.toLowerCase().includes(parsed.categoria.toLowerCase().slice(0, 4))
+    ) ??
+    categories.find((c) => c.name.toLowerCase() === "outros") ??
+    categories[0];
+
+  if (!match) return null;
+
+  const wallet = wallets[0];
+  const date = parsed.data || today;
+
+  const [tx] = await db
+    .insert(transactionsTable)
+    .values({
+      userId,
+      type,
+      amount: String(amount),
+      description: parsed.descricao || parsed.categoria,
+      date,
+      categoryId: match.id,
+      walletId: wallet.id,
+      isRecurring: false,
+    })
+    .returning();
+
+  return {
+    id: tx.id,
+    type,
+    amount,
+    description: tx.description ?? parsed.categoria,
+    categoryId: match.id,
+    categoryName: match.name,
+    categoryColor: match.color ?? "#6C5CE7",
+    date,
+    walletId: wallet.id,
+  };
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+
 async function buildFinancialContext(userId: number): Promise<string> {
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -247,6 +368,17 @@ router.post("/ai/stream", authMiddleware, async (req, res) => {
       role: "assistant",
       content: fullResponse,
     });
+  }
+
+  // Detect and auto-save transaction if message contains one
+  try {
+    const detected = await detectAndSaveTransaction(user.id, message);
+    if (detected) {
+      res.write(`data: ${JSON.stringify({ type: "transaction_saved", transaction: detected })}\n\n`);
+      (res as any).flush?.();
+    }
+  } catch {
+    // Detection failure is non-fatal — don't break the stream
   }
 
   res.write(

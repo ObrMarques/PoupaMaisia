@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
-import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight } from "lucide-react";
+import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
+import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { getGetTransactionsQueryKey } from "@workspace/api-client-react";
 
 const BASE_URL = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -183,6 +186,8 @@ async function fetchMessages(convId: number) {
 export default function AIPage() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const { toast } = useToast();
+  const qc = useQueryClient();
   const [conversations, setConversations]   = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId]     = useState<number | null>(null);
   const [messages, setMessages]             = useState<Message[]>([]);
@@ -303,6 +308,15 @@ export default function AIPage() {
               done?: boolean;
               conversationId?: number;
               error?: string;
+              type?: string;
+              transaction?: {
+                id: number;
+                type: "income" | "expense";
+                amount: number;
+                description: string;
+                categoryName: string;
+                date: string;
+              };
             };
             if (data.content) {
               fullContent += data.content;
@@ -313,6 +327,15 @@ export default function AIPage() {
                     : m
                 )
               );
+            } else if (data.type === "transaction_saved" && data.transaction) {
+              const tx = data.transaction;
+              const typeLabel = tx.type === "income" ? "Receita" : "Despesa";
+              const amountFmt = tx.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+              toast({
+                title: `${typeLabel} registrada`,
+                description: `${amountFmt} em ${tx.categoryName}`,
+              });
+              qc.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
             } else if (data.done) {
               if (data.conversationId) newConvId = data.conversationId;
             } else if (data.error) {
