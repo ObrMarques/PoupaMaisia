@@ -233,6 +233,12 @@ export default function Goals() {
         { onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); } }
       );
     } else {
+      if (!isPremium && (goals?.length ?? 0) >= FREE_GOAL_LIMIT) {
+        setIsFormOpen(false);
+        resetForm();
+        setShowUpgrade(true);
+        return;
+      }
       createMutation.mutate(
         { data: payload },
         { onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); } }

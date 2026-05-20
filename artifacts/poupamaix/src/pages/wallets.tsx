@@ -112,6 +112,11 @@ export default function Wallets() {
         onSuccess: () => { setIsModalOpen(false); invalidate(); },
       });
     } else {
+      if (!isPremium && (wallets?.length ?? 0) >= FREE_WALLET_LIMIT) {
+        setIsModalOpen(false);
+        setShowUpgrade(true);
+        return;
+      }
       createMutation.mutate({ data: { name: form.name, color: form.color, icon: form.icon, initialBalance } }, {
         onSuccess: () => { setIsModalOpen(false); invalidate(); },
       });
