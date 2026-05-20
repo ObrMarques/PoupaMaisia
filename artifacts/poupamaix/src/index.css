@@ -5,10 +5,6 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@media (prefers-color-scheme: dark) {
-  /* intentionally empty — the app controls its own theme independently of the OS */
-}
-
 @theme inline {
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
@@ -49,36 +45,38 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* ── LIGHT MODE (default) ────────────────────────────────── */
+/* ── LIGHT MODE ──────────────────────────────────────────── */
 :root {
   color-scheme: light;
-  --background: 0 0% 100%;       /* #FFFFFF */
-  --foreground: 0 0% 7%;         /* #111111 */
-  --border: 0 0% 88%;            /* #E0E0E0 */
-  --input: 0 0% 92%;
-  --ring: 0 0% 7%;
 
-  --card: 0 0% 97%;              /* #F7F7F7 */
-  --card-foreground: 0 0% 7%;
-  --card-border: 0 0% 88%;
+  /* Fundo levemente acinzentado — evita branco puro */
+  --background: 210 40% 98%;      /* #F8FAFC */
+  --foreground: 222 47% 11%;      /* #111827 */
+  --border: 215 20% 88%;          /* #DBEAFE-ish */
+  --input: 210 30% 94%;
+  --ring: 222 47% 11%;
+
+  --card: 0 0% 100%;              /* #FFFFFF cartões brancos limpos */
+  --card-foreground: 222 47% 11%;
+  --card-border: 215 20% 88%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 7%;
-  --popover-border: 0 0% 88%;
+  --popover-foreground: 222 47% 11%;
+  --popover-border: 215 20% 88%;
 
-  --primary: 0 0% 7%;            /* #111111 — botão preto no claro */
+  --primary: 222 47% 11%;         /* botão escuro no claro */
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 0 0% 93%;         /* #EDEDED */
-  --secondary-foreground: 0 0% 7%;
+  --secondary: 210 30% 94%;       /* #EEF2FF-ish */
+  --secondary-foreground: 222 47% 11%;
 
-  --muted: 0 0% 90%;
-  --muted-foreground: 0 0% 45%;
+  --muted: 210 30% 92%;
+  --muted-foreground: 215 20% 45%;
 
-  --accent: 0 0% 90%;
-  --accent-foreground: 0 0% 7%;
+  --accent: 210 30% 92%;
+  --accent-foreground: 222 47% 11%;
 
-  --destructive: 0 84% 60%;
+  --destructive: 0 84% 60%;       /* #EF4444 */
   --destructive-foreground: 0 0% 100%;
 
   --app-font-sans: 'Inter', sans-serif;
@@ -87,42 +85,70 @@
   --radius: .5rem;
 }
 
-/* ── DARK MODE ───────────────────────────────────────────── */
+/* ── DARK MODE — Premium Slate ───────────────────────────── */
 .dark {
   color-scheme: dark;
-  --background: 0 0% 0%;         /* #000000 */
-  --foreground: 0 0% 100%;       /* #FFFFFF */
-  --border: 0 0% 16%;            /* #2A2A2A */
-  --input: 0 0% 16%;
-  --ring: 0 0% 100%;
 
-  --card: 0 0% 10%;              /* #1A1A1A */
-  --card-foreground: 0 0% 100%;
-  --card-border: 0 0% 16%;
+  /* #111827 — azul-grafite profundo, nunca preto puro */
+  --background: 221 39% 11%;
+  --foreground: 210 40% 98%;      /* #F9FAFB */
+  --border: 215 19% 27%;          /* #374151 */
+  --input: 215 19% 27%;
+  --ring: 160 84% 39%;            /* verde financeiro como ring de foco */
 
-  --popover: 0 0% 10%;
-  --popover-foreground: 0 0% 100%;
-  --popover-border: 0 0% 16%;
+  /* #1F2937 — superfície de card */
+  --card: 215 28% 17%;
+  --card-foreground: 210 40% 98%;
+  --card-border: 215 19% 27%;
 
-  --primary: 0 0% 100%;          /* branco no escuro */
-  --primary-foreground: 0 0% 0%;
+  /* #1F2937 — popovers */
+  --popover: 215 28% 17%;
+  --popover-foreground: 210 40% 98%;
+  --popover-border: 215 19% 27%;
 
-  --secondary: 0 0% 13%;         /* #222222 */
-  --secondary-foreground: 0 0% 100%;
+  /* botão primário = branco no escuro */
+  --primary: 0 0% 100%;
+  --primary-foreground: 221 39% 11%;
 
-  --muted: 0 0% 16%;
-  --muted-foreground: 0 0% 60%;
+  /* #273549 — superfície secundária levemente mais clara */
+  --secondary: 214 32% 22%;
+  --secondary-foreground: 210 40% 98%;
 
-  --accent: 0 0% 16%;
-  --accent-foreground: 0 0% 100%;
+  /* muted = #273549 */
+  --muted: 214 32% 22%;
+  --muted-foreground: 218 11% 65%;  /* #9CA3AF */
 
-  --destructive: 0 100% 64%;     /* #FF4444 */
+  /* accent = mesmo que muted */
+  --accent: 214 32% 22%;
+  --accent-foreground: 210 40% 98%;
+
+  --destructive: 0 84% 60%;       /* #EF4444 */
   --destructive-foreground: 0 0% 100%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: Menlo, monospace;
   --radius: .5rem;
+}
+
+/* ── TRANSIÇÃO SUAVE AO TROCAR TEMA ─────────────────────── */
+html {
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Exceções — elementos que não devem animar (evita flicker em SVG/img) */
+svg, img, video, canvas,
+[data-no-theme-transition],
+.animate-spin, .animate-pulse, .animate-bounce {
+  transition: none !important;
 }
 
 @layer base {
@@ -148,3 +174,12 @@
   }
 }
 
+/* ── SOMBRAS PREMIUM ─────────────────────────────────────── */
+@layer utilities {
+  .shadow-premium {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.2), 0 1px 2px -1px rgb(0 0 0 / 0.2);
+  }
+  .dark .shadow-premium {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  }
+}

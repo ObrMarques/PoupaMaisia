@@ -1,0 +1,94 @@
+```txt
+Melhore completamente o sistema de tema do aplicativo Poupa Mais.
+
+OBJETIVO:
+Transformar o dark mode atual (preto puro) em um tema moderno, elegante e premium usando tons de cinza escuro sofisticados.
+
+REQUISITOS:
+
+1. CRIAR SISTEMA DE TEMA REATIVO
+- Todo o app deve reagir automaticamente à mudança de tema.
+- Quando alterar entre claro e escuro, toda interface deve atualizar instantaneamente.
+- Persistir a preferência do usuário localmente.
+- Detectar automaticamente o tema do sistema operacional na primeira abertura.
+
+2. NOVA PALETA DARK PREMIUM
+
+Background principal:
+#111827
+
+Cards / superfícies:
+#1F2937
+
+Cards secundários:
+#273549
+
+Bordas:
+#374151
+
+Texto principal:
+#F9FAFB
+
+Texto secundário:
+#9CA3AF
+
+Verde financeiro:
+#10B981
+
+Vermelho despesas:
+#EF4444
+
+Dourado premium/VIP:
+#F59E0B
+
+3. REMOVER PRETO PURO
+- Não usar #000000 como fundo principal.
+- Evitar contraste agressivo.
+- Manter aparência suave e premium.
+
+4. COMPONENTES
+Aplicar o novo tema em:
+- Navbar
+- Bottom tabs
+- Cards
+- Modais
+- Inputs
+- Botões
+- Histórico de transações
+- Carteiras
+- Metas
+- Dashboard
+- Gráficos
+- Tela Premium
+- Splash screen
+- Configurações
+
+5. EFEITOS VISUAIS
+- Adicionar sombras suaves.
+- Bordas discretas.
+- Animação suave ao trocar tema.
+- Manter aparência minimalista.
+- Visual semelhante a aplicativos modernos de fintech.
+
+6. MODO CLARO
+Criar também um light mode elegante:
+- Fundo claro levemente acinzentado.
+- Branco suave ao invés de branco puro.
+- Manter consistência visual.
+
+7. ARQUITETURA
+- Centralizar todas as cores em um único arquivo/theme provider.
+- Evitar cores hardcoded nos componentes.
+- Utilizar variáveis reutilizáveis.
+- Garantir fácil manutenção futura.
+
+8. EXPERIÊNCIA PREMIUM
+O visual precisa transmitir:
+- Segurança financeira
+- Modernidade
+- Elegância
+- Aplicativo premium
+- Interface limpa e sofisticada
+
+Faça toda implementação automaticamente no projeto atual sem quebrar funcionalidades existentes.
+```
