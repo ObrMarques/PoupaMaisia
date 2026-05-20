@@ -118,7 +118,6 @@ function MobileDrawer({
         onClick={onClose}
         aria-hidden="true"
       />
-
       {/* Drawer panel — 82% viewport width, max 320px */}
       <div
         className={`fixed top-0 left-0 bottom-0 z-50 w-[82vw] max-w-[320px] bg-card border-r border-border flex flex-col shadow-2xl transition-transform duration-300 ease-out ${
@@ -160,13 +159,9 @@ function MobileDrawer({
           {/* Premium highlight */}
           <div className="pt-2">
             <Link href="/premium" onClick={onClose}>
-              <div className={`flex items-center gap-4 px-4 min-h-[52px] rounded-xl transition-colors cursor-pointer text-base font-semibold ${
-                location === "/premium"
-                  ? "bg-foreground text-background"
-                  : "bg-secondary/60 text-foreground hover:bg-secondary"
-              }`} data-testid="nav-mobile-premium">
+              <div className="flex items-center gap-4 px-4 min-h-[52px] rounded-xl transition-colors cursor-pointer text-base font-semibold text-foreground hover:bg-secondary bg-[#ededed99]" data-testid="nav-mobile-premium">
                 <Crown className={`w-5 h-5 shrink-0 ${location === "/premium" ? "text-background" : "text-foreground"}`} />
-                <span>Premium</span>
+                <span className="text-[#000000]">Premium</span>
                 {location === "/premium" && (
                   <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background" />
                 )}
