@@ -91,6 +91,10 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     res.status(400).json({ error: "Invalid input" });
     return;
   }
+  if (!parsed.data.walletId) {
+    res.status(400).json({ error: "Selecione uma carteira para continuar." });
+    return;
+  }
   const [tx] = await db.insert(transactionsTable).values({
     userId: user.id,
     type: parsed.data.type,

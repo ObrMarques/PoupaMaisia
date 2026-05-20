@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
+  useGetWallets,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
   getGetWalletsQueryKey, useGetCategories,
@@ -17,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
-import { Plus, Filter, Trash2, Pencil, ChevronRight, Wallet } from "lucide-react";
+import { Plus, Filter, Trash2, Pencil, ChevronRight, Wallet, AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
@@ -30,19 +31,21 @@ export default function Transactions() {
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
+  const [walletError, setWalletError] = useState(false);
 
-  const [amount, setAmount]           = useState("");
-  const [description, setDescription] = useState("");
-  const [date, setDate]               = useState(new Date().toISOString().split("T")[0]);
-  const [type, setType]               = useState<"income" | "expense">("expense");
-  const [categoryId, setCategoryId]   = useState("");
+  const [amount, setAmount]             = useState("");
+  const [description, setDescription]   = useState("");
+  const [date, setDate]                 = useState(new Date().toISOString().split("T")[0]);
+  const [type, setType]                 = useState<"income" | "expense">("expense");
+  const [categoryId, setCategoryId]     = useState("");
   const [categoryName, setCategoryName] = useState("");
-  const [walletId, setWalletId]       = useState<number | null>(null);
-  const [walletName, setWalletName]   = useState<string | null>(null);
-  const [walletColor, setWalletColor] = useState<string | null>(null);
-  const [notes, setNotes]             = useState("");
+  const [walletId, setWalletId]         = useState<number | null>(null);
+  const [walletName, setWalletName]     = useState<string | null>(null);
+  const [walletColor, setWalletColor]   = useState<string | null>(null);
+  const [notes, setNotes]               = useState("");
 
   const { data: categories } = useGetCategories();
+  const { data: wallets }    = useGetWallets();
   const params = filterType !== "all" ? { type: filterType as "income" | "expense" } : {};
   const { data: transactions, isLoading } = useGetTransactions(params);
 
@@ -50,23 +53,33 @@ export default function Transactions() {
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
 
-  const invalidateAll = (hasWallet = false) => {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),          refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),               refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                 refetchType: 'all' });
-    if (!hasWallet) {
-      queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),    refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),      refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),    refetchType: 'all' });
-      queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),          refetchType: 'all' });
+  const walletList = wallets ?? [];
+
+  // Auto-select the only wallet when modal opens for new transaction
+  useEffect(() => {
+    if (isModalOpen && !editingTransaction && walletId === null && walletList.length === 1) {
+      const w = walletList[0];
+      setWalletId(w.id);
+      setWalletName(w.name);
+      setWalletColor(w.color);
     }
+  }, [isModalOpen, editingTransaction, walletList, walletId]);
+
+  const invalidateAll = () => {
+    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),         refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),              refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),   refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),     refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),   refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),         refetchType: 'all' });
   };
 
   const resetForm = () => {
     setAmount(""); setDescription(""); setDate(new Date().toISOString().split("T")[0]);
     setType("expense"); setCategoryId(""); setCategoryName("");
     setWalletId(null); setWalletName(null); setWalletColor(null);
-    setNotes(""); setEditingTransaction(null);
+    setNotes(""); setEditingTransaction(null); setWalletError(false);
   };
 
   const handleOpenModal = (t?: any) => {
@@ -84,21 +97,33 @@ export default function Transactions() {
       setNotes(t.notes || "");
     } else {
       resetForm();
+      // Auto-select if only one wallet
+      if (walletList.length === 1) {
+        const w = walletList[0];
+        setWalletId(w.id);
+        setWalletName(w.name);
+        setWalletColor(w.color);
+      }
     }
     setIsModalOpen(true);
   };
 
   const handleSave = async () => {
     if (!amount || !categoryId) return;
+    if (!walletId) {
+      setWalletError(true);
+      return;
+    }
+    setWalletError(false);
 
-    const parsedAmount = parseFloat(amount);
-    const currentType = type;
+    const parsedAmount      = parseFloat(amount);
+    const currentType       = type;
     const currentDescription = description;
-    const currentDate = date;
+    const currentDate       = date;
     const currentCategoryId = parseInt(categoryId, 10);
     const currentCategoryName = categoryName;
-    const currentNotes = notes || null;
-    const currentWalletId = walletId ?? null;
+    const currentNotes      = notes || null;
+    const currentWalletId   = walletId;
 
     const payload: any = {
       type: currentType,
@@ -115,21 +140,16 @@ export default function Transactions() {
       setIsModalOpen(false);
       resetForm();
       updateMutation.mutate({ id: prevId, data: payload }, {
-        onSettled: () => { invalidateAll(currentWalletId !== null); },
+        onSettled: () => { invalidateAll(); },
       });
       return;
     }
 
     const txQueryKey = getGetTransactionsQueryKey(params);
-    const summaryQueryKey = getGetDashboardSummaryQueryKey();
-
     await queryClient.cancelQueries({ queryKey: txQueryKey });
-
     const previousTransactions = queryClient.getQueryData(txQueryKey);
-    let previousSummary: unknown;
 
     const category = (categories ?? []).find(c => c.id === currentCategoryId);
-
     const optimisticTx = {
       id: Date.now() * -1,
       userId: user?.id ?? 0,
@@ -157,97 +177,34 @@ export default function Transactions() {
       });
     }
 
-    if (currentWalletId === null) {
-      await queryClient.cancelQueries({ queryKey: summaryQueryKey });
-      previousSummary = queryClient.getQueryData(summaryQueryKey);
-
-      const txDate = new Date(currentDate + "T12:00:00");
-      const now = new Date();
-      const isCurrentMonth =
-        txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
-
-      queryClient.setQueryData(summaryQueryKey, (old: any) => {
-        if (!old) return old;
-        let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
-        if (currentType === "income") {
-          totalBalance += parsedAmount;
-          if (isCurrentMonth) monthlyIncome += parsedAmount;
-        } else {
-          totalBalance -= parsedAmount;
-          if (isCurrentMonth) monthlyExpenses += parsedAmount;
-        }
-        const savingsRate = monthlyIncome > 0
-          ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
-          : 0;
-        return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
-      });
-    }
-
     setIsModalOpen(false);
     resetForm();
 
     createMutation.mutate({ data: payload }, {
       onError: () => {
         queryClient.setQueryData(txQueryKey, previousTransactions);
-        if (currentWalletId === null && previousSummary !== undefined) {
-          queryClient.setQueryData(summaryQueryKey, previousSummary);
-        }
       },
-      onSettled: () => { invalidateAll(currentWalletId !== null); },
+      onSettled: () => { invalidateAll(); },
     });
   };
 
   const handleDelete = (id: number) => {
     const txQueryKey = getGetTransactionsQueryKey(params);
-    const summaryQueryKey = getGetDashboardSummaryQueryKey();
-
-    const allTx = queryClient.getQueryData(txQueryKey) as any[] | undefined;
-    const txToDelete = allTx?.find((t: any) => t.id === id);
-    const txHasWallet = !!(txToDelete?.walletId);
-
     const previousTransactions = queryClient.getQueryData(txQueryKey);
-    const previousSummary = queryClient.getQueryData(summaryQueryKey);
 
     queryClient.setQueryData(txQueryKey, (old: any) => {
       if (!Array.isArray(old)) return old;
       return old.filter((t: any) => t.id !== id);
     });
 
-    if (txToDelete && !txHasWallet) {
-      const amount = Number(txToDelete.amount);
-      const txDate = new Date(txToDelete.date);
-      const now = new Date();
-      const isCurrentMonth =
-        txDate.getMonth() === now.getMonth() && txDate.getFullYear() === now.getFullYear();
-
-      queryClient.setQueryData(summaryQueryKey, (old: any) => {
-        if (!old) return old;
-        let { totalBalance = 0, monthlyIncome = 0, monthlyExpenses = 0 } = old;
-        if (txToDelete.type === "income") {
-          totalBalance -= amount;
-          if (isCurrentMonth) monthlyIncome -= amount;
-        } else {
-          totalBalance += amount;
-          if (isCurrentMonth) monthlyExpenses -= amount;
-        }
-        const savingsRate =
-          monthlyIncome > 0
-            ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100
-            : 0;
-        return { ...old, totalBalance, monthlyIncome, monthlyExpenses, savingsRate };
-      });
-    }
-
     deleteMutation.mutate({ id }, {
-      onError: () => {
-        queryClient.setQueryData(txQueryKey, previousTransactions);
-        if (!txHasWallet) {
-          queryClient.setQueryData(summaryQueryKey, previousSummary);
-        }
-      },
-      onSettled: () => { invalidateAll(txHasWallet); },
+      onError: () => { queryClient.setQueryData(txQueryKey, previousTransactions); },
+      onSettled: () => { invalidateAll(); },
     });
   };
+
+  const noWallets = walletList.length === 0;
+  const canSave   = !!amount && !!categoryId && !!walletId;
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
@@ -340,25 +297,42 @@ export default function Transactions() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Carteira <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                  <button
-                    type="button"
-                    onClick={() => setIsWalletPickerOpen(true)}
-                    className="w-full flex items-center gap-2 px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
-                  >
-                    {walletId !== null && walletColor ? (
-                      <>
-                        <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                        <span className="flex-1 text-left text-foreground">{walletName}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="flex-1 text-left text-muted-foreground">Sem carteira</span>
-                      </>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
+                  <Label>
+                    Carteira <span className="text-destructive text-xs">*</span>
+                  </Label>
+                  {noWallets ? (
+                    <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Crie uma carteira antes de adicionar transações.</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
+                      className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${
+                        walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"
+                      }`}
+                    >
+                      {walletId !== null && walletColor ? (
+                        <>
+                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                          <span className="flex-1 text-left text-foreground">{walletName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
+                        </>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
+                  {walletError && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Selecione uma carteira para continuar.
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -375,7 +349,7 @@ export default function Transactions() {
                 <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
                 <Button
                   onClick={handleSave}
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending}
                   data-testid="button-save"
                 >
                   {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
@@ -397,7 +371,7 @@ export default function Transactions() {
         open={isWalletPickerOpen}
         onOpenChange={setIsWalletPickerOpen}
         value={walletId}
-        onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); }}
+        onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }}
       />
 
       <Card className="bg-card border-border">
