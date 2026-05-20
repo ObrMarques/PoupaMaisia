@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Wallet } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
+import { WalletIcon } from "@/components/wallet-icon";
 
 interface WalletPickerProps {
   open: boolean;
@@ -54,12 +55,7 @@ export function WalletPicker({ open, onOpenChange, value, onSelect }: WalletPick
                   : "border-border hover:bg-secondary/50"
               }`}
             >
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-base"
-                style={{ backgroundColor: `${w.color}22`, border: `2px solid ${w.color}` }}
-              >
-                {w.icon}
-              </div>
+              <WalletIcon icon={w.icon} color={w.color} />
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{w.name}</p>
                 <p className="text-xs text-muted-foreground">

@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { Plus, ChevronRight, ChevronDown, Wallet, AlertCircle } from "lucide-react";
+import { WalletIcon } from "@/components/wallet-icon";
 
 export function QuickAddTransaction({ children }: { children?: React.ReactNode }) {
   const queryClient = useQueryClient();
@@ -191,12 +192,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                   >
                     {selectedWallet ? (
                       <span className="flex items-center gap-2 text-foreground">
-                        <span
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-xs shrink-0"
-                          style={{ backgroundColor: `${selectedWallet.color}22`, border: `1.5px solid ${selectedWallet.color}` }}
-                        >
-                          {selectedWallet.icon}
-                        </span>
+                        <WalletIcon icon={selectedWallet.icon} color={selectedWallet.color} size="sm" />
                         {selectedWallet.name}
                       </span>
                     ) : (
@@ -214,6 +210,7 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
                           className={`w-full text-left px-3 py-2.5 text-sm hover:bg-secondary transition-colors flex items-center gap-2 ${walletId === w.id ? "font-medium bg-secondary/50" : ""}`}
                           onClick={() => { setWalletId(w.id); setWalletMenuOpen(false); setWalletError(false); }}
                         >
+                          <WalletIcon icon={w.icon} color={w.color} size="sm" />
                           <span className="flex-1 truncate">{w.name}</span>
                         </button>
                       ))}
