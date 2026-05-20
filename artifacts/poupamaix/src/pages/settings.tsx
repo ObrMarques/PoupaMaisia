@@ -10,11 +10,34 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, KeyRound, Check, AlertCircle } from "lucide-react";
+import { Camera, Upload, Moon, Globe, HelpCircle, MessageCircle, Mail, Phone, ExternalLink, KeyRound, Check, AlertCircle } from "lucide-react";
 import { Link } from "wouter";
 import { supabase } from "@/lib/supabase";
 import type { Language } from "@/i18n/translations";
 
+function resizeImageToBase64(file: File, maxSize = 200): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width  = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext("2d")!;
+        const side = Math.min(img.width, img.height);
+        const ox = (img.width  - side) / 2;
+        const oy = (img.height - side) / 2;
+        ctx.drawImage(img, ox, oy, side, side, 0, 0, maxSize, maxSize);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = reject;
+      img.src = e.target!.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
 
 export default function Settings() {
   const { user, updateUser } = useAuth();
@@ -25,6 +48,8 @@ export default function Settings() {
 
   const [name,     setName]     = useState(user?.name  || "");
   const [currency, setCurrency] = useState(user?.currency || "BRL");
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+
   const [resetState, setResetState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
@@ -78,6 +103,29 @@ export default function Settings() {
 
   const handleLanguageChange = (lang: string) => setLanguage(lang as Language);
 
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return;
+    setIsUploadingPhoto(true);
+    try {
+      const base64 = await resizeImageToBase64(file);
+      updateMutation.mutate(
+        { data: { avatarUrl: base64 } },
+        {
+          onSuccess:  (updated) => {
+            updateUser(updated);
+            qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+          },
+          onError:    () => {},
+          onSettled:  () => setIsUploadingPhoto(false),
+        }
+      );
+    } catch {
+      setIsUploadingPhoto(false);
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!user?.email) return;
     setResetState("loading");
@@ -122,18 +170,38 @@ export default function Settings() {
           </CardHeader>
           <CardContent className="space-y-6">
 
-            {/* Avatar */}
+            {/* Avatar upload */}
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border">
-                {user?.avatarUrl ? (
-                  <img src={user.avatarUrl} alt="Avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-2xl font-semibold">{user?.name?.charAt(0).toUpperCase()}</span>
-                )}
-              </div>
+              <label htmlFor="avatar-input" className="relative group cursor-pointer">
+                <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border group-hover:ring-primary transition-all">
+                  {user?.avatarUrl ? (
+                    <img src={user.avatarUrl} alt="Avatar" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-2xl font-semibold">{user?.name?.charAt(0).toUpperCase()}</span>
+                  )}
+                </div>
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  {isUploadingPhoto
+                    ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : <Camera className="w-5 h-5 text-white" />}
+                </div>
+              </label>
               <div>
-                <p className="font-medium text-sm">{user?.name}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+                <label htmlFor="avatar-input">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-input bg-background text-sm font-medium cursor-pointer hover:bg-accent transition-colors ${isUploadingPhoto ? "pointer-events-none opacity-60" : ""}`}>
+                    <Upload className="w-3.5 h-3.5" />
+                    {isUploadingPhoto ? t("common.loading") : t("settings.changePhoto")}
+                  </div>
+                </label>
+                <p className="text-xs text-muted-foreground mt-1.5">JPG, PNG ou GIF · Máx 10 MB</p>
+                <input
+                  id="avatar-input"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  disabled={isUploadingPhoto}
+                  onChange={handleAvatarChange}
+                />
               </div>
             </div>
 
