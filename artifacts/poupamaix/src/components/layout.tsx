@@ -159,11 +159,26 @@ function MobileDrawer({
           {/* Premium highlight */}
           <div className="pt-2">
             <Link href="/premium" onClick={onClose}>
-              <div className="flex items-center gap-4 px-4 min-h-[52px] rounded-xl transition-colors cursor-pointer text-base font-semibold text-foreground hover:bg-secondary bg-[#ededed99]" data-testid="nav-mobile-premium">
-                <Crown className={`w-5 h-5 shrink-0 ${location === "/premium" ? "text-background" : "text-foreground"}`} />
-                <span className="text-[#000000]">Premium</span>
+              <div
+                className={`flex items-center gap-4 px-4 min-h-[52px] rounded-xl transition-all duration-150 cursor-pointer text-base font-semibold ${
+                  location === "/premium"
+                    ? "bg-[#D4AF37]/15"
+                    : "hover:bg-[#D4AF37]/10"
+                }`}
+                data-testid="nav-mobile-premium"
+              >
+                <Crown
+                  className="w-5 h-5 shrink-0 transition-colors"
+                  style={{ color: location === "/premium" ? "#C9A227" : "#D4AF3799" }}
+                />
+                <span
+                  className="transition-colors"
+                  style={{ color: location === "/premium" ? "#C9A227" : "#D4AF3799" }}
+                >
+                  Premium
+                </span>
                 {location === "/premium" && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-background" />
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#C9A227" }} />
                 )}
               </div>
             </Link>
@@ -250,13 +265,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           {/* Premium highlight */}
           <div className="pt-2 pb-1">
             <Link href="/premium">
-              <div className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer text-sm font-medium ${
-                location === "/premium"
-                  ? "bg-foreground text-background"
-                  : "bg-secondary/60 text-foreground hover:bg-secondary"
-              }`} data-testid="nav-premium">
-                <Crown className="w-4 h-4 shrink-0" />
-                Premium
+              <div
+                className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-150 cursor-pointer text-sm font-medium group ${
+                  location === "/premium"
+                    ? "bg-[#D4AF37]/15"
+                    : "hover:bg-[#D4AF37]/10"
+                }`}
+                data-testid="nav-premium"
+              >
+                <Crown
+                  className="w-4 h-4 shrink-0 transition-colors"
+                  style={{ color: location === "/premium" ? "#C9A227" : "#D4AF3799" }}
+                />
+                <span
+                  className="transition-colors"
+                  style={{ color: location === "/premium" ? "#C9A227" : "#D4AF3799" }}
+                >
+                  Premium
+                </span>
+                {location === "/premium" && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#C9A227" }} />
+                )}
               </div>
             </Link>
           </div>
