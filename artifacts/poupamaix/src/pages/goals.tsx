@@ -12,11 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/currency-input";
 import { Input } from "@/components/ui/input";
-import { Plus, Pencil, Trash2, TrendingUp } from "lucide-react";
+import { Plus, Pencil, Trash2, TrendingUp, PiggyBank, Plane, Shield, ShoppingBag, Target, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import type { LucideIcon } from "lucide-react";
 
 const GOAL_TYPES: Record<string, string> = {
   savings:   "Poupança",
@@ -26,13 +26,25 @@ const GOAL_TYPES: Record<string, string> = {
   other:     "Personalizada",
 };
 
-const GOAL_ICONS: Record<string, string> = {
-  savings:   "💰",
-  travel:    "✈️",
-  emergency: "🛡️",
-  purchase:  "🛍️",
-  other:     "🎯",
+const GOAL_ICON_MAP: Record<string, LucideIcon> = {
+  savings:   PiggyBank,
+  travel:    Plane,
+  emergency: Shield,
+  purchase:  ShoppingBag,
+  other:     Target,
 };
+
+function GoalTypeIcon({ type, color }: { type: string; color: string }) {
+  const Icon = GOAL_ICON_MAP[type] ?? Target;
+  return (
+    <div
+      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+      style={{ backgroundColor: `${color}20`, color }}
+    >
+      <Icon className="w-5 h-5" />
+    </div>
+  );
+}
 
 const EXAMPLES: Record<string, string[]> = {
   savings:   ["Reserva de emergência", "Fundo de aposentadoria"],
@@ -166,12 +178,12 @@ export default function Goals() {
   const [contributeAmount, setContributeAmount]   = useState("");
   const [showUpgrade, setShowUpgrade]             = useState(false);
 
-  const [name, setName]                 = useState("");
-  const [targetAmount, setTargetAmount] = useState("");
+  const [name, setName]                   = useState("");
+  const [targetAmount, setTargetAmount]   = useState("");
   const [currentAmount, setCurrentAmount] = useState("0");
-  const [type, setType]                 = useState<GoalType>("savings");
-  const [color, setColor]               = useState("#7C3AED");
-  const [deadline, setDeadline]         = useState("");
+  const [type, setType]                   = useState<GoalType>("savings");
+  const [color, setColor]                 = useState("#7C3AED");
+  const [deadline, setDeadline]           = useState("");
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey() });
@@ -205,9 +217,7 @@ export default function Goals() {
   };
 
   const handleSave = () => {
-    if (!name.trim() || !targetAmount) {
-      return;
-    }
+    if (!name.trim() || !targetAmount) return;
     const payload = {
       name: name.trim(),
       targetAmount: parseFloat(targetAmount),
@@ -220,18 +230,12 @@ export default function Goals() {
     if (editingGoal) {
       updateMutation.mutate(
         { id: editingGoal.id, data: payload },
-        {
-          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
-          onError: () => {},
-        }
+        { onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); } }
       );
     } else {
       createMutation.mutate(
         { data: payload },
-        {
-          onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
-          onError: () => {},
-        }
+        { onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); } }
       );
     }
   };
@@ -240,10 +244,7 @@ export default function Goals() {
     if (!editingGoal) return;
     deleteMutation.mutate(
       { id: editingGoal.id },
-      {
-        onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); },
-        onError: () => {},
-      }
+      { onSuccess: () => { invalidate(); setIsFormOpen(false); resetForm(); } }
     );
   };
 
@@ -263,7 +264,6 @@ export default function Goals() {
           setIsContributeOpen(false);
           setContributeAmount("");
         },
-        onError: () => {},
       }
     );
   };
@@ -371,7 +371,9 @@ export default function Goals() {
           Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-xl" />)
         ) : goals?.length === 0 ? (
           <div className="col-span-full text-center py-16 bg-card rounded-xl border border-border">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4 text-3xl">🎯</div>
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+              <Target className="w-8 h-8 text-muted-foreground" />
+            </div>
             <h3 className="text-lg font-semibold">Nenhuma meta ativa</h3>
             <p className="text-muted-foreground mt-1 mb-4">Comece a poupar para seus sonhos hoje.</p>
             <Button onClick={openCreate}>
@@ -400,12 +402,7 @@ export default function Goals() {
                       >
                         <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center text-2xl"
-                        style={{ backgroundColor: `${goalColor}20` }}
-                      >
-                        {GOAL_ICONS[g.type] || "🎯"}
-                      </div>
+                      <GoalTypeIcon type={g.type} color={goalColor} />
                     </div>
                   </div>
                 </CardHeader>
@@ -436,7 +433,9 @@ export default function Goals() {
                     {remaining > 0 ? (
                       <p className="text-xs text-muted-foreground">Faltam {formatCurrency(remaining, user?.currency)}</p>
                     ) : (
-                      <p className="text-xs text-[#00C851] font-medium">✓ Meta atingida!</p>
+                      <p className="text-xs text-[#00C851] font-medium flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Meta atingida!
+                      </p>
                     )}
                   </div>
 

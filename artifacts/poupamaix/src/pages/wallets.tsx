@@ -16,7 +16,11 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
-import { Plus, Pencil, Trash2, Wallet, Building2 } from "lucide-react";
+import {
+  Plus, Pencil, Trash2, Wallet, Building2,
+  Landmark, Briefcase, PiggyBank, DollarSign, CreditCard, Banknote,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 const PRESET_COLORS = [
   "#1A1A1A", "#3B82F6", "#10B981", "#F59E0B",
@@ -24,7 +28,30 @@ const PRESET_COLORS = [
   "#06B6D4", "#6B7280",
 ];
 
-const PRESET_ICONS = ["💰", "🏦", "💼", "🐷"];
+// Icon identifiers stored in DB
+type WalletIconId = "wallet" | "landmark" | "briefcase" | "piggy-bank" | "dollar" | "credit-card" | "banknote";
+
+const WALLET_ICON_MAP: Record<string, LucideIcon> = {
+  wallet: Wallet,
+  landmark: Landmark,
+  briefcase: Briefcase,
+  "piggy-bank": PiggyBank,
+  dollar: DollarSign,
+  "credit-card": CreditCard,
+  banknote: Banknote,
+  // Legacy emoji fallbacks — map old DB values to icons
+  "💰": Wallet,
+  "🏦": Landmark,
+  "💼": Briefcase,
+  "🐷": PiggyBank,
+};
+
+const PRESET_ICONS: WalletIconId[] = ["wallet", "landmark", "briefcase", "piggy-bank", "dollar", "credit-card", "banknote"];
+
+function WalletIcon({ icon, className }: { icon: string; className?: string }) {
+  const Icon = WALLET_ICON_MAP[icon] ?? Wallet;
+  return <Icon className={className ?? "w-5 h-5"} />;
+}
 
 interface WalletFormState {
   name: string;
@@ -33,7 +60,7 @@ interface WalletFormState {
   initialBalance: string;
 }
 
-const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "💰", initialBalance: "" };
+const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "wallet", initialBalance: "" };
 
 const FREE_WALLET_LIMIT = 2;
 
@@ -146,16 +173,17 @@ export default function Wallets() {
                 <div className="space-y-2">
                   <Label>Ícone</Label>
                   <div className="flex flex-wrap gap-2">
-                    {PRESET_ICONS.map(icon => (
+                    {PRESET_ICONS.map(iconId => (
                       <button
-                        key={icon}
+                        key={iconId}
                         type="button"
-                        onClick={() => setForm(f => ({ ...f, icon }))}
-                        className={`w-10 h-10 rounded-lg text-xl flex items-center justify-center transition-colors ${
-                          form.icon === icon ? "bg-secondary ring-2 ring-foreground" : "bg-secondary/50 hover:bg-secondary"
+                        onClick={() => setForm(f => ({ ...f, icon: iconId }))}
+                        className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
+                          form.icon === iconId ? "bg-secondary ring-2 ring-foreground" : "bg-secondary/50 hover:bg-secondary"
                         }`}
+                        style={{ color: form.color }}
                       >
-                        {icon}
+                        <WalletIcon icon={iconId} className="w-5 h-5" />
                       </button>
                     ))}
                   </div>
@@ -180,10 +208,10 @@ export default function Wallets() {
 
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
                   <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-xl shrink-0"
-                    style={{ backgroundColor: `${form.color}22`, border: `2px solid ${form.color}` }}
+                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${form.color}22`, border: `2px solid ${form.color}`, color: form.color }}
                   >
-                    {form.icon}
+                    <WalletIcon icon={form.icon} className="w-5 h-5" />
                   </div>
                   <div>
                     <p className="font-medium">{form.name || "Nome da carteira"}</p>
@@ -233,7 +261,9 @@ export default function Wallets() {
         ) : (wallets ?? []).length === 0 ? (
           <Card className="bg-card border-border">
             <CardContent className="p-12 text-center space-y-3">
-              <div className="text-4xl">💼</div>
+              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
+                <Briefcase className="w-8 h-8 text-muted-foreground" />
+              </div>
               <p className="text-muted-foreground">Nenhuma carteira criada ainda.</p>
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button variant="outline" onClick={openCreate} className="bg-background">
@@ -248,10 +278,10 @@ export default function Wallets() {
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-xl shrink-0 relative"
-                    style={{ backgroundColor: `${w.color}22`, border: `2px solid ${w.color}` }}
+                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 relative"
+                    style={{ backgroundColor: `${w.color}22`, border: `2px solid ${w.color}`, color: w.color }}
                   >
-                    {w.icon}
+                    <WalletIcon icon={w.icon} className="w-6 h-6" />
                     {w.pluggyAccountId && (
                       <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-background border border-border flex items-center justify-center">
                         <Building2 className="w-2.5 h-2.5 text-muted-foreground" />

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Sparkles } from "lucide-react";
 
 const CURRENCIES = [
   { id: "BRL", symbol: "R$", name: "Real Brasileiro" },
@@ -77,8 +78,8 @@ export default function Onboarding() {
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
               <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center text-3xl mx-auto mb-6">
-                  👋
+                <div className="w-16 h-16 rounded-full bg-foreground flex items-center justify-center mx-auto mb-6">
+                  <Sparkles className="w-8 h-8 text-background" />
                 </div>
                 <h2 className="text-2xl font-bold mb-2">Bem-vindo ao PoupaMais</h2>
                 <p className="text-muted-foreground">Seu assistente financeiro premium. Vamos configurar seu painel para o sucesso financeiro.</p>

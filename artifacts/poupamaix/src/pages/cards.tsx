@@ -13,12 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CurrencyInput } from "@/components/currency-input";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, CreditCard } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const BRAND_LOGOS: Record<string, string> = {
-  mastercard: "◖◗", visa: "VISA", amex: "AMEX",
-  elo: "ELO", hipercard: "HIPER", other: "CARD",
+const BRAND_LABELS: Record<string, string> = {
+  mastercard: "Mastercard", visa: "Visa", amex: "Amex",
+  elo: "Elo", hipercard: "Hiper", other: "Cartão",
 };
 
 const COLOR_PRESETS = [
@@ -52,7 +52,7 @@ function CardVisual({
           <p className="text-[10px] uppercase tracking-widest text-white/50 mb-0.5">Cartão</p>
           <span className="font-semibold text-sm text-white/90">{name || "Nome do cartão"}</span>
         </div>
-        <span className="font-bold text-base text-white/70">{BRAND_LOGOS[brand] ?? "CARD"}</span>
+        <span className="font-bold text-sm text-white/70 tracking-wide">{BRAND_LABELS[brand] ?? "Cartão"}</span>
       </div>
       <div className="space-y-2 relative z-10">
         <div className="font-mono text-lg tracking-[0.25em] text-white/70">
@@ -188,14 +188,14 @@ export default function Cards() {
   const [editingCard, setEditingCard]   = useState<any>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  const [name, setName]                   = useState("");
+  const [name, setName]                     = useState("");
   const [lastFourDigits, setLastFourDigits] = useState("");
-  const [limitVal, setLimitVal]           = useState("");
+  const [limitVal, setLimitVal]             = useState("");
   const [currentBalance, setCurrentBalance] = useState("0");
-  const [brand, setBrand]                 = useState<Brand>("mastercard");
-  const [closingDay, setClosingDay]       = useState("1");
-  const [dueDay, setDueDay]               = useState("10");
-  const [color, setColor]                 = useState("#0A0A0A");
+  const [brand, setBrand]                   = useState<Brand>("mastercard");
+  const [closingDay, setClosingDay]         = useState("1");
+  const [dueDay, setDueDay]                 = useState("10");
+  const [color, setColor]                   = useState("#0A0A0A");
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: getGetCardsQueryKey() });
 
@@ -212,9 +212,7 @@ export default function Cards() {
     setEditingCard(null); setShowDeleteConfirm(false);
   };
 
-  const openCreate = () => {
-    resetForm(); setIsOpen(true);
-  };
+  const openCreate = () => { resetForm(); setIsOpen(true); };
 
   const openEdit = (card: any) => {
     setEditingCard(card);
@@ -231,9 +229,7 @@ export default function Cards() {
   };
 
   const handleSave = () => {
-    if (!name || !lastFourDigits || !limitVal) {
-      return;
-    }
+    if (!name || !lastFourDigits || !limitVal) return;
     const data = {
       name, brand,
       limit: parseFloat(limitVal),
@@ -246,18 +242,12 @@ export default function Cards() {
     if (editingCard) {
       updateMutation.mutate(
         { id: editingCard.id, data },
-        {
-          onSuccess: (updatedCard) => { updateCardInCache(updatedCard); setIsOpen(false); resetForm(); },
-          onError: () => {},
-        }
+        { onSuccess: (updatedCard) => { updateCardInCache(updatedCard); setIsOpen(false); resetForm(); } }
       );
     } else {
       createMutation.mutate(
         { data: { name, lastFourDigits, brand, limit: parseFloat(limitVal), closingDay: parseInt(closingDay), dueDay: parseInt(dueDay), color } },
-        {
-          onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); },
-          onError: () => {},
-        }
+        { onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); } }
       );
     }
   };
@@ -266,10 +256,7 @@ export default function Cards() {
     if (!editingCard) return;
     deleteMutation.mutate(
       { id: editingCard.id },
-      {
-        onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); },
-        onError: () => {},
-      }
+      { onSuccess: () => { invalidate(); setIsOpen(false); resetForm(); } }
     );
   };
 
@@ -339,7 +326,9 @@ export default function Cards() {
           Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-2xl" />)
         ) : cards?.length === 0 ? (
           <div className="col-span-full text-center py-16 bg-card rounded-xl border border-border">
-            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4 text-3xl">💳</div>
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-8 h-8 text-muted-foreground" />
+            </div>
             <h3 className="text-lg font-semibold">Nenhum cartão cadastrado</h3>
             <p className="text-muted-foreground mt-1 mb-4">Adicione seus cartões para acompanhar as faturas.</p>
             <Button onClick={openCreate}>
@@ -369,7 +358,9 @@ export default function Cards() {
                       >
                         <Pencil className="w-3.5 h-3.5 text-white" />
                       </button>
-                      <span className="font-bold text-lg text-white/80">{BRAND_LOGOS[card.brand] ?? "💳"}</span>
+                      <span className="font-bold text-sm text-white/80 tracking-wide">
+                        {BRAND_LABELS[card.brand] ?? "Cartão"}
+                      </span>
                     </div>
                   </div>
 

@@ -53,15 +53,15 @@ const QUICK_REPLIES = [
 
 const BOT_RESPONSES: [RegExp, string][] = [
   [/senha|password|login|entrar/i,     "Para recuperar sua senha, clique em 'Esqueci a senha' na tela de login. Você receberá um e-mail em até 5 minutos."],
-  [/transaç|gasto|receita|despesa/i,   "Para adicionar uma transação, vá em Transações > Nova. Preencha o tipo (receita/despesa), valor, descrição e categoria. É bem rápido! 💸"],
+  [/transaç|gasto|receita|despesa/i,   "Para adicionar uma transação, vá em Transações > Nova. Preencha o tipo (receita/despesa), valor, descrição e categoria. É bem rápido!"],
   [/meta|objetivo|poupança|economiz/i, "Nas Metas Financeiras você pode criar qualquer objetivo — viagem, compra, reserva de emergência. Defina o valor alvo e vá adicionando contribuições!"],
   [/categoria|categori/i,              "As categorias aparecem no formulário de transações. Você pode escolher uma padrão ou criar uma personalizada clicando em 'Categoria personalizada'."],
   [/ai|inteligência|assistente/i,      "O PoupaAI é seu consultor financeiro pessoal com IA! Ele analisa seus gastos, identifica padrões e responde perguntas financeiras. Disponível no plano Premium."],
   [/premium|assina|plano/i,            "O Premium custa R$ 9,90/mês com 7 dias grátis. Inclui PoupaAI ilimitado, relatórios avançados e exportação de extratos. Cancele quando quiser!"],
   [/cartão|card|fatura/i,              "Em Cartões você cadastra seus cartões de crédito, acompanha a fatura atual, limite disponível e dias de fechamento e vencimento."],
   [/relatório|gráfico|report/i,        "Os Relatórios mostram seus gastos por categoria, tendência mensal e comparativos. Ótimo para entender para onde vai seu dinheiro!"],
-  [/oi|olá|hello|hi|bom dia|boa tarde/i, "Olá! 👋 Sou o assistente do PoupaMais. Como posso ajudar você hoje? Pode perguntar sobre transações, metas, categorias, Premium ou qualquer funcionalidade."],
-  [/obrigad|thanks|valeu/i,            "Fico feliz em ajudar! 😊 Se tiver mais dúvidas, é só perguntar. Estou aqui para isso!"],
+  [/oi|olá|hello|hi|bom dia|boa tarde/i, "Olá! Sou o assistente do PoupaMais. Como posso ajudar você hoje? Pode perguntar sobre transações, metas, categorias, Premium ou qualquer funcionalidade."],
+  [/obrigad|thanks|valeu/i,            "Fico feliz em ajudar! Se tiver mais dúvidas, é só perguntar. Estou aqui para isso!"],
   [/problema|erro|bug|não funciona/i,  "Lamento pelo transtorno! Para problemas técnicos, tente: 1) Sair e entrar novamente, 2) Limpar o cache do navegador. Se persistir, entre em contato pelo WhatsApp ou e-mail."],
 ];
 
@@ -79,7 +79,7 @@ function now() {
 function SupportChat() {
   const { t } = useI18n();
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, from: "bot", text: "Olá! 👋 Sou o assistente virtual do PoupaMais. Estou aqui para ajudar com qualquer dúvida sobre o app. O que posso fazer por você?", time: now() },
+    { id: 1, from: "bot", text: "Olá! Sou o assistente virtual do PoupaMais. Estou aqui para ajudar com qualquer dúvida sobre o app. O que posso fazer por você?", time: now() },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
