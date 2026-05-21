@@ -187,7 +187,7 @@ export default function SignUpPage() {
       <div className="bg-white rounded-2xl w-full max-w-[440px] overflow-hidden shadow-lg p-5 sm:p-8 space-y-5 sm:space-y-6">
 
         <div className="space-y-1 text-center">
-          <img src={`${basePath}/logo.svg`} alt="PoupaMais" className="w-10 h-10 mx-auto mb-3" />
+          <img src={`${basePath}/logo.png`} alt="PoupaMais" className="w-16 h-16 mx-auto mb-3 object-contain" />
           <h1 className="text-xl font-bold text-[#111111]">
             {step === "form" ? "Criar sua conta" : "Verificar e-mail"}
           </h1>
