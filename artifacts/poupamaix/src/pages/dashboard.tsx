@@ -3,14 +3,13 @@ import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, TrendingUp, Plus, Bell, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/lib/utils";
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
@@ -83,96 +82,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Contas a Pagar ──────────────────────── */}
-      {(loadingPending || (pending && pending.count > 0)) && (
-        <div className="rounded-2xl border border-[#F4C542]/40 bg-[#FFF8E1] dark:bg-[#F4C542]/5 dark:border-[#F4C542]/20 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-[#F4C542]/30">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#F4C542]/20 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-[#8B6914] dark:text-[#F4C542]" />
-              </div>
-              <div>
-                <p className="font-semibold text-[#3D2800] dark:text-[#F4C542] text-sm">Contas a Pagar</p>
-                {!loadingPending && pending && (
-                  <p className="text-xs text-[#8B6914] dark:text-[#D4A017]">
-                    {pending.count} {pending.count === 1 ? "conta pendente" : "contas pendentes"} · Total: {formatCurrency(pending.total, currency)}
-                  </p>
-                )}
-              </div>
-            </div>
-            <Link href="/transactions?status=pending">
-              <Button variant="ghost" size="sm" className="text-[#8B6914] dark:text-[#F4C542] hover:bg-[#F4C542]/20 text-xs">
-                Ver todas
-              </Button>
-            </Link>
-          </div>
-
-          {loadingPending ? (
-            <div className="px-5 py-3 space-y-2">
-              {Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full bg-[#F4C542]/10" />)}
-            </div>
-          ) : (
-            <div className="divide-y divide-[#F4C542]/20">
-              {pending?.items.slice(0, 4).map(tx => {
-                const days = daysUntil(tx.date);
-                const isOverdue = days < 0;
-                const isUrgent  = !isOverdue && days <= 3;
-                return (
-                  <div key={tx.id} className="flex items-center justify-between px-5 py-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className={cn(
-                        "w-2 h-2 rounded-full shrink-0",
-                        isOverdue ? "bg-red-500" : isUrgent ? "bg-orange-400" : "bg-[#F4C542]"
-                      )} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[#3D2800] dark:text-[#F4C542] truncate">
-                          {tx.description || tx.categoryName}
-                        </p>
-                        <p className={cn(
-                          "text-xs",
-                          isOverdue ? "text-red-600 dark:text-red-400 font-medium"
-                            : isUrgent ? "text-orange-600 dark:text-orange-400 font-medium"
-                              : "text-[#8B6914] dark:text-[#D4A017]"
-                        )}>
-                          {isOverdue
-                            ? `Venceu há ${Math.abs(days)} ${Math.abs(days) === 1 ? "dia" : "dias"}`
-                            : days === 0
-                              ? "Vence hoje"
-                              : `Vence em ${new Date(tx.date + "T00:00:00").toLocaleDateString("pt-BR")}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-3 shrink-0">
-                      <span className="font-semibold text-sm text-[#8B6914] dark:text-[#F4C542] tabular-nums">
-                        -{formatCurrency(tx.amount, currency)}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 text-[#8B6914] dark:text-[#F4C542] hover:bg-[#F4C542]/20"
-                        title="Marcar como pago"
-                        onClick={() => handleMarkPaid(tx.id)}
-                        disabled={payMutation.isPending}
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })}
-              {pending && pending.count > 4 && (
-                <div className="px-5 py-3 flex items-center gap-2">
-                  <AlertTriangle className="w-3.5 h-3.5 text-[#8B6914] dark:text-[#F4C542] shrink-0" />
-                  <p className="text-xs text-[#8B6914] dark:text-[#D4A017]">
-                    + {pending.count - 4} outras contas pendentes
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Cartões de Resumo */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card">
@@ -202,15 +111,30 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-[#FF4444]">{formatCurrency(summary?.monthlyExpenses || 0, currency)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Taxa de Economia</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{(summary?.savingsRate || 0).toFixed(1)}%</div>
-          </CardContent>
-        </Card>
+        <Link href="/transactions?status=pending" className="block">
+          <Card className="bg-card h-full cursor-pointer hover:bg-secondary/30 transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Contas a Pagar</CardTitle>
+              <Clock className="h-4 w-4 text-[#C49A00] dark:text-[#F4C542]" />
+            </CardHeader>
+            <CardContent>
+              {loadingPending ? (
+                <Skeleton className="h-8 w-24" />
+              ) : (
+                <>
+                  <div className="text-2xl font-bold text-[#C49A00] dark:text-[#F4C542]">
+                    {formatCurrency(pending?.total || 0, currency)}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {pending?.count
+                      ? `${pending.count} ${pending.count === 1 ? "conta pendente" : "contas pendentes"}`
+                      : "Nenhuma pendência"}
+                  </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
