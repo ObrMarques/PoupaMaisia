@@ -5,6 +5,7 @@ import {
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey,
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey,
   getGetMonthlyTrendQueryKey, getGetWalletsQueryKey,
+  getGetPendingTransactionsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -51,12 +52,13 @@ export function QuickAddTransaction({ children }: { children?: React.ReactNode }
   };
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),        refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),  refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),    refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(), refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),        refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),         refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),              refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),   refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),     refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),   refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),         refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetPendingTransactionsQueryKey(),  refetchType: 'all' });
   };
 
   const handleSave = async () => {

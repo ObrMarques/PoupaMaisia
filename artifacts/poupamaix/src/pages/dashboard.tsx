@@ -31,7 +31,9 @@ export default function Dashboard() {
   const { data: spending, isLoading: loadingSpending } = useGetSpendingByCategory();
   const { data: trend, isLoading: loadingTrend } = useGetMonthlyTrend();
   const { data: goals, isLoading: loadingGoals } = useGetGoals();
-  const { data: pending, isLoading: loadingPending } = useGetPendingTransactions();
+  const { data: pending, isLoading: loadingPending } = useGetPendingTransactions({
+    query: { staleTime: 0, queryKey: getGetPendingTransactionsQueryKey() },
+  });
   const payMutation = usePayTransaction();
 
   const invalidateAfterPay = () => {
