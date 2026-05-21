@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
-  usePayTransaction,
-  useGetWallets,
+  usePayTransaction, useGetWallets, useGetCategories,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
-  getGetWalletsQueryKey, useGetCategories, getGetPendingTransactionsQueryKey,
+  getGetWalletsQueryKey, getGetPendingTransactionsQueryKey,
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
@@ -19,11 +18,37 @@ import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
 import { CategoryIcon } from "@/components/category-icon";
-import { Plus, Trash2, Pencil, ChevronRight, Wallet, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Wallet, AlertCircle, Clock, CheckCircle2, SlidersHorizontal, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+// ─── Filter types ────────────────────────────────────────────────────────────
+type FilterKey = "all" | "pending" | "income" | "expense";
+
+interface FilterOption {
+  key: FilterKey;
+  label: string;
+  description: string;
+}
+
+const FILTER_OPTIONS: FilterOption[] = [
+  { key: "all",     label: "Todas",      description: "Todas as transações" },
+  { key: "pending", label: "Pendentes",  description: "Contas a pagar / data futura" },
+  { key: "income",  label: "Receitas",   description: "Entradas de dinheiro" },
+  { key: "expense", label: "Despesas",   description: "Gastos concluídos" },
+];
+
+const SESSION_KEY = "poupamaix:tx-filter";
+
+function getQueryParams(filter: FilterKey): Record<string, string> {
+  if (filter === "pending")  return { status: "pending" };
+  if (filter === "income")   return { type: "income" };
+  if (filter === "expense")  return { type: "expense", status: "completed" };
+  return {};
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 function daysUntil(dateStr: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -31,12 +56,101 @@ function daysUntil(dateStr: string): number {
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 
+// ─── FilterDropdown ───────────────────────────────────────────────────────────
+function FilterDropdown({
+  value, onChange,
+}: { value: FilterKey; onChange: (k: FilterKey) => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const active = value !== "all";
+
+  return (
+    <div ref={ref} className="relative">
+      <Button
+        variant="outline"
+        onClick={() => setOpen(o => !o)}
+        className={cn(
+          "gap-2 transition-all",
+          active && "border-foreground/40 bg-secondary"
+        )}
+        aria-label="Filtrar transações"
+      >
+        <SlidersHorizontal className="w-4 h-4" />
+        <span className="hidden sm:inline">
+          {active ? FILTER_OPTIONS.find(o => o.key === value)?.label : "Filtrar"}
+        </span>
+        {active && (
+          <span className="w-1.5 h-1.5 rounded-full bg-foreground/60 sm:hidden" />
+        )}
+      </Button>
+
+      {/* Dropdown panel */}
+      <div
+        className={cn(
+          "absolute right-0 top-[calc(100%+6px)] z-50 min-w-[210px]",
+          "rounded-xl border border-border bg-popover shadow-lg",
+          "origin-top-right transition-all duration-150",
+          open
+            ? "opacity-100 scale-100 pointer-events-auto"
+            : "opacity-0 scale-95 pointer-events-none"
+        )}
+      >
+        <div className="p-1.5">
+          {FILTER_OPTIONS.map((opt, i) => {
+            const isSelected = value === opt.key;
+            return (
+              <button
+                key={opt.key}
+                onClick={() => { onChange(opt.key); setOpen(false); }}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left",
+                  "text-sm transition-colors duration-100",
+                  isSelected
+                    ? "bg-secondary text-foreground font-medium"
+                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                )}
+              >
+                <div className={cn(
+                  "w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors",
+                  isSelected ? "border-foreground bg-foreground" : "border-border"
+                )}>
+                  {isSelected && <Check className="w-2.5 h-2.5 text-background" />}
+                </div>
+                <div>
+                  <p className="leading-none">{opt.label}</p>
+                  <p className={cn(
+                    "text-xs mt-0.5 leading-none",
+                    isSelected ? "text-muted-foreground" : "text-muted-foreground/60"
+                  )}>{opt.description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 export default function Transactions() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed">("all");
-  const [typeFilter, setTypeFilter]     = useState<"all" | "income" | "expense">("all");
+  const [filter, setFilter] = useState<FilterKey>(() => {
+    try { return (sessionStorage.getItem(SESSION_KEY) as FilterKey) || "all"; }
+    catch { return "all"; }
+  });
+
   const [isModalOpen, setIsModalOpen]   = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isWalletPickerOpen, setIsWalletPickerOpen]     = useState(false);
@@ -56,19 +170,21 @@ export default function Transactions() {
 
   const { data: categories } = useGetCategories();
   const { data: wallets }    = useGetWallets();
+  const walletList = wallets ?? [];
 
-  const queryParams: any = {};
-  if (typeFilter   !== "all") queryParams.type   = typeFilter;
-  if (statusFilter !== "all") queryParams.status = statusFilter;
-
-  const { data: transactions, isLoading } = useGetTransactions(queryParams);
+  const queryParams = getQueryParams(filter);
+  const { data: transactions, isLoading } = useGetTransactions(queryParams as any);
 
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
   const payMutation    = usePayTransaction();
 
-  const walletList = wallets ?? [];
+  // Persist filter in session storage
+  const handleFilterChange = (k: FilterKey) => {
+    setFilter(k);
+    try { sessionStorage.setItem(SESSION_KEY, k); } catch { /* noop */ }
+  };
 
   useEffect(() => {
     if (isModalOpen && !editingTransaction && walletId === null && walletList.length === 1) {
@@ -78,14 +194,16 @@ export default function Transactions() {
   }, [isModalOpen, editingTransaction, walletList, walletId]);
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),              refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),                   refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                     refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),        refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),          refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),        refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),              refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetPendingTransactionsQueryKey(),       refetchType: 'all' });
+    [
+      getGetTransactionsQueryKey(),
+      getGetWalletsQueryKey(),
+      getGetGoalsQueryKey(),
+      getGetRecentTransactionsQueryKey(),
+      getGetDashboardSummaryQueryKey(),
+      getGetSpendingByCategoryQueryKey(),
+      getGetMonthlyTrendQueryKey(),
+      getGetPendingTransactionsQueryKey(),
+    ].forEach(key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'all' }));
   };
 
   const resetForm = () => {
@@ -111,8 +229,7 @@ export default function Transactions() {
     } else {
       resetForm();
       if (walletList.length === 1) {
-        const w = walletList[0];
-        setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
+        const w = walletList[0]; setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
       }
     }
     setIsModalOpen(true);
@@ -123,251 +240,220 @@ export default function Transactions() {
     if (!walletId) { setWalletError(true); return; }
     setWalletError(false);
 
-    const parsedAmount       = parseFloat(amount);
-    const currentType        = type;
-    const currentDescription = description;
-    const currentDate        = date;
-    const currentCategoryId  = parseInt(categoryId, 10);
-    const currentCategoryName = categoryName;
-    const currentNotes       = notes || null;
-    const currentWalletId    = walletId;
-
     const payload: any = {
-      type: currentType, amount: parsedAmount, description: currentDescription,
-      date: currentDate, categoryId: currentCategoryId, walletId: currentWalletId,
-      notes: currentNotes,
+      type, amount: parseFloat(amount), description,
+      date, categoryId: parseInt(categoryId, 10), walletId,
+      notes: notes || null,
     };
 
     if (editingTransaction) {
       const prevId = editingTransaction.id;
       setIsModalOpen(false); resetForm();
-      updateMutation.mutate({ id: prevId, data: payload }, { onSettled: () => { invalidateAll(); } });
+      updateMutation.mutate({ id: prevId, data: payload }, { onSettled: () => invalidateAll() });
       return;
     }
 
-    const txQueryKey = getGetTransactionsQueryKey(queryParams);
+    const txQueryKey = getGetTransactionsQueryKey(queryParams as any);
     await queryClient.cancelQueries({ queryKey: txQueryKey });
     const previousTransactions = queryClient.getQueryData(txQueryKey);
 
-    const category = (categories ?? []).find(c => c.id === currentCategoryId);
+    const category = (categories ?? []).find(c => c.id === parseInt(categoryId, 10));
     const today = new Date().toISOString().split("T")[0];
-    const autoStatus = currentDate > today ? "pending" : "completed";
+    const autoStatus = date > today ? "pending" : "completed";
 
     const optimisticTx = {
-      id: Date.now() * -1,
-      userId: user?.id ?? 0,
-      type: currentType,
-      amount: parsedAmount,
-      description: currentDescription,
-      date: currentDate,
-      categoryId: currentCategoryId,
-      categoryName: currentCategoryName || "",
+      id: Date.now() * -1, userId: user?.id ?? 0,
+      type, amount: parseFloat(amount), description, date,
+      categoryId: parseInt(categoryId, 10), categoryName,
       categoryColor: category?.color || "#6C5CE7",
       categoryIcon: category?.icon || "",
-      walletId: currentWalletId,
-      walletName: walletName,
-      walletColor: walletColor,
-      cardId: null,
-      notes: currentNotes,
+      walletId, walletName, walletColor,
+      cardId: null, notes: notes || null,
       status: autoStatus,
       createdAt: new Date().toISOString(),
     };
 
-    const shouldAddToList = statusFilter === "all" || statusFilter === autoStatus;
-    if (shouldAddToList) {
-      queryClient.setQueryData(txQueryKey, (old: any) => {
-        if (!Array.isArray(old)) return [optimisticTx];
-        return [optimisticTx, ...old];
-      });
+    const shouldAdd = filter === "all"
+      || (filter === "pending"  && autoStatus === "pending")
+      || (filter === "income"   && type === "income")
+      || (filter === "expense"  && type === "expense" && autoStatus === "completed");
+
+    if (shouldAdd) {
+      queryClient.setQueryData(txQueryKey, (old: any) =>
+        Array.isArray(old) ? [optimisticTx, ...old] : [optimisticTx]
+      );
     }
 
     setIsModalOpen(false); resetForm();
-
     createMutation.mutate({ data: payload }, {
-      onError: () => { queryClient.setQueryData(txQueryKey, previousTransactions); },
-      onSettled: () => { invalidateAll(); },
+      onError: () => queryClient.setQueryData(txQueryKey, previousTransactions),
+      onSettled: () => invalidateAll(),
     });
   };
 
   const handleDelete = (id: number) => {
-    const txQueryKey = getGetTransactionsQueryKey(queryParams);
+    const txQueryKey = getGetTransactionsQueryKey(queryParams as any);
     const prev = queryClient.getQueryData(txQueryKey);
-    queryClient.setQueryData(txQueryKey, (old: any) => Array.isArray(old) ? old.filter((t: any) => t.id !== id) : old);
+    queryClient.setQueryData(txQueryKey, (old: any) =>
+      Array.isArray(old) ? old.filter((t: any) => t.id !== id) : old
+    );
     deleteMutation.mutate({ id }, {
-      onError: () => { queryClient.setQueryData(txQueryKey, prev); },
-      onSettled: () => { invalidateAll(); },
+      onError: () => queryClient.setQueryData(txQueryKey, prev),
+      onSettled: () => invalidateAll(),
     });
   };
 
   const handleMarkPaid = (id: number) => {
-    payMutation.mutate({ id }, { onSettled: () => { invalidateAll(); } });
+    payMutation.mutate({ id }, { onSettled: () => invalidateAll() });
   };
 
   const noWallets = walletList.length === 0;
   const canSave   = !!amount && !!categoryId && !!walletId;
-
-  const FILTER_TABS = [
-    { key: "all",       label: "Todas" },
-    { key: "pending",   label: "Pendentes" },
-    { key: "completed", label: "Pagas" },
-  ] as const;
-
-  const TYPE_TABS = [
-    { key: "all",     label: "Todos" },
-    { key: "income",  label: "Receitas" },
-    { key: "expense", label: "Despesas" },
-  ] as const;
+  const emptyMsg  = filter === "pending" ? "Nenhuma conta a pagar." : "Nenhuma transação encontrada.";
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5 animate-in fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+
+      {/* ── Header ───────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
           <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
         </div>
-        <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
-              <Plus className="w-4 h-4 mr-2" /> Nova Transação
-            </Button>
-          </DialogTrigger>
-          <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant={type === "expense" ? "default" : "outline"}
-                  className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
-                  onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
-                >Despesa</Button>
-                <Button
-                  variant={type === "income" ? "default" : "outline"}
-                  className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
-                  onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
-                >Receita</Button>
-              </div>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <FilterDropdown value={filter} onChange={handleFilterChange} />
 
-              <div className="space-y-2">
-                <Label>Valor</Label>
-                <CurrencyInput value={amount} onValueChange={setAmount} className="bg-background text-lg font-semibold h-12" data-testid="input-amount" />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Descrição</Label>
-                <Input placeholder="Ex: Supermercado Extra" value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Data {date > new Date().toISOString().split("T")[0] && <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#FFF8E1] dark:bg-[#F4C542]/10 text-[#8B6914] dark:text-[#F4C542] ml-1">pendente</span>}</Label>
-                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
-                </div>
-                <div className="space-y-2">
-                  <Label>Categoria</Label>
-                  <button
-                    type="button"
-                    onClick={() => setIsCategoryPickerOpen(true)}
-                    className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
-                    data-testid="select-category"
-                  >
-                    <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || "Selecionar..."}</span>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Carteira <span className="text-destructive text-xs">*</span></Label>
-                {noWallets ? (
-                  <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
-                    <AlertCircle className="w-4 h-4 shrink-0" />
-                    <span>Crie uma carteira antes de adicionar transações.</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
-                    className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"}`}
-                  >
-                    {walletId !== null && walletColor ? (
-                      <>
-                        <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                        <span className="flex-1 text-left text-foreground">{walletName}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                        <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
-                      </>
-                    )}
-                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                  </button>
-                )}
-                {walletError && (
-                  <p className="text-xs text-destructive flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    Selecione uma carteira para continuar.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
-              </div>
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-              <Button onClick={handleSave} disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending} data-testid="button-save">
-                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+          <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
+                <Plus className="w-4 h-4 mr-2" /> Nova Transação
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <Button
+                    variant={type === "expense" ? "default" : "outline"}
+                    className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
+                    onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
+                  >Despesa</Button>
+                  <Button
+                    variant={type === "income" ? "default" : "outline"}
+                    className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
+                    onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
+                  >Receita</Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Valor</Label>
+                  <CurrencyInput value={amount} onValueChange={setAmount} className="bg-background text-lg font-semibold h-12" data-testid="input-amount" />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Descrição</Label>
+                  <Input placeholder="Ex: Supermercado Extra" value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>
+                      Data{" "}
+                      {date > new Date().toISOString().split("T")[0] && (
+                        <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#FFF8E1] dark:bg-[#F4C542]/10 text-[#8B6914] dark:text-[#F4C542] ml-1">
+                          pendente
+                        </span>
+                      )}
+                    </Label>
+                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Categoria</Label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCategoryPickerOpen(true)}
+                      className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
+                      data-testid="select-category"
+                    >
+                      <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || "Selecionar..."}</span>
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Carteira <span className="text-destructive text-xs">*</span></Label>
+                  {noWallets ? (
+                    <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      <span>Crie uma carteira antes de adicionar transações.</span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
+                      className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"}`}
+                    >
+                      {walletId !== null && walletColor ? (
+                        <>
+                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                          <span className="flex-1 text-left text-foreground">{walletName}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
+                        </>
+                      )}
+                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                    </button>
+                  )}
+                  {walletError && (
+                    <p className="text-xs text-destructive flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" />
+                      Selecione uma carteira para continuar.
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                  <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button onClick={handleSave} disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending} data-testid="button-save">
+                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <CategoryPicker open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen} value={categoryId} type={type} onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }} />
       <WalletPicker open={isWalletPickerOpen} onOpenChange={setIsWalletPickerOpen} value={walletId} onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }} />
 
-      {/* Filter bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Status tabs */}
-        <div className="flex rounded-xl bg-secondary/50 p-1 gap-0.5">
-          {FILTER_TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setStatusFilter(tab.key)}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
-                statusFilter === tab.key
-                  ? tab.key === "pending"
-                    ? "bg-[#F4C542] text-[#3D2800] shadow-sm"
-                    : "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >{tab.label}</button>
-          ))}
+      {/* ── Active filter indicator ───────────────────── */}
+      {filter !== "all" && (
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>Mostrando:</span>
+          <span className="font-medium text-foreground">
+            {FILTER_OPTIONS.find(o => o.key === filter)?.description}
+          </span>
+          <button
+            onClick={() => handleFilterChange("all")}
+            className="text-xs underline-offset-2 hover:underline ml-1"
+          >
+            Limpar filtro
+          </button>
         </div>
-        {/* Type tabs */}
-        <div className="flex rounded-xl bg-secondary/50 p-1 gap-0.5">
-          {TYPE_TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setTypeFilter(tab.key)}
-              className={cn(
-                "flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
-                typeFilter === tab.key
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >{tab.label}</button>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* List */}
+      {/* ── Transaction list ─────────────────────────── */}
       <Card className="bg-card border-border">
         <CardContent className="p-0">
           <div className="divide-y divide-border">
@@ -375,9 +461,7 @@ export default function Transactions() {
               Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full m-2" />)
             ) : transactions?.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-muted-foreground">
-                  {statusFilter === "pending" ? "Nenhuma conta a pagar encontrada." : "Nenhuma transação encontrada."}
-                </p>
+                <p className="text-muted-foreground">{emptyMsg}</p>
                 <Button variant="outline" className="mt-4 bg-background" onClick={() => handleOpenModal()}>
                   <Plus className="w-4 h-4 mr-2" /> Adicionar transação
                 </Button>
@@ -385,8 +469,8 @@ export default function Transactions() {
             ) : (
               transactions?.map((t) => {
                 const isPending = t.status === "pending";
-                const days = isPending ? daysUntil(t.date) : 0;
-                const isUrgent = isPending && days <= 3;
+                const days      = isPending ? daysUntil(t.date) : 0;
+                const isUrgent  = isPending && days <= 3 && days >= 0;
                 const isOverdue = isPending && days < 0;
 
                 return (
@@ -400,6 +484,7 @@ export default function Transactions() {
                     )}
                     data-testid={`row-transaction-${t.id}`}
                   >
+                    {/* Left: icon + details */}
                     <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
                       <div className="relative">
                         <CategoryIcon name={t.categoryName || ""} color={t.categoryColor || "#6C5CE7"} />
@@ -427,7 +512,9 @@ export default function Transactions() {
                         </div>
                         <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                           <span className="text-xs text-muted-foreground">
-                            {isPending ? `Vence em ${new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}` : new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}
+                            {isPending
+                              ? `Vence em ${new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}`
+                              : new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}
                           </span>
                           {t.categoryName && (
                             <>
@@ -447,18 +534,21 @@ export default function Transactions() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Right: amount + actions */}
                     <div className="flex items-center gap-2 ml-4 shrink-0">
                       <div className={cn(
                         "font-semibold text-right tabular-nums",
-                        isPending ? "text-[#8B6914] dark:text-[#F4C542]" : t.type === "income" ? "text-[#00C851]" : "text-foreground"
+                        isPending
+                          ? "text-[#8B6914] dark:text-[#F4C542]"
+                          : t.type === "income" ? "text-[#00C851]" : "text-foreground"
                       )}>
                         {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
                       </div>
-                      <div className="flex gap-1">
+                      <div className="flex gap-0.5">
                         {isPending && (
                           <Button
-                            variant="ghost"
-                            size="icon"
+                            variant="ghost" size="icon"
                             className="h-8 w-8 text-[#8B6914] dark:text-[#F4C542] hover:bg-[#F4C542]/20"
                             title="Marcar como pago"
                             onClick={() => handleMarkPaid(t.id)}
