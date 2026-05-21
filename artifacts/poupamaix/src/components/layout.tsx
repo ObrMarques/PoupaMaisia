@@ -130,7 +130,6 @@ function MobileDrawer({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border shrink-0">
           <Link href="/dashboard" onClick={onClose} className="flex items-center gap-3">
-            <img src="/logo.png" alt="PoupaMais" className="w-9 h-9 object-contain shrink-0" />
             <span className="font-bold text-xl tracking-tight">PoupaMais</span>
           </Link>
           <button
