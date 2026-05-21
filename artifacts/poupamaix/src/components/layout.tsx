@@ -130,9 +130,7 @@ function MobileDrawer({
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border shrink-0">
           <Link href="/dashboard" onClick={onClose} className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-base shrink-0">
-              $
-            </div>
+            <img src="/logo.png" alt="PoupaMais" className="w-9 h-9 object-contain shrink-0" />
             <span className="font-bold text-xl tracking-tight">PoupaMais</span>
           </Link>
           <button
@@ -251,9 +249,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-60 border-r border-border bg-card shrink-0">
         <div className="p-5 pb-4">
           <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-lg tracking-tight">
-            <div className="w-8 h-8 rounded bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
-              $
-            </div>
+            <img src="/logo.png" alt="PoupaMais" className="w-8 h-8 object-contain shrink-0" />
             PoupaMais
           </Link>
         </div>
