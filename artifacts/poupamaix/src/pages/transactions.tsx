@@ -320,7 +320,7 @@ export default function Transactions() {
           <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
           <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
         </div>
-        <div className="flex items-center gap-2 self-end sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto">
           <FilterDropdown value={filter} onChange={handleFilterChange} />
 
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
