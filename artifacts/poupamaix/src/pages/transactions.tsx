@@ -321,8 +321,6 @@ export default function Transactions() {
           <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <FilterDropdown value={filter} onChange={handleFilterChange} />
-
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
@@ -431,6 +429,7 @@ export default function Transactions() {
               </div>
             </DialogContent>
           </Dialog>
+          <FilterDropdown value={filter} onChange={handleFilterChange} />
         </div>
       </div>
 
