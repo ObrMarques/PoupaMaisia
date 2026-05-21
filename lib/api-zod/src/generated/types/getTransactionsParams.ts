@@ -5,6 +5,7 @@
  * PoupaMais - Personal Finance API
  * OpenAPI spec version: 0.1.0
  */
+import type { GetTransactionsStatus } from './getTransactionsStatus';
 import type { GetTransactionsType } from './getTransactionsType';
 
 export type GetTransactionsParams = {
@@ -29,4 +30,5 @@ limit?: number | null;
  * @nullable
  */
 offset?: number | null;
+status?: GetTransactionsStatus;
 };

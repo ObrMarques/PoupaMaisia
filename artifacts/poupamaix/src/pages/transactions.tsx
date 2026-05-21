@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import {
   useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
+  usePayTransaction,
   useGetWallets,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
-  getGetWalletsQueryKey, useGetCategories,
+  getGetWalletsQueryKey, useGetCategories, getGetPendingTransactionsQueryKey,
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
@@ -13,26 +14,34 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
 import { CategoryIcon } from "@/components/category-icon";
-import { Plus, Filter, Trash2, Pencil, ChevronRight, Wallet, AlertCircle } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Wallet, AlertCircle, Clock, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+function daysUntil(dateStr: string): number {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const d = new Date(dateStr + "T00:00:00");
+  return Math.round((d.getTime() - today.getTime()) / 86400000);
+}
 
 export default function Transactions() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const [filterType, setFilterType] = useState<string>("all");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed">("all");
+  const [typeFilter, setTypeFilter]     = useState<"all" | "income" | "expense">("all");
+  const [isModalOpen, setIsModalOpen]   = useState(false);
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
-  const [isWalletPickerOpen, setIsWalletPickerOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<any>(null);
-  const [walletError, setWalletError] = useState(false);
+  const [isWalletPickerOpen, setIsWalletPickerOpen]     = useState(false);
+  const [editingTransaction, setEditingTransaction]     = useState<any>(null);
+  const [walletError, setWalletError]   = useState(false);
 
   const [amount, setAmount]             = useState("");
   const [description, setDescription]   = useState("");
@@ -47,33 +56,36 @@ export default function Transactions() {
 
   const { data: categories } = useGetCategories();
   const { data: wallets }    = useGetWallets();
-  const params = filterType !== "all" ? { type: filterType as "income" | "expense" } : {};
-  const { data: transactions, isLoading } = useGetTransactions(params);
+
+  const queryParams: any = {};
+  if (typeFilter   !== "all") queryParams.type   = typeFilter;
+  if (statusFilter !== "all") queryParams.status = statusFilter;
+
+  const { data: transactions, isLoading } = useGetTransactions(queryParams);
 
   const createMutation = useCreateTransaction();
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
+  const payMutation    = usePayTransaction();
 
   const walletList = wallets ?? [];
 
-  // Auto-select the only wallet when modal opens for new transaction
   useEffect(() => {
     if (isModalOpen && !editingTransaction && walletId === null && walletList.length === 1) {
       const w = walletList[0];
-      setWalletId(w.id);
-      setWalletName(w.name);
-      setWalletColor(w.color);
+      setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
     }
   }, [isModalOpen, editingTransaction, walletList, walletId]);
 
   const invalidateAll = () => {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),         refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),              refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),   refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),     refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),   refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),         refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),              refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),                   refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetGoalsQueryKey(),                     refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetRecentTransactionsQueryKey(),        refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),          refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(),        refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),              refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetPendingTransactionsQueryKey(),       refetchType: 'all' });
   };
 
   const resetForm = () => {
@@ -98,12 +110,9 @@ export default function Transactions() {
       setNotes(t.notes || "");
     } else {
       resetForm();
-      // Auto-select if only one wallet
       if (walletList.length === 1) {
         const w = walletList[0];
-        setWalletId(w.id);
-        setWalletName(w.name);
-        setWalletColor(w.color);
+        setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
       }
     }
     setIsModalOpen(true);
@@ -111,46 +120,39 @@ export default function Transactions() {
 
   const handleSave = async () => {
     if (!amount || !categoryId) return;
-    if (!walletId) {
-      setWalletError(true);
-      return;
-    }
+    if (!walletId) { setWalletError(true); return; }
     setWalletError(false);
 
-    const parsedAmount      = parseFloat(amount);
-    const currentType       = type;
+    const parsedAmount       = parseFloat(amount);
+    const currentType        = type;
     const currentDescription = description;
-    const currentDate       = date;
-    const currentCategoryId = parseInt(categoryId, 10);
+    const currentDate        = date;
+    const currentCategoryId  = parseInt(categoryId, 10);
     const currentCategoryName = categoryName;
-    const currentNotes      = notes || null;
-    const currentWalletId   = walletId;
+    const currentNotes       = notes || null;
+    const currentWalletId    = walletId;
 
     const payload: any = {
-      type: currentType,
-      amount: parsedAmount,
-      description: currentDescription,
-      date: currentDate,
-      categoryId: currentCategoryId,
-      walletId: currentWalletId,
+      type: currentType, amount: parsedAmount, description: currentDescription,
+      date: currentDate, categoryId: currentCategoryId, walletId: currentWalletId,
       notes: currentNotes,
     };
 
     if (editingTransaction) {
       const prevId = editingTransaction.id;
-      setIsModalOpen(false);
-      resetForm();
-      updateMutation.mutate({ id: prevId, data: payload }, {
-        onSettled: () => { invalidateAll(); },
-      });
+      setIsModalOpen(false); resetForm();
+      updateMutation.mutate({ id: prevId, data: payload }, { onSettled: () => { invalidateAll(); } });
       return;
     }
 
-    const txQueryKey = getGetTransactionsQueryKey(params);
+    const txQueryKey = getGetTransactionsQueryKey(queryParams);
     await queryClient.cancelQueries({ queryKey: txQueryKey });
     const previousTransactions = queryClient.getQueryData(txQueryKey);
 
     const category = (categories ?? []).find(c => c.id === currentCategoryId);
+    const today = new Date().toISOString().split("T")[0];
+    const autoStatus = currentDate > today ? "pending" : "completed";
+
     const optimisticTx = {
       id: Date.now() * -1,
       userId: user?.id ?? 0,
@@ -167,10 +169,11 @@ export default function Transactions() {
       walletColor: walletColor,
       cardId: null,
       notes: currentNotes,
+      status: autoStatus,
       createdAt: new Date().toISOString(),
     };
 
-    const shouldAddToList = filterType === "all" || filterType === currentType;
+    const shouldAddToList = statusFilter === "all" || statusFilter === autoStatus;
     if (shouldAddToList) {
       queryClient.setQueryData(txQueryKey, (old: any) => {
         if (!Array.isArray(old)) return [optimisticTx];
@@ -178,203 +181,193 @@ export default function Transactions() {
       });
     }
 
-    setIsModalOpen(false);
-    resetForm();
+    setIsModalOpen(false); resetForm();
 
     createMutation.mutate({ data: payload }, {
-      onError: () => {
-        queryClient.setQueryData(txQueryKey, previousTransactions);
-      },
-      onSettled: () => { invalidateAll(); },
-    });
-  };
-
-  const handleDelete = (id: number) => {
-    const txQueryKey = getGetTransactionsQueryKey(params);
-    const previousTransactions = queryClient.getQueryData(txQueryKey);
-
-    queryClient.setQueryData(txQueryKey, (old: any) => {
-      if (!Array.isArray(old)) return old;
-      return old.filter((t: any) => t.id !== id);
-    });
-
-    deleteMutation.mutate({ id }, {
       onError: () => { queryClient.setQueryData(txQueryKey, previousTransactions); },
       onSettled: () => { invalidateAll(); },
     });
   };
 
+  const handleDelete = (id: number) => {
+    const txQueryKey = getGetTransactionsQueryKey(queryParams);
+    const prev = queryClient.getQueryData(txQueryKey);
+    queryClient.setQueryData(txQueryKey, (old: any) => Array.isArray(old) ? old.filter((t: any) => t.id !== id) : old);
+    deleteMutation.mutate({ id }, {
+      onError: () => { queryClient.setQueryData(txQueryKey, prev); },
+      onSettled: () => { invalidateAll(); },
+    });
+  };
+
+  const handleMarkPaid = (id: number) => {
+    payMutation.mutate({ id }, { onSettled: () => { invalidateAll(); } });
+  };
+
   const noWallets = walletList.length === 0;
   const canSave   = !!amount && !!categoryId && !!walletId;
 
+  const FILTER_TABS = [
+    { key: "all",       label: "Todas" },
+    { key: "pending",   label: "Pendentes" },
+    { key: "completed", label: "Pagas" },
+  ] as const;
+
+  const TYPE_TABS = [
+    { key: "all",     label: "Todos" },
+    { key: "income",  label: "Receitas" },
+    { key: "expense", label: "Despesas" },
+  ] as const;
+
   return (
-    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5 animate-in fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
           <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger className="flex-1 md:w-[160px] bg-background">
-              <Filter className="w-4 h-4 mr-2" />
-              <SelectValue placeholder="Filtrar" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os tipos</SelectItem>
-              <SelectItem value="income">Receitas</SelectItem>
-              <SelectItem value="expense">Despesas</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button onClick={() => handleOpenModal()} className="flex-1 md:flex-none" data-testid="button-add-transaction">
-                <Plus className="w-4 h-4 mr-2" /> Nova
-              </Button>
-            </DialogTrigger>
-            <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={type === "expense" ? "default" : "outline"}
-                    className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
-                    onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
-                  >
-                    Despesa
-                  </Button>
-                  <Button
-                    variant={type === "income" ? "default" : "outline"}
-                    className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
-                    onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
-                  >
-                    Receita
-                  </Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Valor</Label>
-                  <CurrencyInput
-                    value={amount}
-                    onValueChange={setAmount}
-                    className="bg-background text-lg font-semibold h-12"
-                    data-testid="input-amount"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <Input
-                    placeholder="Ex: Supermercado Extra"
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    className="bg-background"
-                    data-testid="input-description"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Data</Label>
-                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Categoria</Label>
-                    <button
-                      type="button"
-                      onClick={() => setIsCategoryPickerOpen(true)}
-                      className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
-                      data-testid="select-category"
-                    >
-                      <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>
-                        {categoryName || "Selecionar..."}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>
-                    Carteira <span className="text-destructive text-xs">*</span>
-                  </Label>
-                  {noWallets ? (
-                    <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Crie uma carteira antes de adicionar transações.</span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
-                      className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${
-                        walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"
-                      }`}
-                    >
-                      {walletId !== null && walletColor ? (
-                        <>
-                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                          <span className="flex-1 text-left text-foreground">{walletName}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                          <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
-                        </>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  )}
-                  {walletError && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      Selecione uma carteira para continuar.
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                  <Input
-                    placeholder="Notas adicionais..."
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    className="bg-background"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+        <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
+              <Plus className="w-4 h-4 mr-2" /> Nova Transação
+            </Button>
+          </DialogTrigger>
+          <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
                 <Button
-                  onClick={handleSave}
-                  disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending}
-                  data-testid="button-save"
-                >
-                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
-                </Button>
+                  variant={type === "expense" ? "default" : "outline"}
+                  className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
+                  onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
+                >Despesa</Button>
+                <Button
+                  variant={type === "income" ? "default" : "outline"}
+                  className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
+                  onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
+                >Receita</Button>
               </div>
-            </DialogContent>
-          </Dialog>
+
+              <div className="space-y-2">
+                <Label>Valor</Label>
+                <CurrencyInput value={amount} onValueChange={setAmount} className="bg-background text-lg font-semibold h-12" data-testid="input-amount" />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Descrição</Label>
+                <Input placeholder="Ex: Supermercado Extra" value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Data {date > new Date().toISOString().split("T")[0] && <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#FFF8E1] dark:bg-[#F4C542]/10 text-[#8B6914] dark:text-[#F4C542] ml-1">pendente</span>}</Label>
+                  <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <button
+                    type="button"
+                    onClick={() => setIsCategoryPickerOpen(true)}
+                    className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
+                    data-testid="select-category"
+                  >
+                    <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || "Selecionar..."}</span>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Carteira <span className="text-destructive text-xs">*</span></Label>
+                {noWallets ? (
+                  <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
+                    <AlertCircle className="w-4 h-4 shrink-0" />
+                    <span>Crie uma carteira antes de adicionar transações.</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
+                    className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"}`}
+                  >
+                    {walletId !== null && walletColor ? (
+                      <>
+                        <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                        <span className="flex-1 text-left text-foreground">{walletName}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
+                      </>
+                    )}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                  </button>
+                )}
+                {walletError && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Selecione uma carteira para continuar.
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+                <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave} disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending} data-testid="button-save">
+                {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <CategoryPicker open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen} value={categoryId} type={type} onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }} />
+      <WalletPicker open={isWalletPickerOpen} onOpenChange={setIsWalletPickerOpen} value={walletId} onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }} />
+
+      {/* Filter bar */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        {/* Status tabs */}
+        <div className="flex rounded-xl bg-secondary/50 p-1 gap-0.5">
+          {FILTER_TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setStatusFilter(tab.key)}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
+                statusFilter === tab.key
+                  ? tab.key === "pending"
+                    ? "bg-[#F4C542] text-[#3D2800] shadow-sm"
+                    : "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >{tab.label}</button>
+          ))}
+        </div>
+        {/* Type tabs */}
+        <div className="flex rounded-xl bg-secondary/50 p-1 gap-0.5">
+          {TYPE_TABS.map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setTypeFilter(tab.key)}
+              className={cn(
+                "flex-1 px-3 py-1.5 text-sm font-medium rounded-lg transition-all",
+                typeFilter === tab.key
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >{tab.label}</button>
+          ))}
         </div>
       </div>
 
-      <CategoryPicker
-        open={isCategoryPickerOpen}
-        onOpenChange={setIsCategoryPickerOpen}
-        value={categoryId}
-        type={type}
-        onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }}
-      />
-      <WalletPicker
-        open={isWalletPickerOpen}
-        onOpenChange={setIsWalletPickerOpen}
-        value={walletId}
-        onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }}
-      />
-
+      {/* List */}
       <Card className="bg-card border-border">
         <CardContent className="p-0">
           <div className="divide-y divide-border">
@@ -382,59 +375,109 @@ export default function Transactions() {
               Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full m-2" />)
             ) : transactions?.length === 0 ? (
               <div className="p-12 text-center">
-                <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
+                <p className="text-muted-foreground">
+                  {statusFilter === "pending" ? "Nenhuma conta a pagar encontrada." : "Nenhuma transação encontrada."}
+                </p>
                 <Button variant="outline" className="mt-4 bg-background" onClick={() => handleOpenModal()}>
-                  <Plus className="w-4 h-4 mr-2" /> Adicionar primeira transação
+                  <Plus className="w-4 h-4 mr-2" /> Adicionar transação
                 </Button>
               </div>
             ) : (
-              transactions?.map((t) => (
-                <div
-                  key={t.id}
-                  className="flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
-                  data-testid={`row-transaction-${t.id}`}
-                >
-                  <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
-                    <CategoryIcon name={t.categoryName || ""} color={t.categoryColor || "#6C5CE7"} />
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">{t.description || t.categoryName}</p>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-xs text-muted-foreground">{new Date(t.date).toLocaleDateString("pt-BR")}</span>
-                        {t.categoryName && (
-                          <>
-                            <span className="text-xs text-muted-foreground">·</span>
-                            <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">
-                              {t.categoryName}
-                            </Badge>
-                          </>
+              transactions?.map((t) => {
+                const isPending = t.status === "pending";
+                const days = isPending ? daysUntil(t.date) : 0;
+                const isUrgent = isPending && days <= 3;
+                const isOverdue = isPending && days < 0;
+
+                return (
+                  <div
+                    key={t.id}
+                    className={cn(
+                      "flex items-center justify-between p-4 transition-colors",
+                      isPending
+                        ? "bg-[#FFF8E1] dark:bg-[#F4C542]/5 hover:bg-[#FFF3CC] dark:hover:bg-[#F4C542]/10"
+                        : "hover:bg-secondary/30"
+                    )}
+                    data-testid={`row-transaction-${t.id}`}
+                  >
+                    <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
+                      <div className="relative">
+                        <CategoryIcon name={t.categoryName || ""} color={t.categoryColor || "#6C5CE7"} />
+                        {isPending && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F4C542] flex items-center justify-center">
+                            <Clock className="w-2.5 h-2.5 text-[#3D2800]" />
+                          </div>
                         )}
-                        {t.walletName && (
-                          <>
-                            <span className="text-xs text-muted-foreground">·</span>
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.walletColor || "#6B7280" }} />
-                              {t.walletName}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-foreground truncate">{t.description || t.categoryName}</p>
+                          {isPending && (
+                            <span className={cn(
+                              "text-[10px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0",
+                              isOverdue
+                                ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                                : isUrgent
+                                  ? "bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
+                                  : "bg-[#FFF3CC] dark:bg-[#F4C542]/15 text-[#8B6914] dark:text-[#F4C542] border-[#F4C542]/40"
+                            )}>
+                              {isOverdue ? "Vencida" : isUrgent ? "Vence em breve" : "Conta a Pagar"}
                             </span>
-                          </>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                          <span className="text-xs text-muted-foreground">
+                            {isPending ? `Vence em ${new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}` : new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}
+                          </span>
+                          {t.categoryName && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">{t.categoryName}</Badge>
+                            </>
+                          )}
+                          {t.walletName && (
+                            <>
+                              <span className="text-xs text-muted-foreground">·</span>
+                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.walletColor || "#6B7280" }} />
+                                {t.walletName}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 ml-4 shrink-0">
+                      <div className={cn(
+                        "font-semibold text-right tabular-nums",
+                        isPending ? "text-[#8B6914] dark:text-[#F4C542]" : t.type === "income" ? "text-[#00C851]" : "text-foreground"
+                      )}>
+                        {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
+                      </div>
+                      <div className="flex gap-1">
+                        {isPending && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-[#8B6914] dark:text-[#F4C542] hover:bg-[#F4C542]/20"
+                            title="Marcar como pago"
+                            onClick={() => handleMarkPaid(t.id)}
+                            disabled={payMutation.isPending}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </Button>
                         )}
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
+                          <Pencil className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <div className={`font-semibold text-right tabular-nums ${t.type === "income" ? "text-[#00C851]" : "text-foreground"}`}>
-                      {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
-                    </div>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
-                        <Pencil className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </CardContent>

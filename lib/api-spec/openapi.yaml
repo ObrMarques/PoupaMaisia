@@ -193,6 +193,11 @@ paths:
           in: query
           schema:
             type: ["integer", "null"]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, completed]
       responses:
         "200":
           description: List of transactions
@@ -219,6 +224,38 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Transaction"
+
+  /transactions/{id}/pay:
+    patch:
+      operationId: payTransaction
+      tags: [transactions]
+      summary: Mark a pending transaction as paid
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Transaction marked as paid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /dashboard/pending-transactions:
+    get:
+      operationId: getPendingTransactions
+      tags: [dashboard]
+      summary: Get summary of pending transactions
+      responses:
+        "200":
+          description: Pending transactions summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PendingTransactionsSummary"
 
   /transactions/{id}:
     get:
@@ -865,7 +902,7 @@ components:
 
     Transaction:
       type: object
-      required: [id, userId, type, amount, description, date, categoryId, categoryName, categoryColor, categoryIcon, createdAt]
+      required: [id, userId, type, amount, description, date, categoryId, categoryName, categoryColor, categoryIcon, status, createdAt]
       properties:
         id:
           type: integer
@@ -908,6 +945,9 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        status:
+          type: string
+          enum: [pending, completed]
         createdAt:
           type: string
 
@@ -971,6 +1011,22 @@ components:
           type: ["integer", "null"]
         notes:
           type: ["string", "null"]
+        status:
+          type: ["string", "null"]
+          enum: [pending, completed, null]
+
+    PendingTransactionsSummary:
+      type: object
+      required: [count, total, items]
+      properties:
+        count:
+          type: integer
+        total:
+          type: number
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
 
     Category:
       type: object

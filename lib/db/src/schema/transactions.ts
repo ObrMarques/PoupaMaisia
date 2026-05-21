@@ -19,6 +19,7 @@ export const transactionsTable = pgTable("transactions", {
   walletId: integer("wallet_id"),
   notes: text("notes"),
   pluggyTransactionId: text("pluggy_transaction_id"),
+  status: text("status").notNull().default("completed"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => [
   index("idx_transactions_user_id").on(table.userId),

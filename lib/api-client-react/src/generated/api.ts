@@ -45,6 +45,7 @@ import type {
   LoginInput,
   MonthlyTrend,
   OnboardingInput,
+  PendingTransactionsSummary,
   ProfileUpdate,
   RegisterInput,
   SuccessResponse,
@@ -731,6 +732,153 @@ export const useCreateTransaction = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getCreateTransactionMutationOptions(options));
     }
+
+export const getPayTransactionUrl = (id: number,) => {
+
+
+
+
+  return `/api/transactions/${id}/pay`
+}
+
+/**
+ * @summary Mark a pending transaction as paid
+ */
+export const payTransaction = async (id: number, options?: RequestInit): Promise<Transaction> => {
+
+  return customFetch<Transaction>(getPayTransactionUrl(id),
+  {
+    ...options,
+    method: 'PATCH'
+
+
+  }
+);}
+
+
+
+
+export const getPayTransactionMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payTransaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof payTransaction>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['payTransaction'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof payTransaction>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  payTransaction(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PayTransactionMutationResult = NonNullable<Awaited<ReturnType<typeof payTransaction>>>
+
+    export type PayTransactionMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Mark a pending transaction as paid
+ */
+export const usePayTransaction = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof payTransaction>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof payTransaction>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getPayTransactionMutationOptions(options));
+    }
+
+export const getGetPendingTransactionsUrl = () => {
+
+
+
+
+  return `/api/dashboard/pending-transactions`
+}
+
+/**
+ * @summary Get summary of pending transactions
+ */
+export const getPendingTransactions = async ( options?: RequestInit): Promise<PendingTransactionsSummary> => {
+
+  return customFetch<PendingTransactionsSummary>(getGetPendingTransactionsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPendingTransactionsQueryKey = () => {
+    return [
+    `/api/dashboard/pending-transactions`
+    ] as const;
+    }
+
+
+export const getGetPendingTransactionsQueryOptions = <TData = Awaited<ReturnType<typeof getPendingTransactions>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingTransactionsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingTransactions>>> = ({ signal }) => getPendingTransactions({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingTransactions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPendingTransactionsQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingTransactions>>>
+export type GetPendingTransactionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get summary of pending transactions
+ */
+
+export function useGetPendingTransactions<TData = Awaited<ReturnType<typeof getPendingTransactions>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingTransactions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPendingTransactionsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetTransactionUrl = (id: number,) => {
 

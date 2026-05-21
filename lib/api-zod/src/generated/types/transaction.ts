@@ -5,6 +5,7 @@
  * PoupaMais - Personal Finance API
  * OpenAPI spec version: 0.1.0
  */
+import type { TransactionStatus } from './transactionStatus';
 import type { TransactionType } from './transactionType';
 
 export interface Transaction {
@@ -37,5 +38,6 @@ export interface Transaction {
   walletColor?: string | null;
   /** @nullable */
   notes?: string | null;
+  status: TransactionStatus;
   createdAt: string;
 }

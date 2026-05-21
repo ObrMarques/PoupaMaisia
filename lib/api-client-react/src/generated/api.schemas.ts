@@ -87,6 +87,14 @@ export const TransactionType = {
   expense: 'expense',
 } as const;
 
+export type TransactionStatus = typeof TransactionStatus[keyof typeof TransactionStatus];
+
+
+export const TransactionStatus = {
+  pending: 'pending',
+  completed: 'completed',
+} as const;
+
 export interface Transaction {
   id: number;
   userId: number;
@@ -117,6 +125,7 @@ export interface Transaction {
   walletColor?: string | null;
   /** @nullable */
   notes?: string | null;
+  status: TransactionStatus;
   createdAt: string;
 }
 
@@ -175,6 +184,17 @@ export const TransactionUpdateType = {
   expense: 'expense',
 } as const;
 
+/**
+ * @nullable
+ */
+export type TransactionUpdateStatus = typeof TransactionUpdateStatus[keyof typeof TransactionUpdateStatus] | null;
+
+
+export const TransactionUpdateStatus = {
+  pending: 'pending',
+  completed: 'completed',
+} as const;
+
 export interface TransactionUpdate {
   /** @nullable */
   type?: TransactionUpdateType;
@@ -200,6 +220,14 @@ export interface TransactionUpdate {
   walletId?: number | null;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  status?: TransactionUpdateStatus;
+}
+
+export interface PendingTransactionsSummary {
+  count: number;
+  total: number;
+  items: Transaction[];
 }
 
 export type CategoryType = typeof CategoryType[keyof typeof CategoryType];
@@ -557,6 +585,7 @@ limit?: number | null;
  * @nullable
  */
 offset?: number | null;
+status?: GetTransactionsStatus;
 };
 
 export type GetTransactionsType = typeof GetTransactionsType[keyof typeof GetTransactionsType];
@@ -565,6 +594,14 @@ export type GetTransactionsType = typeof GetTransactionsType[keyof typeof GetTra
 export const GetTransactionsType = {
   income: 'income',
   expense: 'expense',
+} as const;
+
+export type GetTransactionsStatus = typeof GetTransactionsStatus[keyof typeof GetTransactionsStatus];
+
+
+export const GetTransactionsStatus = {
+  pending: 'pending',
+  completed: 'completed',
 } as const;
 
 export type GetDashboardSummaryParams = {

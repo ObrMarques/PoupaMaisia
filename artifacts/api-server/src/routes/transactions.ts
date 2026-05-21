@@ -6,6 +6,13 @@ import { CreateTransactionBody, UpdateTransactionBody, GetTransactionsQueryParam
 
 const router = Router();
 
+function isFutureDate(dateStr: string): boolean {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const txDate = new Date(dateStr + "T00:00:00");
+  return txDate > today;
+}
+
 async function serializeTransaction(tx: any, cat: any, walletMap: Map<number, any> = new Map()) {
   const wallet = tx.walletId ? walletMap.get(tx.walletId) : null;
   return {
@@ -29,6 +36,7 @@ async function serializeTransaction(tx: any, cat: any, walletMap: Map<number, an
     walletName: wallet?.name ?? null,
     walletColor: wallet?.color ?? null,
     notes: tx.notes ?? null,
+    status: tx.status ?? "completed",
     createdAt: tx.createdAt.toISOString(),
   };
 }
@@ -41,6 +49,7 @@ async function recalculateCardBalance(cardId: number, userId: number) {
       eq(transactionsTable.cardId, cardId),
       eq(transactionsTable.userId, userId),
       eq(transactionsTable.type, "expense"),
+      eq(transactionsTable.status, "completed"),
     ));
   await db.update(cardsTable)
     .set({ currentBalance: String(parseFloat(total)) })
@@ -65,12 +74,15 @@ router.get("/transactions", authMiddleware, async (req, res) => {
         sql`EXTRACT(MONTH FROM ${transactionsTable.date}) = ${params.data.month} AND EXTRACT(YEAR FROM ${transactionsTable.date}) = ${params.data.year}`
       );
     }
+    if ((params.data as any).status) {
+      conditions.push(eq(transactionsTable.status, (params.data as any).status));
+    }
   }
 
   const txs = await db.select().from(transactionsTable)
     .where(and(...conditions))
     .orderBy(desc(transactionsTable.date), desc(transactionsTable.createdAt))
-    .limit(params.success && params.data.limit ? Number(params.data.limit) : 100)
+    .limit(params.success && params.data.limit ? Number(params.data.limit) : 200)
     .offset(params.success && params.data.offset ? Number(params.data.offset) : 0);
 
   const [cats, wallets] = await Promise.all([
@@ -95,6 +107,9 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     res.status(400).json({ error: "Selecione uma carteira para continuar." });
     return;
   }
+
+  const autoStatus = isFutureDate(parsed.data.date) ? "pending" : "completed";
+
   const [tx] = await db.insert(transactionsTable).values({
     userId: user.id,
     type: parsed.data.type,
@@ -109,9 +124,11 @@ router.post("/transactions", authMiddleware, async (req, res) => {
     cardId: parsed.data.cardId ?? null,
     walletId: parsed.data.walletId ?? null,
     notes: parsed.data.notes ?? null,
+    status: autoStatus,
   }).returning();
 
-  if (tx.cardId && parsed.data.type === "expense") {
+  // Only update card balance for completed transactions
+  if (tx.cardId && parsed.data.type === "expense" && autoStatus === "completed") {
     await recalculateCardBalance(tx.cardId, user.id);
   }
 
@@ -142,6 +159,34 @@ router.get("/transactions/:id", authMiddleware, async (req, res) => {
   res.json(await serializeTransaction(tx, cats[0], walletMap));
 });
 
+router.patch("/transactions/:id/pay", authMiddleware, async (req, res) => {
+  const user = getUser(req);
+  const id = parseInt(req.params["id"] as string);
+  const existing = await db.select().from(transactionsTable)
+    .where(and(eq(transactionsTable.id, id), eq(transactionsTable.userId, user.id))).limit(1);
+  if (!existing.length) {
+    res.status(404).json({ error: "Transaction not found" });
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const [tx] = await db.update(transactionsTable)
+    .set({ status: "completed", date: today })
+    .where(eq(transactionsTable.id, id))
+    .returning();
+
+  if (tx.cardId && tx.type === "expense") {
+    await recalculateCardBalance(tx.cardId, user.id);
+  }
+
+  const [cats, wallets] = await Promise.all([
+    db.select().from(categoriesTable).where(eq(categoriesTable.id, tx.categoryId)).limit(1),
+    tx.walletId ? db.select().from(walletsTable).where(eq(walletsTable.id, tx.walletId)).limit(1) : Promise.resolve([]),
+  ]);
+  const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
+  res.json(await serializeTransaction(tx, cats[0], walletMap));
+});
+
 router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   const user = getUser(req);
   const id = parseInt(req.params["id"] as string);
@@ -161,7 +206,13 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   if (d.type !== undefined && d.type !== null) updates.type = d.type;
   if (d.amount !== undefined && d.amount !== null) updates.amount = String(d.amount);
   if (d.description !== undefined) updates.description = d.description || null;
-  if (d.date !== undefined && d.date !== null) updates.date = d.date;
+  if (d.date !== undefined && d.date !== null) {
+    updates.date = d.date;
+    // Recalculate status based on new date (unless status explicitly provided)
+    if ((d as any).status === undefined || (d as any).status === null) {
+      updates.status = isFutureDate(d.date) ? "pending" : "completed";
+    }
+  }
   if (d.time !== undefined) updates.time = d.time;
   if (d.categoryId !== undefined && d.categoryId !== null) updates.categoryId = d.categoryId;
   if (d.isRecurring !== undefined) updates.isRecurring = d.isRecurring;
@@ -170,14 +221,18 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   if (d.cardId !== undefined) updates.cardId = d.cardId;
   if ((d as any).walletId !== undefined) updates.walletId = (d as any).walletId;
   if (d.notes !== undefined) updates.notes = d.notes;
+  if ((d as any).status !== undefined && (d as any).status !== null) updates.status = (d as any).status;
 
   const [tx] = await db.update(transactionsTable).set(updates).where(eq(transactionsTable.id, id)).returning();
 
-  const affectedCards = new Set<number>();
-  if (existing[0].cardId) affectedCards.add(existing[0].cardId);
-  if (tx.cardId) affectedCards.add(tx.cardId);
-  for (const cid of affectedCards) {
-    await recalculateCardBalance(cid, user.id);
+  // Only recalculate card balance if completed
+  if (tx.status === "completed") {
+    const affectedCards = new Set<number>();
+    if (existing[0].cardId) affectedCards.add(existing[0].cardId);
+    if (tx.cardId) affectedCards.add(tx.cardId);
+    for (const cid of affectedCards) {
+      await recalculateCardBalance(cid, user.id);
+    }
   }
 
   const [cats, wallets] = await Promise.all([
@@ -198,9 +253,10 @@ router.delete("/transactions/:id", authMiddleware, async (req, res) => {
     return;
   }
   const oldCardId = existing[0].cardId;
+  const wasCompleted = existing[0].status === "completed";
   await db.delete(transactionsTable).where(eq(transactionsTable.id, id));
 
-  if (oldCardId) {
+  if (oldCardId && wasCompleted) {
     await recalculateCardBalance(oldCardId, user.id);
   }
 

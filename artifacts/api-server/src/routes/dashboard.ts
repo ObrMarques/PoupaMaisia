@@ -15,7 +15,7 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear  = month === 1 ? year - 1 : year;
 
-  // All figures based solely on current-month transactions
+  // All figures based solely on completed current-month transactions
   const txResult = await db.execute(sql`
     SELECT
       SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_income,
@@ -24,7 +24,7 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
       SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_expenses,
       COUNT(CASE WHEN EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year} THEN 1 END) AS tx_count
     FROM transactions
-    WHERE user_id = ${user.id}
+    WHERE user_id = ${user.id} AND (status IS NULL OR status = 'completed')
   `);
 
   const r = (txResult.rows[0] ?? {}) as any;
@@ -67,6 +67,7 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
     LEFT JOIN categories c ON c.id = t.category_id
     WHERE t.user_id = ${user.id}
       AND t.type = 'expense'
+      AND (t.status IS NULL OR t.status = 'completed')
       AND EXTRACT(MONTH FROM t.date) = ${month}
       AND EXTRACT(YEAR  FROM t.date) = ${year}
     GROUP BY t.category_id, c.name, c.color, c.icon
@@ -104,7 +105,7 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
       SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END) AS income,
       SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END) AS expenses
     FROM transactions
-    WHERE user_id = ${user.id} AND date >= ${cutoff}
+    WHERE user_id = ${user.id} AND date >= ${cutoff} AND (status IS NULL OR status = 'completed')
     GROUP BY EXTRACT(MONTH FROM date), EXTRACT(YEAR FROM date)
     ORDER BY year ASC, month ASC
   `);
@@ -178,4 +179,58 @@ router.get("/dashboard/recent-transactions", authMiddleware, async (req, res) =>
   })));
 });
 
+router.get("/dashboard/pending-transactions", authMiddleware, async (req, res) => {
+  const user = getUser(req);
+
+  const result = await db.execute(sql`
+    SELECT
+      t.id, t.user_id, t.type, t.amount::numeric AS amount, t.description,
+      t.date, t.time, t.category_id, t.is_recurring, t.recurring_period,
+      t.installments, t.installment_number, t.card_id, t.wallet_id, t.notes,
+      t.status, t.created_at,
+      c.name  AS category_name,
+      c.color AS category_color,
+      c.icon  AS category_icon,
+      w.name  AS wallet_name,
+      w.color AS wallet_color
+    FROM transactions t
+    LEFT JOIN categories c ON c.id = t.category_id
+    LEFT JOIN wallets    w ON w.id = t.wallet_id
+    WHERE t.user_id = ${user.id} AND t.status = 'pending'
+    ORDER BY t.date ASC, t.created_at ASC
+  `);
+
+  const rows = result.rows as any[];
+  const total = rows.reduce((s, r) => s + parseFloat(r.amount || "0"), 0);
+
+  const items = rows.map(r => ({
+    id:               r.id,
+    userId:           r.user_id,
+    type:             r.type,
+    amount:           parseFloat(r.amount || "0"),
+    description:      r.description,
+    date:             r.date,
+    time:             r.time              ?? null,
+    categoryId:       r.category_id,
+    categoryName:     r.category_name     ?? "Outros",
+    categoryColor:    r.category_color    ?? "#666666",
+    categoryIcon:     r.category_icon     ?? "",
+    isRecurring:      r.is_recurring,
+    recurringPeriod:  r.recurring_period  ?? null,
+    installments:     r.installments      ?? null,
+    installmentNumber: r.installment_number ?? null,
+    cardId:           r.card_id           ?? null,
+    walletId:         r.wallet_id         ?? null,
+    walletName:       r.wallet_name       ?? null,
+    walletColor:      r.wallet_color      ?? null,
+    notes:            r.notes             ?? null,
+    status:           r.status            ?? "pending",
+    createdAt:        new Date(r.created_at).toISOString(),
+  }));
+
+  res.set("Cache-Control", CACHE_NONE);
+  res.json({ count: rows.length, total, items });
+});
+
 export default router;
+

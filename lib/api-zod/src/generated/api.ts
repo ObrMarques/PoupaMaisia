@@ -144,7 +144,8 @@ export const GetTransactionsQueryParams = zod.object({
   "month": zod.coerce.number().nullish(),
   "year": zod.coerce.number().nullish(),
   "limit": zod.coerce.number().nullish(),
-  "offset": zod.coerce.number().nullish()
+  "offset": zod.coerce.number().nullish(),
+  "status": zod.enum(['pending', 'completed']).optional()
 })
 
 export const GetTransactionsResponseItem = zod.object({
@@ -168,6 +169,7 @@ export const GetTransactionsResponseItem = zod.object({
   "walletName": zod.string().nullish(),
   "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
   "createdAt": zod.string()
 })
 export const GetTransactionsResponse = zod.array(GetTransactionsResponseItem)
@@ -193,6 +195,72 @@ export const CreateTransactionBody = zod.object({
   "cardId": zod.number().nullish(),
   "walletId": zod.number().nullish(),
   "notes": zod.string().nullish()
+})
+
+
+/**
+ * @summary Mark a pending transaction as paid
+ */
+export const PayTransactionParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const PayTransactionResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['income', 'expense']),
+  "amount": zod.number(),
+  "description": zod.string(),
+  "date": zod.string(),
+  "time": zod.string().nullish(),
+  "categoryId": zod.number(),
+  "categoryName": zod.string(),
+  "categoryColor": zod.string(),
+  "categoryIcon": zod.string(),
+  "isRecurring": zod.boolean().optional(),
+  "recurringPeriod": zod.string().nullish(),
+  "installments": zod.number().nullish(),
+  "installmentNumber": zod.number().nullish(),
+  "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get summary of pending transactions
+ */
+export const GetPendingTransactionsResponse = zod.object({
+  "count": zod.number(),
+  "total": zod.number(),
+  "items": zod.array(zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "type": zod.enum(['income', 'expense']),
+  "amount": zod.number(),
+  "description": zod.string(),
+  "date": zod.string(),
+  "time": zod.string().nullish(),
+  "categoryId": zod.number(),
+  "categoryName": zod.string(),
+  "categoryColor": zod.string(),
+  "categoryIcon": zod.string(),
+  "isRecurring": zod.boolean().optional(),
+  "recurringPeriod": zod.string().nullish(),
+  "installments": zod.number().nullish(),
+  "installmentNumber": zod.number().nullish(),
+  "cardId": zod.number().nullish(),
+  "walletId": zod.number().nullish(),
+  "walletName": zod.string().nullish(),
+  "walletColor": zod.string().nullish(),
+  "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
+  "createdAt": zod.string()
+}))
 })
 
 
@@ -224,6 +292,7 @@ export const GetTransactionResponse = zod.object({
   "walletName": zod.string().nullish(),
   "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
   "createdAt": zod.string()
 })
 
@@ -247,7 +316,8 @@ export const UpdateTransactionBody = zod.object({
   "installments": zod.number().nullish(),
   "cardId": zod.number().nullish(),
   "walletId": zod.number().nullish(),
-  "notes": zod.string().nullish()
+  "notes": zod.string().nullish(),
+  "status": zod.union([zod.literal('pending'),zod.literal('completed'),zod.literal(null)]).nullish()
 })
 
 export const UpdateTransactionResponse = zod.object({
@@ -271,6 +341,7 @@ export const UpdateTransactionResponse = zod.object({
   "walletName": zod.string().nullish(),
   "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
   "createdAt": zod.string()
 })
 
@@ -712,6 +783,7 @@ export const GetRecentTransactionsResponseItem = zod.object({
   "walletName": zod.string().nullish(),
   "walletColor": zod.string().nullish(),
   "notes": zod.string().nullish(),
+  "status": zod.enum(['pending', 'completed']),
   "createdAt": zod.string()
 })
 export const GetRecentTransactionsResponse = zod.array(GetRecentTransactionsResponseItem)
