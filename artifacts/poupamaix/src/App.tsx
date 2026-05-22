@@ -33,7 +33,11 @@ const queryClient = new QueryClient({
     queries: {
       staleTime:            1000 * 60 * 5,
       gcTime:               1000 * 60 * 10,
-      retry:                1,
+      // Never retry 401 — session is invalid, retrying just creates an infinite loop
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401) return false;
+        return failureCount < 1;
+      },
       refetchInterval:      false,
       refetchOnWindowFocus: false,
       refetchOnReconnect:   true,

@@ -30,7 +30,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession]           = useState<Session | null>(null);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const qc = useQueryClient();
 
@@ -52,13 +52,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isSignedIn = !!session;
 
-  const { data: dbUser, isLoading } = useGetMe({
+  const { data: dbUser, isLoading, error: meError } = useGetMe({
     query: {
       queryKey: getGetMeQueryKey(),
       enabled: isSignedIn && sessionLoaded,
-      retry: 1,
+      // Never retry a 401 — the token is invalid; signing out is the right move
+      retry: (failureCount, error: any) => {
+        if (error?.status === 401) return false;
+        return failureCount < 1;
+      },
     },
   });
+
+  // When /api/auth/me returns 401 while we think we're signed in,
+  // the session is stale/expired — sign out and redirect to sign-in.
+  useEffect(() => {
+    if (!meError) return;
+    const status = (meError as any)?.status;
+    if (status === 401) {
+      supabase.auth.signOut().then(() => {
+        window.location.replace('/sign-in');
+      });
+    }
+  }, [meError]);
 
   const updateUser = (updatedUser: AppUser) => {
     qc.setQueryData(getGetMeQueryKey(), updatedUser);
@@ -69,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = '/sign-in';
   };
 
-  const isLoaded = sessionLoaded && (!isSignedIn || !isLoading);
+  const isLoaded = sessionLoaded && (!isSignedIn || (!isLoading && (!!dbUser || !!meError)));
 
   return (
     <AuthContext.Provider value={{
