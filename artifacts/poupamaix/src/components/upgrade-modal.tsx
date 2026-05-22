@@ -1,7 +1,7 @@
 import { Crown, X, ChevronRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/test_fZuaEQfTB7AHem6cA5frW01";
+const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
 
 interface UpgradeModalProps {
   open: boolean;
