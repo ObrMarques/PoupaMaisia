@@ -1,4 +1,4 @@
-import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, usePayTransaction, getGetPendingTransactionsQueryKey, getGetTransactionsQueryKey, getGetDashboardSummaryQueryKey, getGetWalletsQueryKey } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
@@ -9,21 +9,14 @@ import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useQueryClient } from "@tanstack/react-query";
+
 
 const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 
-function daysUntil(dateStr: string): number {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const d = new Date(dateStr + "T00:00:00");
-  return Math.round((d.getTime() - today.getTime()) / 86400000);
-}
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { isDark } = useTheme();
-  const queryClient = useQueryClient();
   const tooltipStyle = isDark
     ? { backgroundColor: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
     : { backgroundColor: "#FFFFFF", borderColor: "#E0E0E0", color: "#111" };
@@ -34,19 +27,6 @@ export default function Dashboard() {
   const { data: pending, isLoading: loadingPending } = useGetPendingTransactions({
     query: { staleTime: 0, queryKey: getGetPendingTransactionsQueryKey() },
   });
-  const payMutation = usePayTransaction();
-
-  const invalidateAfterPay = () => {
-    queryClient.invalidateQueries({ queryKey: getGetPendingTransactionsQueryKey(), refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsQueryKey(),         refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),     refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),              refetchType: 'all' });
-  };
-
-  const handleMarkPaid = (id: number) => {
-    payMutation.mutate({ id }, { onSettled: () => { invalidateAfterPay(); } });
-  };
-
   const currency = user?.currency || 'BRL';
 
   const trendData = trend?.map(t => ({

@@ -1,10 +1,6 @@
 import { createContext, useContext, useState, useCallback } from "react";
 import { translations, Language, LANGUAGE_LABELS } from "@/i18n/translations";
 
-type DeepKeys<T> = T extends object
-  ? { [K in keyof T]: K extends string ? `${K}.${DeepKeys<T[K]>}` | K : never }[keyof T]
-  : "";
-
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;

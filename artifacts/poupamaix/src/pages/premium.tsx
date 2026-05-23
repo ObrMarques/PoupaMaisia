@@ -1,6 +1,6 @@
 import {
   Crown, Bot, Bell, Wallet, Target, Zap, Star,
-  CheckCircle2, ChevronRight, ArrowRight,
+  CheckCircle2, ArrowRight,
 } from "lucide-react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";

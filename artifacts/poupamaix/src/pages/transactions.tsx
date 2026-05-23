@@ -105,7 +105,7 @@ function FilterDropdown({
         )}
       >
         <div className="p-1.5">
-          {FILTER_OPTIONS.map((opt, i) => {
+          {FILTER_OPTIONS.map((opt) => {
             const isSelected = value === opt.key;
             return (
               <button

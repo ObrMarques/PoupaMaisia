@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { useI18n } from "@/contexts/i18n-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MessageCircle, Mail, Phone, ChevronDown, ChevronUp, Search, ExternalLink, HelpCircle, BookOpen, Zap, Send } from "lucide-react";
+import { MessageCircle, Mail, Phone, ChevronDown, ChevronUp, Search, ExternalLink, HelpCircle, Zap, Send } from "lucide-react";
 
 // ─── FAQ ────────────────────────────────────────────────────────────────────
 const FAQS = [

@@ -69,12 +69,12 @@ type GoalType = "savings" | "travel" | "emergency" | "purchase" | "other";
 
 function GoalForm({
   name, setName, targetAmount, setTargetAmount, currentAmount, setCurrentAmount,
-  type, setType, color, setColor, deadline, setDeadline, isEditing,
+  type, color, setColor, deadline, setDeadline, isEditing,
 }: {
   name: string; setName: (v: string) => void;
   targetAmount: string; setTargetAmount: (v: string) => void;
   currentAmount: string; setCurrentAmount: (v: string) => void;
-  type: GoalType; setType: (v: GoalType) => void;
+  type: GoalType;
   color: string; setColor: (v: string) => void;
   deadline: string; setDeadline: (v: string) => void;
   isEditing: boolean;
@@ -299,7 +299,7 @@ export default function Goals() {
                 name={name} setName={setName}
                 targetAmount={targetAmount} setTargetAmount={setTargetAmount}
                 currentAmount={currentAmount} setCurrentAmount={setCurrentAmount}
-                type={type} setType={setType}
+                type={type}
                 color={color} setColor={setColor}
                 deadline={deadline} setDeadline={setDeadline}
                 isEditing={!!editingGoal}

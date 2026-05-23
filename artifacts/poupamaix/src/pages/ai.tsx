@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
-import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight, CheckCircle } from "lucide-react";
+import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";

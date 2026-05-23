@@ -13,7 +13,7 @@ import {
   Camera, Moon, Globe, Mail, KeyRound, Check, AlertCircle, ChevronRight,
   Bell, FileText, Shield, Cookie, LogOut, Trash2, Lock, X,
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
 import type { Language } from "@/i18n/translations";
 import { cn } from "@/lib/utils";
@@ -133,7 +133,7 @@ export default function Settings() {
   const [emailPromo, setEmailPromo] = useState(false);
 
   const [modal, setModal] = useState<"terms" | "privacy" | "cookies" | "delete" | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
+
 
   useEffect(() => {
     if (user?.name && !nameDirtyRef.current) setName(user.name);
@@ -216,7 +216,7 @@ export default function Settings() {
   };
 
   const handleDeleteAccount = async () => {
-    setDeleteConfirm(false);
+   ;
     setModal(null);
     await logout();
     navigate("/sign-in");
@@ -448,7 +448,7 @@ export default function Settings() {
             label="Excluir conta"
             danger
             right={<ChevronRight className="w-4 h-4 text-destructive/60" />}
-            onClick={() => { setDeleteConfirm(true); setModal("delete"); }}
+            onClick={() => { setModal("delete"); }}
             divider={false}
           />
         </SectionCard>
@@ -483,7 +483,7 @@ export default function Settings() {
         <p><strong>Controle</strong><br />Você pode desativar cookies nas configurações do seu navegador, mas isso pode afetar o funcionamento do aplicativo.</p>
       </Modal>
 
-      <Modal open={modal === "delete"} onClose={() => { setModal(null); setDeleteConfirm(false); }} title="Excluir conta">
+      <Modal open={modal === "delete"} onClose={() => { setModal(null); }} title="Excluir conta">
         <div className="flex flex-col items-center text-center gap-4 py-2">
           <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
             <Trash2 className="w-6 h-6 text-destructive" />
@@ -498,7 +498,7 @@ export default function Settings() {
             <Button
               variant="outline"
               className="flex-1"
-              onClick={() => { setModal(null); setDeleteConfirm(false); }}
+              onClick={() => { setModal(null); }}
             >
               Cancelar
             </Button>
