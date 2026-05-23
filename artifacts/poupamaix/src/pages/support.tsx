@@ -211,7 +211,7 @@ export default function Support() {
             </CardContent>
           </Card>
         </a>
-        <a href="mailto:poupamaisia@gmail.com">
+        <a href="mailto:suporte.poupamaisbr@gmail.com">
           <Card className="bg-card border-border hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group h-full">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
@@ -304,7 +304,7 @@ export default function Support() {
             <p className="text-sm text-muted-foreground">Nossa equipe está pronta para ajudar você.</p>
           </div>
           <div className="flex gap-3">
-            <a href="mailto:poupamaisia@gmail.com">
+            <a href="mailto:suporte.poupamaisbr@gmail.com">
               <Button variant="outline" className="bg-background"><Mail className="w-4 h-4 mr-2" />{t("support.sendEmail")}</Button>
             </a>
             <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
