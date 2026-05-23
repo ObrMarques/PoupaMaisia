@@ -6,7 +6,6 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/use-subscription";
 
-const STRIPE_CHECKOUT_URL = "https://buy.stripe.com/6oUbJ12gi04T2Ix4L6gMw00";
 
 const BENEFITS = [
   {
@@ -41,11 +40,6 @@ const BENEFITS = [
   },
 ];
 
-const INCLUDED = [
-  "7 dias gratuitos para testar",
-  "Cancele quando quiser",
-  "Suporte prioritário",
-];
 
 export default function Premium() {
   const { isPremium } = useSubscription();
@@ -115,62 +109,27 @@ export default function Premium() {
           })}
         </div>
 
-        {/* Price card */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
-          <div className="p-5 border-b border-border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider mb-1">Plano Premium</p>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-bold">R$ 9,90</span>
-                  <span className="text-sm text-muted-foreground">/mês</span>
-                </div>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center">
-                <Crown className="w-6 h-6 text-foreground" />
-              </div>
+        {/* Stripe Pricing Table */}
+        {isPremium ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-3">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium">
+              <CheckCircle2 className="w-4 h-4" />
+              Você já é Premium
             </div>
+            <p className="text-sm text-muted-foreground">Obrigado por ser Premium!</p>
+            <Link href="/settings">
+              <Button variant="outline" className="h-11 font-semibold">
+                Gerenciar assinatura
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
           </div>
-          <div className="p-5 space-y-4">
-            <ul className="space-y-2.5">
-              {INCLUDED.map((item) => (
-                <li key={item} className="flex items-center gap-2.5 text-sm">
-                  <CheckCircle2 className="w-4 h-4 text-foreground shrink-0" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            {isPremium ? (
-              <Link href="/settings">
-                <Button variant="outline" className="w-full h-12 font-semibold">
-                  Gerenciar assinatura
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            ) : (
-              <a href={STRIPE_CHECKOUT_URL} target="_blank" rel="noopener noreferrer" className="block">
-                <Button className="w-full h-12 text-base font-semibold">
-                  Assinar Premium
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              </a>
-            )}
-
-            <p className="text-center text-xs text-muted-foreground">
-              {isPremium ? (
-                <>Obrigado por ser Premium!</>
-              ) : (
-                <>
-                  Já assinante?{" "}
-                  <Link href="/settings" className="underline underline-offset-2 hover:text-foreground transition-colors">
-                    Gerenciar plano
-                  </Link>
-                </>
-              )}
-            </p>
-          </div>
-        </div>
+        ) : (
+          <stripe-pricing-table
+            pricing-table-id="prctbl_1TaE0BDNf06AuejqggZPBZqP"
+            publishable-key="pk_live_51TX3j4DNf06Auejq8chhktEKco5aIHX08uTnNKqwo1g6vfrGILEfqNbIO9vBYeqtrnIuHisc9LRTgJGLWiYGJyXb00ZrZJppmM"
+          />
+        )}
 
       </div>
     </div>
