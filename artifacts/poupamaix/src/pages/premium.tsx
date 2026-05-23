@@ -45,7 +45,6 @@ const INCLUDED = [
   "7 dias gratuitos para testar",
   "Cancele quando quiser",
   "Suporte prioritário",
-  "Sem taxas ocultas",
 ];
 
 export default function Premium() {
