@@ -9,7 +9,7 @@ interface I18nContextType {
   isRTL: boolean;
 }
 
-const RTL_LANGUAGES: Language[] = ["ar"];
+const RTL_LANGUAGES: Language[] = [];
 
 const I18nContext = createContext<I18nContextType>({
   language: "pt-BR",
