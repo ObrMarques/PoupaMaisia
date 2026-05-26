@@ -6,3 +6,9 @@ id = "qqq4g_5CEYU4HPTw3sKmv"
 uri = "file://poupamaix.tar.gz"
 type = "unspecified"
 title = "PoupaMais — código fonte"
+
+[[outputs]]
+id = "SrZnBHeRmQiIVbMigy0Kj"
+uri = "file://poupamaix-android.tar.gz"
+type = "unspecified"
+title = "PoupaMais — Projeto Android (para gerar o APK)"
