@@ -348,10 +348,6 @@ export default function Settings() {
                   <SelectItem value="BRL">BRL — R$ (Real)</SelectItem>
                   <SelectItem value="USD">USD — $ (Dólar)</SelectItem>
                   <SelectItem value="EUR">EUR — € (Euro)</SelectItem>
-                  <SelectItem value="GBP">GBP — £ (Libra)</SelectItem>
-                  <SelectItem value="JPY">JPY — ¥ (Iene)</SelectItem>
-                  <SelectItem value="ARS">ARS — $ (Peso AR)</SelectItem>
-                  <SelectItem value="MXN">MXN — $ (Peso MX)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
