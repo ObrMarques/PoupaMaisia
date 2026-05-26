@@ -36,7 +36,7 @@ export default function SignInPage() {
         setError(translateSupabaseError(signInError.message));
         return;
       }
-      setLocation("/dashboard");
+      setLocation("/dashboard", { replace: true });
     } catch (err: any) {
       setError("Erro ao entrar. Tente novamente.");
     } finally {

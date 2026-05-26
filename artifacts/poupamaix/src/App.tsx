@@ -90,7 +90,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) { setLocation("/sign-in"); return; }
+    if (!isSignedIn) { setLocation("/sign-in", { replace: true }); return; }
   }, [isSignedIn, isLoaded, setLocation]);
 
   if (!isLoaded) return <SpinnerLoader />;
@@ -126,10 +126,10 @@ function AppShell() {
               <Route path="/forgot-password" component={() => <Suspense fallback={<SpinnerLoader />}><ForgotPassword /></Suspense>} />
               <Route path="/reset-password"  component={() => <Suspense fallback={<SpinnerLoader />}><ResetPassword /></Suspense>} />
               {/* legacy redirects */}
-              <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in"), []); return null; }} />
-              <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up"), []); return null; }} />
-              <Route path="/paywall"      component={() => { const [,s] = useLocation(); useEffect(() => s("/dashboard"), []); return null; }} />
-              <Route path="/sso-callback" component={() => { const [,s] = useLocation(); useEffect(() => s("/auth/callback"), []); return null; }} />
+              <Route path="/login"        component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-in",     { replace: true }), []); return null; }} />
+              <Route path="/register"     component={() => { const [,s] = useLocation(); useEffect(() => s("/sign-up",      { replace: true }), []); return null; }} />
+              <Route path="/paywall"      component={() => { const [,s] = useLocation(); useEffect(() => s("/dashboard",    { replace: true }), []); return null; }} />
+              <Route path="/sso-callback" component={() => { const [,s] = useLocation(); useEffect(() => s("/auth/callback",{ replace: true }), []); return null; }} />
               <Route path="/dashboard"    component={() => <ProtectedRoute component={Dashboard} />} />
               <Route path="/transactions" component={() => <ProtectedRoute component={Transactions} />} />
               <Route path="/goals"        component={() => <ProtectedRoute component={Goals} />} />

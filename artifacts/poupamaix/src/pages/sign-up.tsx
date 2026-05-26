@@ -131,7 +131,7 @@ export default function SignUpPage() {
         return;
       }
       // Success → redirect to sign-in
-      setLocation(`${basePath}/sign-in?verified=1`);
+      setLocation(`${basePath}/sign-in?verified=1`, { replace: true });
     } catch {
       setError("Sem conexão com o servidor. Tente novamente.");
     } finally {
