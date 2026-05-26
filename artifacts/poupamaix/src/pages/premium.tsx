@@ -1,9 +1,7 @@
 import {
   Crown, Bot, Bell, Wallet, Target, Zap, Star,
-  CheckCircle2, ArrowRight,
+  CheckCircle2,
 } from "lucide-react";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { useSubscription } from "@/hooks/use-subscription";
 
 
@@ -117,12 +115,6 @@ export default function Premium() {
               Você já é Premium
             </div>
             <p className="text-sm text-muted-foreground">Obrigado por ser Premium!</p>
-            <Link href="/settings">
-              <Button variant="outline" className="h-11 font-semibold">
-                Gerenciar assinatura
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
           </div>
         ) : (
           <stripe-pricing-table
