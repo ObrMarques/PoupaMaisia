@@ -461,26 +461,67 @@ export default function Settings() {
 
       {/* ── Modais legais ───────────────────────────── */}
       <Modal open={modal === "terms"} onClose={() => setModal(null)} title="Termos de uso">
-        <p><strong>1. Aceitação dos termos</strong><br />Ao utilizar o PoupaMais, você concorda com estes termos de uso. Caso não concorde, não utilize o aplicativo.</p>
-        <p><strong>2. Uso permitido</strong><br />O PoupaMais é destinado ao uso pessoal para gestão de finanças pessoais. É proibido utilizar o serviço para fins ilegais ou fraudulentos.</p>
-        <p><strong>3. Conta e responsabilidade</strong><br />Você é responsável por manter a confidencialidade da sua senha e por todas as atividades realizadas na sua conta.</p>
-        <p><strong>4. Dados financeiros</strong><br />Os dados inseridos no aplicativo são de sua responsabilidade. O PoupaMais não se responsabiliza por decisões financeiras tomadas com base nas informações exibidas.</p>
-        <p><strong>5. Alterações nos termos</strong><br />Podemos atualizar estes termos periodicamente. O uso continuado do aplicativo após alterações implica na aceitação dos novos termos.</p>
+        <p className="text-xs text-muted-foreground mb-4">Última atualização: 26 de maio de 2026</p>
+        <p className="text-sm text-muted-foreground mb-4">Ao utilizar o PoupaMais, você concorda com os termos descritos abaixo. Leia com atenção antes de continuar.</p>
+        <div className="space-y-4">
+          <div><p className="text-sm font-medium mb-1">1. Aceitação dos termos</p><p className="text-sm text-muted-foreground">Ao acessar ou utilizar o PoupaMais, você confirma ter lido, compreendido e concordado com estes Termos de Uso. Caso não concorde, não utilize o serviço. Estes termos constituem um contrato legalmente vinculante entre você e o PoupaMais.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">2. Uso permitido</p><p className="text-sm text-muted-foreground mb-2">Você concorda em utilizar o PoupaMais apenas para fins legais e de acordo com estes termos. É expressamente proibido:</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li>Violar qualquer lei ou regulamento aplicável</li><li>Transmitir conteúdo ofensivo, falso ou prejudicial</li><li>Tentar acessar áreas restritas sem autorização</li><li>Realizar engenharia reversa ou descompilar o aplicativo</li><li>Usar o serviço para fins comerciais não autorizados</li></ul></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">3. Conta do usuário</p><p className="text-sm text-muted-foreground">Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas em sua conta no PoupaMais. Notifique-nos imediatamente caso suspeite de acesso não autorizado.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">4. Propriedade intelectual</p><p className="text-sm text-muted-foreground">Todo o conteúdo do PoupaMais, incluindo textos, gráficos, logotipos, ícones e software, é propriedade do PoupaMais e protegido pelas leis de direito autoral. Nenhum conteúdo pode ser reproduzido sem autorização prévia e por escrito.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">5. Limitação de responsabilidade</p><p className="text-sm text-muted-foreground">O PoupaMais é fornecido "como está". Não garantimos que o serviço estará livre de erros ou interrupções. Em nenhuma hipótese seremos responsáveis por danos indiretos, incidentais ou consequentes decorrentes do uso do serviço.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">6. Rescisão</p><p className="text-sm text-muted-foreground">Reservamos o direito de suspender ou encerrar seu acesso ao PoupaMais a qualquer momento, sem aviso prévio, caso haja violação destes termos. Você também pode encerrar sua conta a qualquer momento mediante solicitação.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">7. Contato</p><p className="text-sm text-muted-foreground">Em caso de dúvidas sobre estes termos, entre em contato com nossa equipe: <span className="text-primary">suporte.poupamaisbr@gmail.com</span></p></div>
+        </div>
       </Modal>
 
       <Modal open={modal === "privacy"} onClose={() => setModal(null)} title="Política de privacidade">
-        <p><strong>1. Dados coletados</strong><br />Coletamos nome, e-mail e dados financeiros que você insere voluntariamente no aplicativo.</p>
-        <p><strong>2. Uso dos dados</strong><br />Seus dados são utilizados exclusivamente para fornecer os serviços do PoupaMais, incluindo análises financeiras personalizadas pela PoupaAI.</p>
-        <p><strong>3. Compartilhamento</strong><br />Não vendemos nem compartilhamos seus dados pessoais com terceiros, exceto quando exigido por lei.</p>
-        <p><strong>4. Segurança</strong><br />Utilizamos criptografia e boas práticas de segurança para proteger suas informações. Sua senha nunca é armazenada em texto simples.</p>
-        <p><strong>5. Seus direitos</strong><br />Você pode solicitar a exclusão de todos os seus dados a qualquer momento através das configurações da conta.</p>
+        <p className="text-xs text-muted-foreground mb-4">Conformidade com a LGPD · Lei nº 13.709/2018</p>
+        <p className="text-sm text-muted-foreground mb-4">Sua privacidade é fundamental para nós. Esta política explica como o PoupaMais coleta, usa e protege seus dados pessoais.</p>
+        <div className="space-y-4">
+          <div><p className="text-sm font-medium mb-1">1. Dados que coletamos</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li><span className="font-medium text-foreground">Dados de identificação</span>: nome, e-mail, número de telefone</li><li><span className="font-medium text-foreground">Dados de uso</span>: páginas acessadas, funcionalidades utilizadas, tempo de sessão</li><li><span className="font-medium text-foreground">Dados técnicos</span>: endereço IP, tipo de dispositivo, sistema operacional, navegador</li><li><span className="font-medium text-foreground">Dados financeiros</span>: transações, metas e carteiras inseridas voluntariamente</li></ul></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">2. Finalidade do tratamento</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li>Fornecer e melhorar os serviços do PoupaMais</li><li>Personalizar a experiência do usuário</li><li>Enviar comunicações relevantes (com seu consentimento)</li><li>Cumprir obrigações legais e regulatórias</li><li>Prevenir fraudes e garantir a segurança da plataforma</li></ul></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">3. Compartilhamento de dados</p><p className="text-sm text-muted-foreground">O PoupaMais não vende seus dados pessoais. Podemos compartilhá-los com parceiros terceiros apenas nas seguintes situações: prestadores de serviços essenciais ao funcionamento da plataforma, cumprimento de obrigações legais ou ordens judiciais, e proteção de direitos em caso de disputas.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">4. Armazenamento e segurança</p><p className="text-sm text-muted-foreground">Seus dados são armazenados em servidores seguros com criptografia em trânsito e em repouso. O PoupaMais aplica medidas técnicas e organizacionais para proteger suas informações contra acesso não autorizado, perda ou destruição.</p></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">5. Seus direitos (LGPD)</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li>Confirmar a existência de tratamento dos seus dados</li><li>Acessar, corrigir ou atualizar suas informações</li><li>Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários</li><li>Revogar o consentimento a qualquer momento</li><li>Solicitar a portabilidade dos dados para outro fornecedor</li></ul></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">6. Contato com o DPO</p><p className="text-sm text-muted-foreground">Para exercer seus direitos ou esclarecer dúvidas sobre o tratamento de dados, entre em contato com o Encarregado de Dados (DPO) do PoupaMais: <span className="text-primary">suporte.poupamaisbr@gmail.com</span></p></div>
+        </div>
       </Modal>
 
       <Modal open={modal === "cookies"} onClose={() => setModal(null)} title="Política de cookies">
-        <p><strong>O que são cookies?</strong><br />Cookies são pequenos arquivos armazenados no seu dispositivo que ajudam a melhorar a experiência de uso do aplicativo.</p>
-        <p><strong>Cookies essenciais</strong><br />Utilizamos cookies estritamente necessários para manter sua sessão ativa e garantir o funcionamento correto do aplicativo.</p>
-        <p><strong>Cookies analíticos</strong><br />Podemos utilizar dados anônimos de uso para melhorar o desempenho e a experiência do aplicativo.</p>
-        <p><strong>Controle</strong><br />Você pode desativar cookies nas configurações do seu navegador, mas isso pode afetar o funcionamento do aplicativo.</p>
+        <p className="text-sm text-muted-foreground mb-4">O PoupaMais utiliza cookies para melhorar sua experiência. Veja quais utilizamos e como gerenciá-los.</p>
+        <div className="space-y-4">
+          <div><p className="text-sm font-medium mb-1">O que são cookies?</p><p className="text-sm text-muted-foreground">Cookies são pequenos arquivos de texto armazenados no seu dispositivo quando você usa o PoupaMais. Eles nos ajudam a reconhecê-lo, lembrar suas preferências e entender como você utiliza o serviço.</p></div>
+          <div className="border-t border-border" />
+          <div className="space-y-3">
+            <p className="text-sm font-medium">Tipos de cookies que usamos</p>
+            {[
+              { name: "Cookies essenciais", desc: "Necessários para o funcionamento básico do PoupaMais. Não podem ser desativados.", required: true },
+              { name: "Cookies de desempenho", desc: "Coletam dados de uso anônimos para melhorar o PoupaMais.", required: false },
+              { name: "Cookies de funcionalidade", desc: "Lembram suas preferências e configurações personalizadas.", required: false },
+              { name: "Cookies de marketing", desc: "Usados para exibir conteúdo relevante e comunicações personalizadas.", required: false },
+            ].map(c => (
+              <div key={c.name} className="flex items-start justify-between gap-3 py-2 border-b border-border last:border-0">
+                <div><p className="text-sm font-medium">{c.name}</p><p className="text-xs text-muted-foreground mt-0.5">{c.desc}</p></div>
+                <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${c.required ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{c.required ? "Sempre ativo" : "Opcional"}</span>
+              </div>
+            ))}
+          </div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">Tipos de cookies por duração</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li><span className="font-medium text-foreground">Sessão</span>: expiram ao fechar o PoupaMais</li><li><span className="font-medium text-foreground">Persistentes</span>: ficam armazenados por um período definido</li><li><span className="font-medium text-foreground">Próprios</span>: definidos diretamente pelo PoupaMais</li><li><span className="font-medium text-foreground">Terceiros</span>: definidos por parceiros como ferramentas de análise</li></ul></div>
+          <div className="border-t border-border" />
+          <div><p className="text-sm font-medium mb-1">Dúvidas sobre cookies</p><p className="text-sm text-muted-foreground">Para mais informações sobre como o PoupaMais utiliza cookies, entre em contato: <span className="text-primary">suporte.poupamaisbr@gmail.com</span></p></div>
+        </div>
       </Modal>
 
       <Modal open={modal === "delete"} onClose={() => { setModal(null); }} title="Excluir conta">

@@ -1,0 +1,157 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);color:var(--color-text-primary)}
+.nav{display:flex;gap:4px;border-bottom:0.5px solid var(--color-border-tertiary);padding:0;margin-bottom:2rem;overflow-x:auto}
+.nav-btn{padding:10px 16px;font-size:13px;font-weight:500;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--color-text-secondary);cursor:pointer;white-space:nowrap;transition:color 0.15s,border-color 0.15s}
+.nav-btn.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary)}
+.nav-btn:hover:not(.active){color:var(--color-text-primary)}
+.page{display:none}.page.active{display:block}
+.section-title{font-size:22px;font-weight:500;margin-bottom:0.5rem}
+.subtitle{font-size:14px;color:var(--color-text-secondary);margin-bottom:2rem}
+.block{margin-bottom:1.75rem}
+.block h3{font-size:15px;font-weight:500;margin-bottom:0.5rem}
+.block p,.block li{font-size:14px;color:var(--color-text-secondary);line-height:1.7}
+.block ul{padding-left:1.25rem}
+.block li{margin-bottom:4px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 10px;border-radius:var(--border-radius-md);margin-bottom:1.25rem}
+.badge-info{background:var(--color-background-info);color:var(--color-text-info)}
+.badge-success{background:var(--color-background-success);color:var(--color-text-success)}
+.badge-warning{background:var(--color-background-warning);color:var(--color-text-warning)}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:1.5rem 0}
+.toc{background:var(--color-background-secondary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:2rem}
+.toc p{font-size:13px;font-weight:500;margin-bottom:0.5rem;color:var(--color-text-secondary)}
+.toc-links{display:flex;flex-wrap:wrap;gap:6px}
+.toc-link{font-size:12px;color:var(--color-text-info);cursor:pointer;padding:3px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-info);background:transparent;transition:background 0.1s}
+.toc-link:hover{background:var(--color-background-info)}
+.cookie-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.cookie-row:last-child{border-bottom:none}
+.cookie-info p{font-size:13px;font-weight:500}
+.cookie-info span{font-size:12px;color:var(--color-text-secondary)}
+.toggle{position:relative;width:36px;height:20px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.slider-t{position:absolute;inset:0;background:var(--color-border-secondary);border-radius:20px;transition:0.2s}
+.slider-t:before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.2s}
+input:checked+.slider-t{background:var(--color-text-success)}
+input:checked+.slider-t:before{transform:translateX(16px)}
+input:disabled+.slider-t{opacity:0.5;cursor:not-allowed}
+.accept-btn{display:inline-block;margin-top:1rem;padding:8px 20px;background:var(--color-text-primary);color:var(--color-background-primary);border:none;border-radius:var(--border-radius-md);font-size:13px;font-weight:500;cursor:pointer}
+.email-link{color:var(--color-text-info)}
+</style>
+
+<h2 class="sr-only">PoupaMais — Termos de Uso, Política de Privacidade e Política de Cookies</h2>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('termos',this)"><i class="ti ti-file-text" aria-hidden="true"></i> Termos de uso</button>
+  <button class="nav-btn" onclick="showPage('privacidade',this)"><i class="ti ti-shield-lock" aria-hidden="true"></i> Privacidade</button>
+  <button class="nav-btn" onclick="showPage('cookies',this)"><i class="ti ti-cookie" aria-hidden="true"></i> Cookies</button>
+</nav>
+
+<!-- TERMOS DE USO -->
+<div id="termos" class="page active">
+  <div class="badge badge-info"><i class="ti ti-file-text" style="font-size:13px" aria-hidden="true"></i> Última atualização: 26 de maio de 2026</div>
+  <p class="section-title">Termos de uso — PoupaMais</p>
+  <p class="subtitle">Ao utilizar o PoupaMais, você concorda com os termos descritos abaixo. Leia com atenção antes de continuar.</p>
+  <div class="toc"><p>Nesta página</p><div class="toc-links">
+    <button class="toc-link" onclick="scrollTo('t1')">Aceitação</button>
+    <button class="toc-link" onclick="scrollTo('t2')">Uso permitido</button>
+    <button class="toc-link" onclick="scrollTo('t3')">Conta do usuário</button>
+    <button class="toc-link" onclick="scrollTo('t4')">Propriedade intelectual</button>
+    <button class="toc-link" onclick="scrollTo('t5')">Limitação de responsabilidade</button>
+    <button class="toc-link" onclick="scrollTo('t6')">Rescisão</button>
+    <button class="toc-link" onclick="scrollTo('t7')">Contato</button>
+  </div></div>
+  <div class="block" id="t1"><h3>1. Aceitação dos termos</h3><p>Ao acessar ou utilizar o PoupaMais, você confirma ter lido, compreendido e concordado com estes Termos de Uso. Caso não concorde, não utilize o serviço. Estes termos constituem um contrato legalmente vinculante entre você e o PoupaMais.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="t2"><h3>2. Uso permitido</h3><p>Você concorda em utilizar o PoupaMais apenas para fins legais e de acordo com estes termos. É expressamente proibido:</p><ul><li>Violar qualquer lei ou regulamento aplicável</li><li>Transmitir conteúdo ofensivo, falso ou prejudicial</li><li>Tentar acessar áreas restritas sem autorização</li><li>Realizar engenharia reversa ou descompilar o aplicativo</li><li>Usar o serviço para fins comerciais não autorizados</li></ul></div>
+  <div class="divider"></div>
+  <div class="block" id="t3"><h3>3. Conta do usuário</h3><p>Você é responsável por manter a confidencialidade de suas credenciais de acesso e por todas as atividades realizadas em sua conta no PoupaMais. Notifique-nos imediatamente caso suspeite de acesso não autorizado.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="t4"><h3>4. Propriedade intelectual</h3><p>Todo o conteúdo do PoupaMais, incluindo textos, gráficos, logotipos, ícones e software, é propriedade do PoupaMais e protegido pelas leis de direito autoral. Nenhum conteúdo pode ser reproduzido sem autorização prévia e por escrito.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="t5"><h3>5. Limitação de responsabilidade</h3><p>O PoupaMais é fornecido "como está". Não garantimos que o serviço estará livre de erros ou interrupções. Em nenhuma hipótese seremos responsáveis por danos indiretos, incidentais ou consequentes decorrentes do uso do serviço.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="t6"><h3>6. Rescisão</h3><p>Reservamos o direito de suspender ou encerrar seu acesso ao PoupaMais a qualquer momento, sem aviso prévio, caso haja violação destes termos. Você também pode encerrar sua conta a qualquer momento mediante solicitação.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="t7"><h3>7. Contato</h3><p>Em caso de dúvidas sobre estes termos, entre em contato com nossa equipe: <span class="email-link">suporte.poupamaisbr@gmail.com</span></p></div>
+</div>
+
+<!-- PRIVACIDADE -->
+<div id="privacidade" class="page">
+  <div class="badge badge-success"><i class="ti ti-shield-lock" style="font-size:13px" aria-hidden="true"></i> Conformidade com a LGPD</div>
+  <p class="section-title">Política de privacidade — PoupaMais</p>
+  <p class="subtitle">Sua privacidade é fundamental para nós. Esta política explica como o PoupaMais coleta, usa e protege seus dados pessoais.</p>
+  <div class="toc"><p>Nesta página</p><div class="toc-links">
+    <button class="toc-link" onclick="scrollTo('p1')">Dados coletados</button>
+    <button class="toc-link" onclick="scrollTo('p2')">Finalidade</button>
+    <button class="toc-link" onclick="scrollTo('p3')">Compartilhamento</button>
+    <button class="toc-link" onclick="scrollTo('p4')">Armazenamento</button>
+    <button class="toc-link" onclick="scrollTo('p5')">Seus direitos</button>
+    <button class="toc-link" onclick="scrollTo('p6')">Contato DPO</button>
+  </div></div>
+  <div class="block" id="p1"><h3>1. Dados que coletamos</h3><p>O PoupaMais coleta os seguintes tipos de informações:</p><ul><li><strong style="font-weight:500">Dados de identificação</strong>: nome, e-mail, número de telefone</li><li><strong style="font-weight:500">Dados de uso</strong>: páginas acessadas, funcionalidades utilizadas, tempo de sessão</li><li><strong style="font-weight:500">Dados técnicos</strong>: endereço IP, tipo de dispositivo, sistema operacional, navegador</li><li><strong style="font-weight:500">Dados de localização</strong>: somente quando você autoriza expressamente</li></ul></div>
+  <div class="divider"></div>
+  <div class="block" id="p2"><h3>2. Finalidade do tratamento</h3><p>Utilizamos seus dados para:</p><ul><li>Fornecer e melhorar os serviços do PoupaMais</li><li>Personalizar a experiência do usuário</li><li>Enviar comunicações relevantes (com seu consentimento)</li><li>Cumprir obrigações legais e regulatórias</li><li>Prevenir fraudes e garantir a segurança da plataforma</li></ul></div>
+  <div class="divider"></div>
+  <div class="block" id="p3"><h3>3. Compartilhamento de dados</h3><p>O PoupaMais não vende seus dados pessoais. Podemos compartilhá-los com parceiros terceiros apenas nas seguintes situações: prestadores de serviços essenciais ao funcionamento da plataforma, cumprimento de obrigações legais ou ordens judiciais, e proteção de direitos em caso de disputas.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="p4"><h3>4. Armazenamento e segurança</h3><p>Seus dados são armazenados em servidores seguros com criptografia em trânsito e em repouso. O PoupaMais aplica medidas técnicas e organizacionais para proteger suas informações contra acesso não autorizado, perda ou destruição.</p></div>
+  <div class="divider"></div>
+  <div class="block" id="p5"><h3>5. Seus direitos (LGPD)</h3><p>De acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</p><ul><li>Confirmar a existência de tratamento dos seus dados</li><li>Acessar, corrigir ou atualizar suas informações</li><li>Solicitar a anonimização, bloqueio ou eliminação de dados desnecessários</li><li>Revogar o consentimento a qualquer momento</li><li>Solicitar a portabilidade dos dados para outro fornecedor</li></ul></div>
+  <div class="divider"></div>
+  <div class="block" id="p6"><h3>6. Contato com o DPO</h3><p>Para exercer seus direitos ou esclarecer dúvidas sobre o tratamento de dados, entre em contato com o Encarregado de Dados (DPO) do PoupaMais: <span class="email-link">suporte.poupamaisbr@gmail.com</span></p></div>
+</div>
+
+<!-- COOKIES -->
+<div id="cookies" class="page">
+  <div class="badge badge-warning"><i class="ti ti-cookie" style="font-size:13px" aria-hidden="true"></i> Gerencie suas preferências</div>
+  <p class="section-title">Política de cookies — PoupaMais</p>
+  <p class="subtitle">O PoupaMais utiliza cookies para melhorar sua experiência. Veja quais utilizamos e escolha o que aceitar.</p>
+  <div class="block"><h3>O que são cookies?</h3><p>Cookies são pequenos arquivos de texto armazenados no seu dispositivo quando você usa o PoupaMais. Eles nos ajudam a reconhecê-lo, lembrar suas preferências e entender como você utiliza o serviço.</p></div>
+  <div class="divider"></div>
+  <div class="block"><h3>Gerenciar preferências</h3>
+    <div class="cookie-row">
+      <div class="cookie-info"><p>Cookies essenciais</p><span>Necessários para o funcionamento básico do PoupaMais. Não podem ser desativados.</span></div>
+      <label class="toggle"><input type="checkbox" checked disabled><span class="slider-t"></span></label>
+    </div>
+    <div class="cookie-row">
+      <div class="cookie-info"><p>Cookies de desempenho</p><span>Coletam dados de uso anônimos para melhorar o PoupaMais.</span></div>
+      <label class="toggle"><input type="checkbox" id="ck-perf" checked><span class="slider-t"></span></label>
+    </div>
+    <div class="cookie-row">
+      <div class="cookie-info"><p>Cookies de funcionalidade</p><span>Lembram suas preferências e configurações personalizadas.</span></div>
+      <label class="toggle"><input type="checkbox" id="ck-func" checked><span class="slider-t"></span></label>
+    </div>
+    <div class="cookie-row">
+      <div class="cookie-info"><p>Cookies de marketing</p><span>Usados para exibir conteúdo relevante e comunicações personalizadas.</span></div>
+      <label class="toggle"><input type="checkbox" id="ck-mkt"><span class="slider-t"></span></label>
+    </div>
+    <button class="accept-btn" onclick="savePrefs()">Salvar preferências</button>
+  </div>
+  <div class="divider"></div>
+  <div class="block"><h3>Tipos de cookies que usamos</h3><ul>
+    <li><strong style="font-weight:500">Sessão</strong>: expiram ao fechar o PoupaMais</li>
+    <li><strong style="font-weight:500">Persistentes</strong>: ficam armazenados por um período definido</li>
+    <li><strong style="font-weight:500">Próprios</strong>: definidos diretamente pelo PoupaMais</li>
+    <li><strong style="font-weight:500">Terceiros</strong>: definidos por parceiros como ferramentas de análise</li>
+  </ul></div>
+  <div class="divider"></div>
+  <div class="block"><h3>Dúvidas sobre cookies</h3><p>Para mais informações sobre como o PoupaMais utiliza cookies, entre em contato: <span class="email-link">suporte.poupamaisbr@gmail.com</span></p></div>
+</div>
+
+<script>
+function showPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+function scrollTo(id){
+  var el=document.getElementById(id);
+  if(el)el.scrollIntoView({behavior:'smooth'});
+}
+function savePrefs(){
+  var msg='Preferências salvas:\n• Essenciais: sempre ativo\n• Desempenho: '+(document.getElementById('ck-perf').checked?'ativo':'inativo')+'\n• Funcionalidade: '+(document.getElementById('ck-func').checked?'ativo':'inativo')+'\n• Marketing: '+(document.getElementById('ck-mkt').checked?'ativo':'inativo');
+  alert(msg);
+}
+</script>
