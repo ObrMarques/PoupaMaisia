@@ -54,9 +54,7 @@ export default function Premium() {
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
             {t("premium.title")}
           </h1>
-          <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto leading-relaxed">
-            {t("premium.subtitle")}
-          </p>
+
           {isPremium && (
             <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium">
               <CheckCircle2 className="w-4 h-4" />
