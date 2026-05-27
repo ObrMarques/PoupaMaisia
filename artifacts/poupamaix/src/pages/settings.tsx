@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Camera, Moon, Globe, Mail, KeyRound, Check, AlertCircle, ChevronRight,
+  Camera, Moon, Globe, Mail, Check, AlertCircle, ChevronRight,
   Bell, FileText, Shield, Cookie, LogOut, Trash2, Lock, X,
 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -124,7 +124,6 @@ export default function Settings() {
   const [name,     setName]     = useState(user?.name  || "");
   const [currency, setCurrency] = useState(user?.currency || "BRL");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [resetState, setResetState] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const nameDirtyRef = useRef(false);
@@ -194,21 +193,6 @@ export default function Settings() {
     } catch { setIsUploadingPhoto(false); }
   };
 
-  const handleResetPassword = async () => {
-    if (!user?.email) return;
-    setResetState("loading");
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      const origin = window.location.origin;
-      const res = await fetch(`${origin}/api/auth/reset-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ redirectTo: `${origin}/reset-password` }),
-      });
-      setResetState(res.ok ? "sent" : "error");
-    } catch { setResetState("error"); }
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -357,29 +341,6 @@ export default function Settings() {
           </div>
         </SectionCard>
 
-        {/* ── Segurança ────────────────────────────── */}
-        <SectionCard title="Segurança">
-          <div className="px-4 py-4">
-            <p className="text-xs text-muted-foreground mb-3">
-              Envie um link de redefinição de senha para <strong>{user?.email}</strong>.
-            </p>
-            <Button
-              variant="outline"
-              onClick={handleResetPassword}
-              disabled={resetState === "loading" || resetState === "sent"}
-              className="w-full flex items-center gap-2"
-            >
-              {resetState === "loading" && <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />}
-              {resetState === "sent"    && <Check className="w-4 h-4 text-green-600" />}
-              {resetState === "error"   && <AlertCircle className="w-4 h-4 text-destructive" />}
-              <KeyRound className={cn("w-4 h-4", resetState === "idle" ? "" : "hidden")} />
-              {resetState === "idle"    && "Redefinir senha"}
-              {resetState === "loading" && "Enviando..."}
-              {resetState === "sent"    && "Link enviado para o seu e-mail"}
-              {resetState === "error"   && "Erro ao enviar. Tente novamente."}
-            </Button>
-          </div>
-        </SectionCard>
 
         {/* ── Notificações ─────────────────────────── */}
         <SectionCard title="Notificações">
