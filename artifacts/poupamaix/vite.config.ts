@@ -40,8 +40,8 @@ export default defineConfig({
         enabled: false,
       },
       manifest: {
-        name: "Pouco a Mais",
-        short_name: "Pouco+",
+        name: "PoupaMais",
+        short_name: "PoupaMais",
         description: "Seu aplicativo de gestão financeira pessoal",
         start_url: "/",
         display: "standalone",
