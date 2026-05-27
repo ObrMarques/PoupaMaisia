@@ -73,6 +73,7 @@ type TranslationMap = {
     walletsTitle: string; walletsDesc: string;
     goalsTitle: string; goalsDesc: string;
     featuresTitle: string; featuresDesc: string;
+    manageSubscription: string;
   };
   forgotPassword: {
     title: string; subtitle: string;
@@ -246,6 +247,7 @@ const ptBR: TranslationMap = {
     goalsDesc: "Organize metas financeiras ilimitadas com barras de progresso, prazos e contribuições personalizadas.",
     featuresTitle: "Recursos Premium",
     featuresDesc: "Acesso antecipado a novas funcionalidades e relatórios avançados antes de todos.",
+    manageSubscription: "Gerenciar assinatura",
   },
   forgotPassword: {
     title: "Recuperar senha", subtitle: "Digite seu e-mail e enviaremos um link para criar uma nova senha.",
@@ -455,6 +457,7 @@ const en: TranslationMap = {
     goalsDesc: "Organize unlimited financial goals with progress bars, deadlines and personalized contributions.",
     featuresTitle: "Premium Features",
     featuresDesc: "Early access to new features and advanced reports before everyone else.",
+    manageSubscription: "Manage subscription",
   },
   forgotPassword: {
     title: "Recover password", subtitle: "Enter your email and we'll send you a link to create a new password.",
@@ -664,6 +667,7 @@ const es: TranslationMap = {
     goalsDesc: "Organiza metas financieras ilimitadas con barras de progreso, plazos y contribuciones personalizadas.",
     featuresTitle: "Funciones Premium",
     featuresDesc: "Acceso anticipado a nuevas funcionalidades e informes avanzados antes que nadie.",
+    manageSubscription: "Gestionar suscripción",
   },
   forgotPassword: {
     title: "Recuperar contraseña", subtitle: "Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.",
@@ -873,6 +877,7 @@ const fr: TranslationMap = {
     goalsDesc: "Organisez des objectifs financiers illimités avec des barres de progression, des échéances et des contributions personnalisées.",
     featuresTitle: "Fonctionnalités Premium",
     featuresDesc: "Accès anticipé aux nouvelles fonctionnalités et aux rapports avancés avant tout le monde.",
+    manageSubscription: "Gérer l'abonnement",
   },
   forgotPassword: {
     title: "Récupérer le mot de passe", subtitle: "Entrez votre e-mail et nous vous enverrons un lien pour créer un nouveau mot de passe.",

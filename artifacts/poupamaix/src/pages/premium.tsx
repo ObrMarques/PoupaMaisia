@@ -109,12 +109,20 @@ export default function Premium() {
 
         {/* Stripe Pricing Table */}
         {isPremium ? (
-          <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-3">
+          <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium">
               <CheckCircle2 className="w-4 h-4" />
               {t("premium.alreadyPremium")}
             </div>
             <p className="text-sm text-muted-foreground">{t("premium.thanksPremium")}</p>
+            <a
+              href="https://billing.stripe.com/p/login/6oUbJ12gi04T2Ix4L6gMw00"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-background hover:bg-secondary text-sm font-medium transition-colors"
+            >
+              {t("premium.manageSubscription")}
+            </a>
           </div>
         ) : (
           <stripe-pricing-table
