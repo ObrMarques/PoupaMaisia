@@ -54,23 +54,10 @@ function SectionCard({ title, children }: { title: string; children: React.React
 }
 
 function SettingRow({
-  icon,
-  iconBg,
-  label,
-  description,
-  right,
-  onClick,
-  danger,
-  divider = true,
+  icon, iconBg, label, description, right, onClick, danger, divider = true,
 }: {
-  icon: React.ReactNode;
-  iconBg: string;
-  label: string;
-  description?: string;
-  right?: React.ReactNode;
-  onClick?: () => void;
-  danger?: boolean;
-  divider?: boolean;
+  icon: React.ReactNode; iconBg: string; label: string; description?: string;
+  right?: React.ReactNode; onClick?: () => void; danger?: boolean; divider?: boolean;
 }) {
   return (
     <div
@@ -133,7 +120,6 @@ export default function Settings() {
 
   const [modal, setModal] = useState<"terms" | "privacy" | "cookies" | "delete" | null>(null);
 
-
   useEffect(() => {
     if (user?.name && !nameDirtyRef.current) setName(user.name);
     if (user?.currency) setCurrency(user.currency);
@@ -154,7 +140,7 @@ export default function Settings() {
           setTimeout(() => setProfileSaved(false), 3500);
         },
         onError: (err: unknown) => {
-          const msg = err instanceof Error ? err.message : "Erro ao salvar. Tente novamente.";
+          const msg = err instanceof Error ? err.message : t("settings.saveError");
           setProfileError(msg);
         },
       }
@@ -193,14 +179,12 @@ export default function Settings() {
     } catch { setIsUploadingPhoto(false); }
   };
 
-
   const handleLogout = async () => {
     await logout();
     navigate("/sign-in");
   };
 
   const handleDeleteAccount = async () => {
-   ;
     setModal(null);
     await logout();
     navigate("/sign-in");
@@ -212,13 +196,13 @@ export default function Settings() {
     <div className="min-h-full bg-background pb-10">
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-sm border-b border-border px-4 py-3 flex items-center justify-center">
-        <h1 className="text-base font-bold">Configurações</h1>
+        <h1 className="text-base font-bold">{t("settings.title")}</h1>
       </div>
 
       <div className="max-w-xl mx-auto px-4 pt-5 space-y-5">
 
         {/* ── Perfil ───────────────────────────────── */}
-        <SectionCard title="Perfil">
+        <SectionCard title={t("settings.profile")}>
           {/* Avatar */}
           <div className="flex flex-col items-center pt-6 pb-4 px-4 gap-3 border-b border-border/60">
             <label htmlFor="avatar-input" className="relative group cursor-pointer">
@@ -236,13 +220,13 @@ export default function Settings() {
               </div>
             </label>
             <input id="avatar-input" type="file" accept="image/*" className="sr-only" disabled={isUploadingPhoto} onChange={handleAvatarChange} />
-            <p className="text-xs text-muted-foreground">Toque para alterar a foto</p>
+            <p className="text-xs text-muted-foreground">{t("settings.tapChangePhoto")}</p>
           </div>
 
           {/* Fields */}
           <div className="px-4 py-4 space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="input-name" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Nome completo</Label>
+              <Label htmlFor="input-name" className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("settings.fullName")}</Label>
               <Input
                 id="input-name"
                 value={name}
@@ -253,9 +237,9 @@ export default function Settings() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="input-email" className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                E-mail
+                {t("auth.email")}
                 <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-normal">
-                  <Lock className="w-2.5 h-2.5" /> não editável
+                  <Lock className="w-2.5 h-2.5" /> {t("settings.notEditable")}
                 </span>
               </Label>
               <Input
@@ -275,11 +259,11 @@ export default function Settings() {
                 className="flex-1"
                 data-testid="button-save-profile"
               >
-                {updateMutation.isPending ? "Salvando..." : "Salvar alterações"}
+                {updateMutation.isPending ? t("common.saving") : t("settings.saveProfile")}
               </Button>
               {profileSaved && (
                 <span className="flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400 shrink-0">
-                  <Check className="w-4 h-4" /> Salvo!
+                  <Check className="w-4 h-4" /> {t("settings.saved")}
                 </span>
               )}
             </div>
@@ -292,19 +276,19 @@ export default function Settings() {
         </SectionCard>
 
         {/* ── Aparência ────────────────────────────── */}
-        <SectionCard title="Aparência">
+        <SectionCard title={t("settings.appearance")}>
           <SettingRow
             icon={<Moon className="w-4 h-4 text-purple-400" />}
             iconBg="bg-purple-500/15"
-            label="Modo escuro"
-            description={isDark ? "Fundo escuro, textos claros" : "Fundo claro, textos escuros"}
+            label={t("settings.darkMode")}
+            description={isDark ? t("settings.darkModeOn") : t("settings.darkModeOff")}
             right={<Switch checked={isDark} onCheckedChange={toggleTheme} data-testid="switch-theme" />}
           />
           <SettingRow
             icon={<Globe className="w-4 h-4 text-amber-500" />}
             iconBg="bg-amber-500/15"
-            label="Idioma"
-            description={language === "pt-BR" ? "Português (Brasil)" : language}
+            label={t("settings.language")}
+            description={languages[language]}
             right={
               <Select value={language} onValueChange={handleLanguageChange}>
                 <SelectTrigger className="w-36 h-8 text-xs bg-background border-border">
@@ -322,7 +306,7 @@ export default function Settings() {
         </SectionCard>
 
         {/* ── Moeda ────────────────────────────────── */}
-        <SectionCard title="Preferências">
+        <SectionCard title={t("settings.preferences")}>
           <div className="px-4 py-4 space-y-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("settings.currency")}</Label>
@@ -336,54 +320,53 @@ export default function Settings() {
               </Select>
             </div>
             <Button onClick={handleSavePreferences} disabled={updateMutation.isPending} variant="outline" className="w-full">
-              {updateMutation.isPending ? "Salvando..." : "Salvar preferências"}
+              {updateMutation.isPending ? t("common.saving") : t("settings.savePreferences")}
             </Button>
           </div>
         </SectionCard>
 
-
         {/* ── Notificações ─────────────────────────── */}
-        <SectionCard title="Notificações">
+        <SectionCard title={t("settings.notifications")}>
           <SettingRow
             icon={<Bell className="w-4 h-4 text-green-500" />}
             iconBg="bg-green-500/15"
-            label="Notificações push"
-            description="Alertas e atualizações"
+            label={t("settings.pushNotif")}
+            description={t("settings.pushNotifDesc")}
             right={<Switch checked={pushNotif} onCheckedChange={setPushNotif} />}
           />
           <SettingRow
             icon={<Mail className="w-4 h-4 text-blue-500" />}
             iconBg="bg-blue-500/15"
-            label="E-mails promocionais"
-            description="Novidades e ofertas"
+            label={t("settings.emailPromo")}
+            description={t("settings.emailPromoDesc")}
             right={<Switch checked={emailPromo} onCheckedChange={setEmailPromo} />}
             divider={false}
           />
         </SectionCard>
 
         {/* ── Legal ────────────────────────────────── */}
-        <SectionCard title="Legal">
+        <SectionCard title={t("settings.legal")}>
           <SettingRow
             icon={<FileText className="w-4 h-4 text-foreground" />}
             iconBg="bg-secondary"
-            label="Termos de uso"
-            description="Regras e condições do serviço"
+            label={t("settings.termsTitle")}
+            description={t("settings.termsDescShort")}
             right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
             onClick={() => setModal("terms")}
           />
           <SettingRow
             icon={<Shield className="w-4 h-4 text-foreground" />}
             iconBg="bg-secondary"
-            label="Política de privacidade"
-            description="Como seus dados são usados"
+            label={t("settings.privacyTitle")}
+            description={t("settings.privacyDescShort")}
             right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
             onClick={() => setModal("privacy")}
           />
           <SettingRow
             icon={<Cookie className="w-4 h-4 text-foreground" />}
             iconBg="bg-secondary"
-            label="Política de cookies"
-            description="Preferências de rastreamento"
+            label={t("settings.cookiesTitle")}
+            description={t("settings.cookiesDescShort")}
             right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
             onClick={() => setModal("cookies")}
             divider={false}
@@ -391,18 +374,18 @@ export default function Settings() {
         </SectionCard>
 
         {/* ── Conta ────────────────────────────────── */}
-        <SectionCard title="Conta">
+        <SectionCard title={t("settings.account")}>
           <SettingRow
             icon={<LogOut className="w-4 h-4 text-muted-foreground" />}
             iconBg="bg-secondary"
-            label="Sair da conta"
+            label={t("settings.signOut")}
             right={<ChevronRight className="w-4 h-4 text-muted-foreground" />}
             onClick={handleLogout}
           />
           <SettingRow
             icon={<Trash2 className="w-4 h-4 text-destructive" />}
             iconBg="bg-destructive/10"
-            label="Excluir conta"
+            label={t("settings.deleteAccount")}
             danger
             right={<ChevronRight className="w-4 h-4 text-destructive/60" />}
             onClick={() => { setModal("delete"); }}
@@ -412,12 +395,12 @@ export default function Settings() {
 
         {/* Rodapé */}
         <p className="text-center text-xs text-muted-foreground/50 py-4">
-          Versão 1.0.0 · © 2026 PoupaMais
+          {t("settings.version")}
         </p>
       </div>
 
       {/* ── Modais legais ───────────────────────────── */}
-      <Modal open={modal === "terms"} onClose={() => setModal(null)} title="Termos de uso">
+      <Modal open={modal === "terms"} onClose={() => setModal(null)} title={t("settings.termsTitle")}>
         <p className="text-xs text-muted-foreground mb-4">Última atualização: 26 de maio de 2026</p>
         <p className="text-sm text-muted-foreground mb-4">Ao utilizar o PoupaMais, você concorda com os termos descritos abaixo. Leia com atenção antes de continuar.</p>
         <div className="space-y-4">
@@ -437,7 +420,7 @@ export default function Settings() {
         </div>
       </Modal>
 
-      <Modal open={modal === "privacy"} onClose={() => setModal(null)} title="Política de privacidade">
+      <Modal open={modal === "privacy"} onClose={() => setModal(null)} title={t("settings.privacyTitle")}>
         <p className="text-xs text-muted-foreground mb-4">Conformidade com a LGPD · Lei nº 13.709/2018</p>
         <p className="text-sm text-muted-foreground mb-4">Sua privacidade é fundamental para nós. Esta política explica como o PoupaMais coleta, usa e protege seus dados pessoais.</p>
         <div className="space-y-4">
@@ -455,7 +438,7 @@ export default function Settings() {
         </div>
       </Modal>
 
-      <Modal open={modal === "cookies"} onClose={() => setModal(null)} title="Política de cookies">
+      <Modal open={modal === "cookies"} onClose={() => setModal(null)} title={t("settings.cookiesTitle")}>
         <p className="text-sm text-muted-foreground mb-4">O PoupaMais utiliza cookies para melhorar sua experiência. Veja quais utilizamos e como gerenciá-los.</p>
         <div className="space-y-4">
           <div><p className="text-sm font-medium mb-1">O que são cookies?</p><p className="text-sm text-muted-foreground">Cookies são pequenos arquivos de texto armazenados no seu dispositivo quando você usa o PoupaMais. Eles nos ajudam a reconhecê-lo, lembrar suas preferências e entender como você utiliza o serviço.</p></div>
@@ -470,42 +453,30 @@ export default function Settings() {
             ].map(c => (
               <div key={c.name} className="flex items-start justify-between gap-3 py-2 border-b border-border last:border-0">
                 <div><p className="text-sm font-medium">{c.name}</p><p className="text-xs text-muted-foreground mt-0.5">{c.desc}</p></div>
-                <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${c.required ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{c.required ? "Sempre ativo" : "Opcional"}</span>
+                <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 mt-0.5 ${c.required ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>{c.required ? "Sempre ativo" : t("common.optional")}</span>
               </div>
             ))}
           </div>
-          <div className="border-t border-border" />
-          <div><p className="text-sm font-medium mb-1">Tipos de cookies por duração</p><ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1"><li><span className="font-medium text-foreground">Sessão</span>: expiram ao fechar o PoupaMais</li><li><span className="font-medium text-foreground">Persistentes</span>: ficam armazenados por um período definido</li><li><span className="font-medium text-foreground">Próprios</span>: definidos diretamente pelo PoupaMais</li><li><span className="font-medium text-foreground">Terceiros</span>: definidos por parceiros como ferramentas de análise</li></ul></div>
           <div className="border-t border-border" />
           <div><p className="text-sm font-medium mb-1">Dúvidas sobre cookies</p><p className="text-sm text-muted-foreground">Para mais informações sobre como o PoupaMais utiliza cookies, entre em contato: <span className="text-primary">suporte.poupamaisbr@gmail.com</span></p></div>
         </div>
       </Modal>
 
-      <Modal open={modal === "delete"} onClose={() => { setModal(null); }} title="Excluir conta">
+      <Modal open={modal === "delete"} onClose={() => { setModal(null); }} title={t("settings.deleteAccount")}>
         <div className="flex flex-col items-center text-center gap-4 py-2">
           <div className="w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
             <Trash2 className="w-6 h-6 text-destructive" />
           </div>
           <div>
-            <p className="font-semibold text-foreground text-base">Tem certeza?</p>
-            <p className="text-muted-foreground text-sm mt-1">
-              Todos os seus dados — transações, carteiras, metas e histórico — serão permanentemente excluídos. Essa ação não pode ser desfeita.
-            </p>
+            <p className="font-semibold text-foreground text-base">{t("settings.deleteConfirmSure")}</p>
+            <p className="text-muted-foreground text-sm mt-1">{t("settings.deleteConfirmMsg")}</p>
           </div>
           <div className="flex gap-3 w-full pt-2">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => { setModal(null); }}
-            >
-              Cancelar
+            <Button variant="outline" className="flex-1" onClick={() => { setModal(null); }}>
+              {t("common.cancel")}
             </Button>
-            <Button
-              variant="destructive"
-              className="flex-1"
-              onClick={handleDeleteAccount}
-            >
-              Excluir conta
+            <Button variant="destructive" className="flex-1" onClick={handleDeleteAccount}>
+              {t("settings.deleteConfirmBtn")}
             </Button>
           </div>
         </div>

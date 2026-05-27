@@ -3,44 +3,44 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
-
-
-const BENEFITS = [
-  {
-    icon: Bot,
-    title: "PoupaAI — Assistente Financeira",
-    description: "Assistente inteligente com IA que analisa seus dados reais e dá conselhos financeiros personalizados em tempo real.",
-    highlight: true,
-  },
-  {
-    icon: Bell,
-    title: "Alertas Inteligentes",
-    description: "Receba avisos automáticos quando estiver gastando acima do esperado em alguma categoria.",
-    highlight: false,
-  },
-  {
-    icon: Wallet,
-    title: "Carteiras Ilimitadas",
-    description: "Crie quantas carteiras precisar — corrente, poupança, investimentos, dinheiro físico e muito mais.",
-    highlight: false,
-  },
-  {
-    icon: Target,
-    title: "Metas Ilimitadas",
-    description: "Organize metas financeiras ilimitadas com barras de progresso, prazos e contribuições personalizadas.",
-    highlight: false,
-  },
-  {
-    icon: Zap,
-    title: "Recursos Premium",
-    description: "Acesso antecipado a novas funcionalidades e relatórios avançados antes de todos.",
-    highlight: false,
-  },
-];
-
+import { useI18n } from "@/contexts/i18n-context";
 
 export default function Premium() {
   const { isPremium } = useSubscription();
+  const { t } = useI18n();
+
+  const BENEFITS = [
+    {
+      icon: Bot,
+      title: t("premium.aiTitle"),
+      description: t("premium.aiDesc"),
+      highlight: true,
+    },
+    {
+      icon: Bell,
+      title: t("premium.alertsTitle"),
+      description: t("premium.alertsDesc"),
+      highlight: false,
+    },
+    {
+      icon: Wallet,
+      title: t("premium.walletsTitle"),
+      description: t("premium.walletsDesc"),
+      highlight: false,
+    },
+    {
+      icon: Target,
+      title: t("premium.goalsTitle"),
+      description: t("premium.goalsDesc"),
+      highlight: false,
+    },
+    {
+      icon: Zap,
+      title: t("premium.featuresTitle"),
+      description: t("premium.featuresDesc"),
+      highlight: false,
+    },
+  ];
 
   return (
     <div className="min-h-full bg-background">
@@ -52,15 +52,15 @@ export default function Premium() {
             <Crown className="w-10 h-10 text-background" />
           </div>
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-            Poupa Mais Premium
+            {t("premium.title")}
           </h1>
           <p className="text-muted-foreground text-base md:text-lg max-w-md mx-auto leading-relaxed">
-            Desbloqueie recursos avançados para controlar melhor sua vida financeira.
+            {t("premium.subtitle")}
           </p>
           {isPremium && (
             <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium">
               <CheckCircle2 className="w-4 h-4" />
-              Você já é Premium
+              {t("premium.alreadyPremium")}
             </div>
           )}
         </div>
@@ -71,7 +71,7 @@ export default function Premium() {
         {/* Benefits */}
         <div className="space-y-3">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1">
-            O que está incluído
+            {t("premium.whatsIncluded")}
           </p>
           {BENEFITS.map((b) => {
             const Icon = b.icon;
@@ -95,7 +95,7 @@ export default function Premium() {
                     {b.highlight && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-foreground text-background text-[10px] font-semibold">
                         <Star className="w-2.5 h-2.5 fill-background" />
-                        Destaque
+                        {t("premium.highlight")}
                       </span>
                     )}
                   </div>
@@ -112,9 +112,9 @@ export default function Premium() {
           <div className="rounded-2xl border border-border bg-card p-6 text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-foreground text-background text-sm font-medium">
               <CheckCircle2 className="w-4 h-4" />
-              Você já é Premium
+              {t("premium.alreadyPremium")}
             </div>
-            <p className="text-sm text-muted-foreground">Obrigado por ser Premium!</p>
+            <p className="text-sm text-muted-foreground">{t("premium.thanksPremium")}</p>
           </div>
         ) : (
           <stripe-pricing-table

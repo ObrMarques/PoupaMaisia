@@ -5,28 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Mail, Phone, ChevronDown, ChevronUp, Search, ExternalLink, HelpCircle, Zap, Send } from "lucide-react";
 
-// ─── FAQ ────────────────────────────────────────────────────────────────────
-const FAQS = [
-  { cat: "login",        q: "Como recuperar minha senha?",         a: "Na tela de login, clique em 'Esqueci a senha'. Você receberá um e-mail com instruções para criar uma nova senha." },
-  { cat: "transactions", q: "Como adicionar uma transação?",        a: "Vá para Transações e clique em 'Nova'. Preencha tipo, valor, descrição, data e categoria. Clique em Salvar." },
-  { cat: "categories",   q: "Posso criar categorias personalizadas?", a: "Sim! No formulário de nova transação, clique em 'Selecionar Categoria' e depois em 'Categoria personalizada' no rodapé." },
-  { cat: "goals",        q: "Como criar uma meta financeira?",      a: "Acesse Metas e clique em 'Nova Meta'. Defina o nome, valor alvo e tipo. Você pode adicionar contribuições a qualquer momento." },
-  { cat: "ai",           q: "O que é o PoupaAI?",                   a: "O PoupaAI é seu consultor financeiro com IA. Analisa seus gastos, sugere economias e responde perguntas financeiras." },
-  { cat: "premium",      q: "Como funciona o Premium?",             a: "O Premium inclui PoupaAI ilimitado, relatórios avançados e exportação de extratos. R$ 9,90/mês com 7 dias grátis." },
-  { cat: "login",        q: "Meus dados estão seguros?",            a: "Sim. Todos os dados são criptografados em trânsito e em repouso. Nunca compartilhamos suas informações." },
-  { cat: "categories",   q: "Por que as categorias não aparecem?",  a: "Verifique sua conexão. Se persistir, saia e entre novamente. As categorias carregam automaticamente após o login." },
-];
-
-const FAQ_CATEGORIES = [
-  { key: "all",          label: "Todos" },
-  { key: "login",        label: "Conta & Login" },
-  { key: "transactions", label: "Transações" },
-  { key: "categories",   label: "Categorias" },
-  { key: "goals",        label: "Metas" },
-  { key: "ai",           label: "PoupaAI" },
-  { key: "premium",      label: "Premium" },
-];
-
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
@@ -40,46 +18,37 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   );
 }
 
-// ─── CHAT BOT ────────────────────────────────────────────────────────────────
 interface Message { id: number; from: "user" | "bot"; text: string; time: string }
 
-const QUICK_REPLIES = [
-  "Como adicionar transação?",
-  "Criar meta financeira",
-  "O que é o PoupaAI?",
-  "Como usar categorias?",
-  "Problemas com login",
-];
-
-const BOT_RESPONSES: [RegExp, string][] = [
-  [/senha|password|login|entrar/i,     "Para recuperar sua senha, clique em 'Esqueci a senha' na tela de login. Você receberá um e-mail em até 5 minutos."],
-  [/transaç|gasto|receita|despesa/i,   "Para adicionar uma transação, vá em Transações > Nova. Preencha o tipo (receita/despesa), valor, descrição e categoria. É bem rápido!"],
-  [/meta|objetivo|poupança|economiz/i, "Nas Metas Financeiras você pode criar qualquer objetivo — viagem, compra, reserva de emergência. Defina o valor alvo e vá adicionando contribuições!"],
-  [/categoria|categori/i,              "As categorias aparecem no formulário de transações. Você pode escolher uma padrão ou criar uma personalizada clicando em 'Categoria personalizada'."],
-  [/ai|inteligência|assistente/i,      "O PoupaAI é seu consultor financeiro pessoal com IA! Ele analisa seus gastos, identifica padrões e responde perguntas financeiras. Disponível no plano Premium."],
-  [/premium|assina|plano/i,            "O Premium custa R$ 9,90/mês com 7 dias grátis. Inclui PoupaAI ilimitado, relatórios avançados e exportação de extratos. Cancele quando quiser!"],
-  [/cartão|card|fatura/i,              "Em Cartões você cadastra seus cartões de crédito, acompanha a fatura atual, limite disponível e dias de fechamento e vencimento."],
-  [/relatório|gráfico|report/i,        "Os Relatórios mostram seus gastos por categoria, tendência mensal e comparativos. Ótimo para entender para onde vai seu dinheiro!"],
-  [/oi|olá|hello|hi|bom dia|boa tarde/i, "Olá! Sou o assistente do PoupaMais. Como posso ajudar você hoje? Pode perguntar sobre transações, metas, categorias, Premium ou qualquer funcionalidade."],
-  [/obrigad|thanks|valeu/i,            "Fico feliz em ajudar! Se tiver mais dúvidas, é só perguntar. Estou aqui para isso!"],
-  [/problema|erro|bug|não funciona/i,  "Lamento pelo transtorno! Para problemas técnicos, tente: 1) Sair e entrar novamente, 2) Limpar o cache do navegador. Se persistir, entre em contato pelo WhatsApp ou e-mail."],
-];
-
-function getBotResponse(text: string): string {
-  for (const [pattern, response] of BOT_RESPONSES) {
-    if (pattern.test(text)) return response;
-  }
-  return "Entendido! Para dúvidas mais específicas ou problemas técnicos, nossa equipe está disponível pelo WhatsApp ou e-mail. Como mais posso ajudar?";
-}
-
 function now() {
-  return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
 }
 
 function SupportChat() {
   const { t } = useI18n();
+
+  const BOT_RESPONSES: [RegExp, string][] = [
+    [/senha|password|login|entrar|contraseña|mot de passe/i,     t("support.faq1a")],
+    [/transaç|gasto|receita|despesa|transacc|ingreso|transaction/i, t("support.faq2a")],
+    [/meta|objetivo|poupança|economiz|ahorro|objectif|épargne/i,  t("support.faq4a")],
+    [/categoria|categori|catégorie/i,                             t("support.faq3a")],
+    [/ai|inteligência|assistente|asistente|assistant/i,           t("support.faq5a")],
+    [/premium|assina|plano|suscri|abonnement/i,                   t("support.faq6a")],
+    [/relatório|gráfico|report|rapport/i,                         `${t("nav.reports")}: ${t("reports.subtitle")}`],
+    [/oi|olá|hello|hi|bom dia|boa tarde|hola|bonjour/i,          t("support.botGreeting")],
+    [/obrigad|thanks|valeu|gracias|merci/i,                       t("support.chatOnline")],
+    [/problema|erro|bug|não funciona|error|problème/i,            t("support.faq8a")],
+  ];
+
+  const getBotResponse = (text: string): string => {
+    for (const [pattern, response] of BOT_RESPONSES) {
+      if (pattern.test(text)) return response;
+    }
+    return t("support.botFallback");
+  };
+
   const [messages, setMessages] = useState<Message[]>([
-    { id: 1, from: "bot", text: "Olá! Sou o assistente virtual do PoupaMais. Estou aqui para ajudar com qualquer dúvida sobre o app. O que posso fazer por você?", time: now() },
+    { id: 1, from: "bot", text: t("support.botGreeting"), time: now() },
   ]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -104,6 +73,8 @@ function SupportChat() {
       setMessages(prev => [...prev, { id: Date.now() + 1, from: "bot", text: response, time: now() }]);
     }, 900 + Math.random() * 600);
   };
+
+  const quickReplies = [t("support.qr1"), t("support.qr2"), t("support.qr3"), t("support.qr4"), t("support.qr5")];
 
   return (
     <div className="flex flex-col h-[520px] bg-card border border-border rounded-xl overflow-hidden">
@@ -151,7 +122,7 @@ function SupportChat() {
 
       {/* Quick replies */}
       <div className="px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide border-t border-border/50">
-        {QUICK_REPLIES.map(r => (
+        {quickReplies.map(r => (
           <button
             key={r}
             onClick={() => sendMessage(r)}
@@ -179,12 +150,32 @@ function SupportChat() {
   );
 }
 
-// ─── MAIN PAGE ───────────────────────────────────────────────────────────────
 export default function Support() {
   const { t } = useI18n();
   const [search, setSearch]   = useState("");
   const [faqCat, setFaqCat]   = useState("all");
   const [activeTab, setActiveTab] = useState<"faq" | "chat">("chat");
+
+  const FAQS = [
+    { cat: "login",        q: t("support.faq1q"), a: t("support.faq1a") },
+    { cat: "transactions", q: t("support.faq2q"), a: t("support.faq2a") },
+    { cat: "categories",   q: t("support.faq3q"), a: t("support.faq3a") },
+    { cat: "goals",        q: t("support.faq4q"), a: t("support.faq4a") },
+    { cat: "ai",           q: t("support.faq5q"), a: t("support.faq5a") },
+    { cat: "premium",      q: t("support.faq6q"), a: t("support.faq6a") },
+    { cat: "login",        q: t("support.faq7q"), a: t("support.faq7a") },
+    { cat: "categories",   q: t("support.faq8q"), a: t("support.faq8a") },
+  ];
+
+  const FAQ_CATEGORIES = [
+    { key: "all",          label: t("support.faqAll") },
+    { key: "login",        label: t("support.faqLogin") },
+    { key: "transactions", label: t("support.faqTransactions") },
+    { key: "categories",   label: t("support.faqCategories") },
+    { key: "goals",        label: t("support.faqGoals") },
+    { key: "ai",           label: t("support.faqAI") },
+    { key: "premium",      label: t("support.faqPremium") },
+  ];
 
   const filteredFaqs = FAQS.filter(f =>
     (faqCat === "all" || f.cat === faqCat) &&
@@ -206,8 +197,8 @@ export default function Support() {
               <div className="w-12 h-12 rounded-full bg-[#00C851]/10 flex items-center justify-center group-hover:bg-[#00C851]/20 transition-colors">
                 <Phone className="w-6 h-6 text-[#00C851]" />
               </div>
-              <div><p className="font-semibold">{t("support.whatsapp")}</p><p className="text-sm text-muted-foreground">Resposta em minutos</p></div>
-              <div className="flex items-center gap-1 text-xs text-[#00C851] font-medium"><span>Abrir conversa</span><ExternalLink className="w-3 h-3" /></div>
+              <div><p className="font-semibold">{t("support.whatsapp")}</p><p className="text-sm text-muted-foreground">{t("support.responseMinutes")}</p></div>
+              <div className="flex items-center gap-1 text-xs text-[#00C851] font-medium"><span>{t("support.openConversation")}</span><ExternalLink className="w-3 h-3" /></div>
             </CardContent>
           </Card>
         </a>
@@ -217,8 +208,8 @@ export default function Support() {
               <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                 <Mail className="w-6 h-6 text-primary" />
               </div>
-              <div><p className="font-semibold">{t("support.email")}</p><p className="text-sm text-muted-foreground">Resposta em até 24h</p></div>
-              <div className="flex items-center gap-1 text-xs text-primary font-medium"><span>Enviar e-mail</span><ExternalLink className="w-3 h-3" /></div>
+              <div><p className="font-semibold">{t("support.email")}</p><p className="text-sm text-muted-foreground">{t("support.responseHours")}</p></div>
+              <div className="flex items-center gap-1 text-xs text-primary font-medium"><span>{t("support.sendEmailLink")}</span><ExternalLink className="w-3 h-3" /></div>
             </CardContent>
           </Card>
         </a>
@@ -229,7 +220,7 @@ export default function Support() {
                 <MessageCircle className="w-6 h-6 text-primary" />
               </div>
               <div><p className="font-semibold">{t("support.chat")}</p></div>
-              <div className="flex items-center gap-1 text-xs text-[#00C851] font-medium"><Zap className="w-3 h-3" /><span>Online agora</span></div>
+              <div className="flex items-center gap-1 text-xs text-[#00C851] font-medium"><Zap className="w-3 h-3" /><span>{t("support.onlineNow")}</span></div>
             </CardContent>
           </Card>
         </button>
@@ -246,7 +237,7 @@ export default function Support() {
                 activeTab === tab ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              {tab === "chat" ? "Chat de Suporte" : t("support.faqTitle")}
+              {tab === "chat" ? t("support.chatTab") : t("support.faqTitle")}
             </button>
           ))}
         </div>
@@ -273,7 +264,7 @@ export default function Support() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={`${t("common.search")} nas perguntas...`}
+                placeholder={t("support.searchFaqs")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="pl-9 bg-card"
@@ -285,7 +276,7 @@ export default function Support() {
                 {filteredFaqs.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <HelpCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>Nenhuma pergunta encontrada.</p>
+                    <p>{t("support.noFaqFound")}</p>
                   </div>
                 ) : (
                   filteredFaqs.map((faq, i) => <FAQItem key={i} q={faq.q} a={faq.a} />)
@@ -301,7 +292,7 @@ export default function Support() {
         <CardContent className="p-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div>
             <p className="font-semibold">{t("support.notFound")}</p>
-            <p className="text-sm text-muted-foreground">Nossa equipe está pronta para ajudar você.</p>
+            <p className="text-sm text-muted-foreground">{t("support.teamReady")}</p>
           </div>
           <div className="flex gap-3">
             <a href="mailto:suporte.poupamaisbr@gmail.com">

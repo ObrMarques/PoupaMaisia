@@ -34,12 +34,59 @@ type TranslationMap = {
     savePreferences: string; changePhoto: string; uploadPhoto: string;
     danger: string; deleteAccount: string; photoUpdated: string;
     profileUpdated: string; preferencesUpdated: string;
+    appearance: string; notifications: string; legal: string; account: string;
+    tapChangePhoto: string; fullName: string; notEditable: string;
+    saved: string; saveError: string;
+    darkModeOn: string; darkModeOff: string;
+    pushNotif: string; pushNotifDesc: string;
+    emailPromo: string; emailPromoDesc: string;
+    termsTitle: string; termsDescShort: string;
+    privacyTitle: string; privacyDescShort: string;
+    cookiesTitle: string; cookiesDescShort: string;
+    signOut: string; version: string;
+    deleteConfirmSure: string; deleteConfirmMsg: string; deleteConfirmBtn: string;
   };
   support: {
     title: string; subtitle: string; whatsapp: string; email: string; chat: string;
     chatTitle: string; chatOnline: string; chatOffline: string; chatPlaceholder: string;
     chatSend: string; faqTitle: string; guides: string; notFound: string; sendEmail: string;
     typing: string;
+    responseMinutes: string; openConversation: string;
+    responseHours: string; sendEmailLink: string;
+    onlineNow: string; chatTab: string;
+    noFaqFound: string; teamReady: string; searchFaqs: string;
+    faqAll: string; faqLogin: string; faqTransactions: string; faqCategories: string;
+    faqGoals: string; faqAI: string; faqPremium: string;
+    botGreeting: string; botFallback: string;
+    qr1: string; qr2: string; qr3: string; qr4: string; qr5: string;
+    faq1q: string; faq1a: string; faq2q: string; faq2a: string;
+    faq3q: string; faq3a: string; faq4q: string; faq4a: string;
+    faq5q: string; faq5a: string; faq6q: string; faq6a: string;
+    faq7q: string; faq7a: string; faq8q: string; faq8a: string;
+  };
+  premium: {
+    title: string; subtitle: string;
+    alreadyPremium: string; whatsIncluded: string;
+    highlight: string; thanksPremium: string;
+    aiTitle: string; aiDesc: string;
+    alertsTitle: string; alertsDesc: string;
+    walletsTitle: string; walletsDesc: string;
+    goalsTitle: string; goalsDesc: string;
+    featuresTitle: string; featuresDesc: string;
+  };
+  forgotPassword: {
+    title: string; subtitle: string;
+    sentTitle: string; sentDesc: string;
+    backToLogin: string; sendBtn: string;
+    errNotFound: string; errTooMany: string; errGeneric: string; sendError: string;
+  };
+  resetPassword: {
+    title: string; subtitle: string;
+    successTitle: string; successDesc: string;
+    newPassLabel: string; minChars: string;
+    confirmLabel: string; repeatPass: string;
+    submitBtn: string;
+    errShort: string; errMismatch: string; errExpired: string; errGeneric: string;
   };
   dashboard: {
     title: string; balance: string; income: string; expenses: string; savings: string;
@@ -143,6 +190,19 @@ const ptBR: TranslationMap = {
     danger: "Zona de Perigo", deleteAccount: "Excluir Conta",
     photoUpdated: "Foto atualizada com sucesso", profileUpdated: "Perfil atualizado com sucesso",
     preferencesUpdated: "Preferências salvas",
+    appearance: "Aparência", notifications: "Notificações", legal: "Legal", account: "Conta",
+    tapChangePhoto: "Toque para alterar a foto", fullName: "Nome completo", notEditable: "não editável",
+    saved: "Salvo!", saveError: "Erro ao salvar. Tente novamente.",
+    darkModeOn: "Fundo escuro, textos claros", darkModeOff: "Fundo claro, textos escuros",
+    pushNotif: "Notificações push", pushNotifDesc: "Alertas e atualizações",
+    emailPromo: "E-mails promocionais", emailPromoDesc: "Novidades e ofertas",
+    termsTitle: "Termos de uso", termsDescShort: "Regras e condições do serviço",
+    privacyTitle: "Política de privacidade", privacyDescShort: "Como seus dados são usados",
+    cookiesTitle: "Política de cookies", cookiesDescShort: "Preferências de rastreamento",
+    signOut: "Sair da conta", version: "Versão 1.0.0 · © 2026 PoupaMais",
+    deleteConfirmSure: "Tem certeza?",
+    deleteConfirmMsg: "Todos os seus dados — transações, carteiras, metas e histórico — serão permanentemente excluídos. Essa ação não pode ser desfeita.",
+    deleteConfirmBtn: "Excluir conta",
   },
   support: {
     title: "Central de Ajuda", subtitle: "Como podemos ajudar você hoje?",
@@ -151,6 +211,61 @@ const ptBR: TranslationMap = {
     chatPlaceholder: "Digite sua mensagem...", chatSend: "Enviar",
     faqTitle: "Perguntas Frequentes", guides: "Guias Rápidos",
     notFound: "Não encontrou o que procurava?", sendEmail: "Enviar E-mail", typing: "Digitando...",
+    responseMinutes: "Resposta em minutos", openConversation: "Abrir conversa",
+    responseHours: "Resposta em até 24h", sendEmailLink: "Enviar e-mail",
+    onlineNow: "Online agora", chatTab: "Chat de Suporte",
+    noFaqFound: "Nenhuma pergunta encontrada.", teamReady: "Nossa equipe está pronta para ajudar você.",
+    searchFaqs: "Pesquisar nas perguntas...",
+    faqAll: "Todos", faqLogin: "Conta & Login", faqTransactions: "Transações",
+    faqCategories: "Categorias", faqGoals: "Metas", faqAI: "PoupaAI", faqPremium: "Premium",
+    botGreeting: "Olá! Sou o assistente virtual do PoupaMais. Estou aqui para ajudar com qualquer dúvida sobre o app. O que posso fazer por você?",
+    botFallback: "Entendido! Para dúvidas mais específicas ou problemas técnicos, nossa equipe está disponível pelo WhatsApp ou e-mail. Como mais posso ajudar?",
+    qr1: "Como adicionar transação?", qr2: "Criar meta financeira",
+    qr3: "O que é o PoupaAI?", qr4: "Como usar categorias?", qr5: "Problemas com login",
+    faq1q: "Como recuperar minha senha?", faq1a: "Na tela de login, clique em 'Esqueci a senha'. Você receberá um e-mail com instruções para criar uma nova senha.",
+    faq2q: "Como adicionar uma transação?", faq2a: "Vá para Transações e clique em 'Nova'. Preencha tipo, valor, descrição, data e categoria. Clique em Salvar.",
+    faq3q: "Posso criar categorias personalizadas?", faq3a: "Sim! No formulário de nova transação, clique em 'Selecionar Categoria' e depois em 'Categoria personalizada' no rodapé.",
+    faq4q: "Como criar uma meta financeira?", faq4a: "Acesse Metas e clique em 'Nova Meta'. Defina o nome, valor alvo e tipo. Você pode adicionar contribuições a qualquer momento.",
+    faq5q: "O que é o PoupaAI?", faq5a: "O PoupaAI é seu consultor financeiro com IA. Analisa seus gastos, sugere economias e responde perguntas financeiras.",
+    faq6q: "Como funciona o Premium?", faq6a: "O Premium inclui PoupaAI ilimitado, relatórios avançados e exportação de extratos. R$ 9,90/mês com 7 dias grátis.",
+    faq7q: "Meus dados estão seguros?", faq7a: "Sim. Todos os dados são criptografados em trânsito e em repouso. Nunca compartilhamos suas informações.",
+    faq8q: "Por que as categorias não aparecem?", faq8a: "Verifique sua conexão. Se persistir, saia e entre novamente. As categorias carregam automaticamente após o login.",
+  },
+  premium: {
+    title: "Poupa Mais Premium",
+    subtitle: "Desbloqueie recursos avançados para controlar melhor sua vida financeira.",
+    alreadyPremium: "Você já é Premium", whatsIncluded: "O que está incluído",
+    highlight: "Destaque", thanksPremium: "Obrigado por ser Premium!",
+    aiTitle: "PoupaAI — Assistente Financeira",
+    aiDesc: "Assistente inteligente com IA que analisa seus dados reais e dá conselhos financeiros personalizados em tempo real.",
+    alertsTitle: "Alertas Inteligentes",
+    alertsDesc: "Receba avisos automáticos quando estiver gastando acima do esperado em alguma categoria.",
+    walletsTitle: "Carteiras Ilimitadas",
+    walletsDesc: "Crie quantas carteiras precisar — corrente, poupança, investimentos, dinheiro físico e muito mais.",
+    goalsTitle: "Metas Ilimitadas",
+    goalsDesc: "Organize metas financeiras ilimitadas com barras de progresso, prazos e contribuições personalizadas.",
+    featuresTitle: "Recursos Premium",
+    featuresDesc: "Acesso antecipado a novas funcionalidades e relatórios avançados antes de todos.",
+  },
+  forgotPassword: {
+    title: "Recuperar senha", subtitle: "Digite seu e-mail e enviaremos um link para criar uma nova senha.",
+    sentTitle: "E-mail enviado!", sentDesc: "Verifique sua caixa de entrada e clique no link para redefinir sua senha.",
+    backToLogin: "Voltar para o login", sendBtn: "Enviar link de recuperação",
+    errNotFound: "Nenhuma conta encontrada com esse e-mail.",
+    errTooMany: "Muitas tentativas. Aguarde alguns minutos e tente novamente.",
+    errGeneric: "Erro ao enviar o e-mail. Verifique o endereço e tente novamente.",
+    sendError: "Erro ao enviar o e-mail. Tente novamente.",
+  },
+  resetPassword: {
+    title: "Nova senha", subtitle: "Crie uma nova senha para sua conta.",
+    successTitle: "Senha redefinida!", successDesc: "Sua senha foi alterada com sucesso. Redirecionando…",
+    newPassLabel: "Nova senha", minChars: "Mínimo 6 caracteres",
+    confirmLabel: "Confirmar senha", repeatPass: "Repita a nova senha",
+    submitBtn: "Redefinir senha",
+    errShort: "A senha deve ter pelo menos 6 caracteres.",
+    errMismatch: "As senhas não coincidem.",
+    errExpired: "O link de recuperação expirou. Solicite um novo.",
+    errGeneric: "Erro ao redefinir a senha. Tente novamente.",
   },
   dashboard: {
     title: "Painel Financeiro", balance: "Saldo Total", income: "Receitas", expenses: "Despesas",
@@ -284,6 +399,19 @@ const en: TranslationMap = {
     danger: "Danger Zone", deleteAccount: "Delete Account",
     photoUpdated: "Photo updated successfully", profileUpdated: "Profile updated successfully",
     preferencesUpdated: "Preferences saved",
+    appearance: "Appearance", notifications: "Notifications", legal: "Legal", account: "Account",
+    tapChangePhoto: "Tap to change photo", fullName: "Full name", notEditable: "not editable",
+    saved: "Saved!", saveError: "Error saving. Please try again.",
+    darkModeOn: "Dark background, light text", darkModeOff: "Light background, dark text",
+    pushNotif: "Push notifications", pushNotifDesc: "Alerts and updates",
+    emailPromo: "Promotional emails", emailPromoDesc: "News and offers",
+    termsTitle: "Terms of use", termsDescShort: "Rules and conditions of service",
+    privacyTitle: "Privacy policy", privacyDescShort: "How your data is used",
+    cookiesTitle: "Cookie policy", cookiesDescShort: "Tracking preferences",
+    signOut: "Sign out", version: "Version 1.0.0 · © 2026 PoupaMais",
+    deleteConfirmSure: "Are you sure?",
+    deleteConfirmMsg: "All your data — transactions, wallets, goals and history — will be permanently deleted. This action cannot be undone.",
+    deleteConfirmBtn: "Delete account",
   },
   support: {
     title: "Help Center", subtitle: "How can we help you today?",
@@ -292,6 +420,61 @@ const en: TranslationMap = {
     chatPlaceholder: "Type your message...", chatSend: "Send",
     faqTitle: "Frequently Asked Questions", guides: "Quick Guides",
     notFound: "Didn't find what you were looking for?", sendEmail: "Send Email", typing: "Typing...",
+    responseMinutes: "Response in minutes", openConversation: "Open conversation",
+    responseHours: "Response within 24h", sendEmailLink: "Send email",
+    onlineNow: "Online now", chatTab: "Support Chat",
+    noFaqFound: "No questions found.", teamReady: "Our team is ready to help you.",
+    searchFaqs: "Search questions...",
+    faqAll: "All", faqLogin: "Account & Login", faqTransactions: "Transactions",
+    faqCategories: "Categories", faqGoals: "Goals", faqAI: "PoupaAI", faqPremium: "Premium",
+    botGreeting: "Hi! I'm the PoupaMais virtual assistant. I'm here to help with any questions about the app. What can I do for you?",
+    botFallback: "Understood! For more specific questions or technical issues, our team is available via WhatsApp or email. How else can I help?",
+    qr1: "How to add a transaction?", qr2: "Create a financial goal",
+    qr3: "What is PoupaAI?", qr4: "How to use categories?", qr5: "Login issues",
+    faq1q: "How do I recover my password?", faq1a: "On the login screen, click 'Forgot password'. You will receive an email with instructions to create a new password.",
+    faq2q: "How do I add a transaction?", faq2a: "Go to Transactions and click 'New'. Fill in type, amount, description, date and category. Click Save.",
+    faq3q: "Can I create custom categories?", faq3a: "Yes! In the new transaction form, click 'Select Category' and then 'Custom category' at the bottom.",
+    faq4q: "How do I create a financial goal?", faq4a: "Go to Goals and click 'New Goal'. Set the name, target amount and type. You can add contributions at any time.",
+    faq5q: "What is PoupaAI?", faq5a: "PoupaAI is your AI-powered financial advisor. It analyzes your spending, suggests savings and answers financial questions.",
+    faq6q: "How does Premium work?", faq6a: "Premium includes unlimited PoupaAI, advanced reports and statement export. R$ 9.90/month with a 7-day free trial.",
+    faq7q: "Is my data secure?", faq7a: "Yes. All data is encrypted in transit and at rest. We never share your information.",
+    faq8q: "Why aren't categories showing?", faq8a: "Check your connection. If it persists, sign out and back in. Categories load automatically after login.",
+  },
+  premium: {
+    title: "PoupaMais Premium",
+    subtitle: "Unlock advanced features to better manage your financial life.",
+    alreadyPremium: "You are already Premium", whatsIncluded: "What's included",
+    highlight: "Featured", thanksPremium: "Thank you for being Premium!",
+    aiTitle: "PoupaAI — Financial Assistant",
+    aiDesc: "AI-powered smart assistant that analyzes your real data and gives personalized financial advice in real time.",
+    alertsTitle: "Smart Alerts",
+    alertsDesc: "Receive automatic warnings when you are spending above expectations in any category.",
+    walletsTitle: "Unlimited Wallets",
+    walletsDesc: "Create as many wallets as you need — checking, savings, investments, cash and more.",
+    goalsTitle: "Unlimited Goals",
+    goalsDesc: "Organize unlimited financial goals with progress bars, deadlines and personalized contributions.",
+    featuresTitle: "Premium Features",
+    featuresDesc: "Early access to new features and advanced reports before everyone else.",
+  },
+  forgotPassword: {
+    title: "Recover password", subtitle: "Enter your email and we'll send you a link to create a new password.",
+    sentTitle: "Email sent!", sentDesc: "Check your inbox and click the link to reset your password.",
+    backToLogin: "Back to login", sendBtn: "Send recovery link",
+    errNotFound: "No account found with that email.",
+    errTooMany: "Too many attempts. Please wait a few minutes and try again.",
+    errGeneric: "Error sending email. Please check the address and try again.",
+    sendError: "Error sending email. Please try again.",
+  },
+  resetPassword: {
+    title: "New password", subtitle: "Create a new password for your account.",
+    successTitle: "Password reset!", successDesc: "Your password has been changed successfully. Redirecting…",
+    newPassLabel: "New password", minChars: "Minimum 6 characters",
+    confirmLabel: "Confirm password", repeatPass: "Repeat the new password",
+    submitBtn: "Reset password",
+    errShort: "Password must be at least 6 characters.",
+    errMismatch: "Passwords do not match.",
+    errExpired: "The recovery link has expired. Request a new one.",
+    errGeneric: "Error resetting password. Please try again.",
   },
   dashboard: {
     title: "Financial Dashboard", balance: "Total Balance", income: "Income", expenses: "Expenses",
@@ -425,6 +608,19 @@ const es: TranslationMap = {
     danger: "Zona de peligro", deleteAccount: "Eliminar cuenta",
     photoUpdated: "Foto actualizada", profileUpdated: "Perfil actualizado",
     preferencesUpdated: "Preferencias guardadas",
+    appearance: "Apariencia", notifications: "Notificaciones", legal: "Legal", account: "Cuenta",
+    tapChangePhoto: "Toca para cambiar la foto", fullName: "Nombre completo", notEditable: "no editable",
+    saved: "¡Guardado!", saveError: "Error al guardar. Inténtalo de nuevo.",
+    darkModeOn: "Fondo oscuro, texto claro", darkModeOff: "Fondo claro, texto oscuro",
+    pushNotif: "Notificaciones push", pushNotifDesc: "Alertas y actualizaciones",
+    emailPromo: "Correos promocionales", emailPromoDesc: "Novedades y ofertas",
+    termsTitle: "Términos de uso", termsDescShort: "Reglas y condiciones del servicio",
+    privacyTitle: "Política de privacidad", privacyDescShort: "Cómo se usan tus datos",
+    cookiesTitle: "Política de cookies", cookiesDescShort: "Preferencias de rastreo",
+    signOut: "Cerrar sesión", version: "Versión 1.0.0 · © 2026 PoupaMais",
+    deleteConfirmSure: "¿Estás seguro?",
+    deleteConfirmMsg: "Todos tus datos — transacciones, carteras, metas e historial — serán eliminados permanentemente. Esta acción no se puede deshacer.",
+    deleteConfirmBtn: "Eliminar cuenta",
   },
   support: {
     title: "Centro de ayuda", subtitle: "¿Cómo podemos ayudarte hoy?",
@@ -433,6 +629,61 @@ const es: TranslationMap = {
     chatPlaceholder: "Escribe tu mensaje...", chatSend: "Enviar",
     faqTitle: "Preguntas frecuentes", guides: "Guías rápidas",
     notFound: "¿No encontraste lo que buscabas?", sendEmail: "Enviar correo", typing: "Escribiendo...",
+    responseMinutes: "Respuesta en minutos", openConversation: "Abrir conversación",
+    responseHours: "Respuesta en hasta 24h", sendEmailLink: "Enviar correo",
+    onlineNow: "En línea ahora", chatTab: "Chat de soporte",
+    noFaqFound: "No se encontraron preguntas.", teamReady: "Nuestro equipo está listo para ayudarte.",
+    searchFaqs: "Buscar en las preguntas...",
+    faqAll: "Todos", faqLogin: "Cuenta y login", faqTransactions: "Transacciones",
+    faqCategories: "Categorías", faqGoals: "Metas", faqAI: "PoupaAI", faqPremium: "Premium",
+    botGreeting: "¡Hola! Soy el asistente virtual de PoupaMais. Estoy aquí para ayudarte con cualquier pregunta sobre la app. ¿Qué puedo hacer por ti?",
+    botFallback: "¡Entendido! Para preguntas más específicas o problemas técnicos, nuestro equipo está disponible por WhatsApp o correo. ¿En qué más puedo ayudar?",
+    qr1: "¿Cómo agregar una transacción?", qr2: "Crear una meta financiera",
+    qr3: "¿Qué es PoupaAI?", qr4: "¿Cómo usar categorías?", qr5: "Problemas con el login",
+    faq1q: "¿Cómo recupero mi contraseña?", faq1a: "En la pantalla de login, haz clic en 'Olvidé mi contraseña'. Recibirás un correo con instrucciones para crear una nueva.",
+    faq2q: "¿Cómo agrego una transacción?", faq2a: "Ve a Transacciones y haz clic en 'Nueva'. Completa tipo, monto, descripción, fecha y categoría. Haz clic en Guardar.",
+    faq3q: "¿Puedo crear categorías personalizadas?", faq3a: "¡Sí! En el formulario de nueva transacción, haz clic en 'Seleccionar Categoría' y luego en 'Categoría personalizada'.",
+    faq4q: "¿Cómo creo una meta financiera?", faq4a: "Ve a Metas y haz clic en 'Nueva Meta'. Define el nombre, monto objetivo y tipo. Puedes agregar contribuciones en cualquier momento.",
+    faq5q: "¿Qué es PoupaAI?", faq5a: "PoupaAI es tu asesor financiero con IA. Analiza tus gastos, sugiere ahorros y responde preguntas financieras.",
+    faq6q: "¿Cómo funciona el Premium?", faq6a: "El Premium incluye PoupaAI ilimitado, informes avanzados y exportación de extractos. R$ 9,90/mes con 7 días gratis.",
+    faq7q: "¿Mis datos están seguros?", faq7a: "Sí. Todos los datos están cifrados en tránsito y en reposo. Nunca compartimos tu información.",
+    faq8q: "¿Por qué no aparecen las categorías?", faq8a: "Verifica tu conexión. Si persiste, cierra sesión y vuelve a entrar. Las categorías se cargan automáticamente tras el login.",
+  },
+  premium: {
+    title: "PoupaMais Premium",
+    subtitle: "Desbloquea funciones avanzadas para controlar mejor tu vida financiera.",
+    alreadyPremium: "Ya eres Premium", whatsIncluded: "Qué está incluido",
+    highlight: "Destacado", thanksPremium: "¡Gracias por ser Premium!",
+    aiTitle: "PoupaAI — Asistente Financiero",
+    aiDesc: "Asistente inteligente con IA que analiza tus datos reales y da consejos financieros personalizados en tiempo real.",
+    alertsTitle: "Alertas inteligentes",
+    alertsDesc: "Recibe avisos automáticos cuando estés gastando por encima de lo esperado en alguna categoría.",
+    walletsTitle: "Carteras ilimitadas",
+    walletsDesc: "Crea tantas carteras como necesites — corriente, ahorros, inversiones, efectivo y mucho más.",
+    goalsTitle: "Metas ilimitadas",
+    goalsDesc: "Organiza metas financieras ilimitadas con barras de progreso, plazos y contribuciones personalizadas.",
+    featuresTitle: "Funciones Premium",
+    featuresDesc: "Acceso anticipado a nuevas funcionalidades e informes avanzados antes que nadie.",
+  },
+  forgotPassword: {
+    title: "Recuperar contraseña", subtitle: "Ingresa tu correo y te enviaremos un enlace para crear una nueva contraseña.",
+    sentTitle: "¡Correo enviado!", sentDesc: "Revisa tu bandeja de entrada y haz clic en el enlace para restablecer tu contraseña.",
+    backToLogin: "Volver al login", sendBtn: "Enviar enlace de recuperación",
+    errNotFound: "No se encontró ninguna cuenta con ese correo.",
+    errTooMany: "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.",
+    errGeneric: "Error al enviar el correo. Verifica la dirección e inténtalo de nuevo.",
+    sendError: "Error al enviar el correo. Inténtalo de nuevo.",
+  },
+  resetPassword: {
+    title: "Nueva contraseña", subtitle: "Crea una nueva contraseña para tu cuenta.",
+    successTitle: "¡Contraseña restablecida!", successDesc: "Tu contraseña fue cambiada con éxito. Redirigiendo…",
+    newPassLabel: "Nueva contraseña", minChars: "Mínimo 6 caracteres",
+    confirmLabel: "Confirmar contraseña", repeatPass: "Repite la nueva contraseña",
+    submitBtn: "Restablecer contraseña",
+    errShort: "La contraseña debe tener al menos 6 caracteres.",
+    errMismatch: "Las contraseñas no coinciden.",
+    errExpired: "El enlace de recuperación expiró. Solicita uno nuevo.",
+    errGeneric: "Error al restablecer la contraseña. Inténtalo de nuevo.",
   },
   dashboard: {
     title: "Panel financiero", balance: "Saldo total", income: "Ingresos", expenses: "Gastos",
@@ -566,6 +817,19 @@ const fr: TranslationMap = {
     danger: "Zone danger", deleteAccount: "Supprimer le compte",
     photoUpdated: "Photo mise à jour", profileUpdated: "Profil mis à jour",
     preferencesUpdated: "Préférences sauvegardées",
+    appearance: "Apparence", notifications: "Notifications", legal: "Légal", account: "Compte",
+    tapChangePhoto: "Appuyez pour changer la photo", fullName: "Nom complet", notEditable: "non modifiable",
+    saved: "Sauvegardé !", saveError: "Erreur lors de la sauvegarde. Réessayez.",
+    darkModeOn: "Fond sombre, texte clair", darkModeOff: "Fond clair, texte sombre",
+    pushNotif: "Notifications push", pushNotifDesc: "Alertes et mises à jour",
+    emailPromo: "E-mails promotionnels", emailPromoDesc: "Nouveautés et offres",
+    termsTitle: "Conditions d'utilisation", termsDescShort: "Règles et conditions du service",
+    privacyTitle: "Politique de confidentialité", privacyDescShort: "Comment vos données sont utilisées",
+    cookiesTitle: "Politique des cookies", cookiesDescShort: "Préférences de suivi",
+    signOut: "Se déconnecter", version: "Version 1.0.0 · © 2026 PoupaMais",
+    deleteConfirmSure: "Êtes-vous sûr ?",
+    deleteConfirmMsg: "Toutes vos données — transactions, portefeuilles, objectifs et historique — seront définitivement supprimées. Cette action est irréversible.",
+    deleteConfirmBtn: "Supprimer le compte",
   },
   support: {
     title: "Centre d'aide", subtitle: "Comment pouvons-nous vous aider?",
@@ -574,6 +838,61 @@ const fr: TranslationMap = {
     chatPlaceholder: "Tapez votre message...", chatSend: "Envoyer",
     faqTitle: "Questions fréquentes", guides: "Guides rapides",
     notFound: "Pas trouvé ce que vous cherchez?", sendEmail: "Envoyer un e-mail", typing: "En train d'écrire...",
+    responseMinutes: "Réponse en quelques minutes", openConversation: "Ouvrir une conversation",
+    responseHours: "Réponse sous 24h", sendEmailLink: "Envoyer un e-mail",
+    onlineNow: "En ligne maintenant", chatTab: "Chat de support",
+    noFaqFound: "Aucune question trouvée.", teamReady: "Notre équipe est prête à vous aider.",
+    searchFaqs: "Rechercher dans les questions...",
+    faqAll: "Tous", faqLogin: "Compte & Connexion", faqTransactions: "Transactions",
+    faqCategories: "Catégories", faqGoals: "Objectifs", faqAI: "PoupaAI", faqPremium: "Premium",
+    botGreeting: "Bonjour ! Je suis l'assistant virtuel de PoupaMais. Je suis là pour vous aider avec toute question sur l'app. Que puis-je faire pour vous ?",
+    botFallback: "Compris ! Pour des questions plus spécifiques ou des problèmes techniques, notre équipe est disponible par WhatsApp ou e-mail. Comment puis-je vous aider ?",
+    qr1: "Comment ajouter une transaction ?", qr2: "Créer un objectif financier",
+    qr3: "Qu'est-ce que PoupaAI ?", qr4: "Comment utiliser les catégories ?", qr5: "Problèmes de connexion",
+    faq1q: "Comment récupérer mon mot de passe ?", faq1a: "Sur l'écran de connexion, cliquez sur 'Mot de passe oublié'. Vous recevrez un e-mail avec des instructions.",
+    faq2q: "Comment ajouter une transaction ?", faq2a: "Allez dans Transactions et cliquez sur 'Nouvelle'. Remplissez type, montant, description, date et catégorie. Cliquez sur Enregistrer.",
+    faq3q: "Puis-je créer des catégories personnalisées ?", faq3a: "Oui ! Dans le formulaire de nouvelle transaction, cliquez sur 'Sélectionner une catégorie' puis sur 'Catégorie personnalisée'.",
+    faq4q: "Comment créer un objectif financier ?", faq4a: "Allez dans Objectifs et cliquez sur 'Nouvel objectif'. Définissez le nom, le montant cible et le type. Vous pouvez ajouter des contributions à tout moment.",
+    faq5q: "Qu'est-ce que PoupaAI ?", faq5a: "PoupaAI est votre conseiller financier IA. Il analyse vos dépenses, suggère des économies et répond aux questions financières.",
+    faq6q: "Comment fonctionne le Premium ?", faq6a: "Le Premium inclut PoupaAI illimité, des rapports avancés et l'export d'extraits. R$ 9,90/mois avec 7 jours gratuits.",
+    faq7q: "Mes données sont-elles sécurisées ?", faq7a: "Oui. Toutes les données sont chiffrées en transit et au repos. Nous ne partageons jamais vos informations.",
+    faq8q: "Pourquoi les catégories n'apparaissent-elles pas ?", faq8a: "Vérifiez votre connexion. Si le problème persiste, déconnectez-vous et reconnectez-vous. Les catégories se chargent automatiquement après la connexion.",
+  },
+  premium: {
+    title: "PoupaMais Premium",
+    subtitle: "Débloquez des fonctionnalités avancées pour mieux gérer votre vie financière.",
+    alreadyPremium: "Vous êtes déjà Premium", whatsIncluded: "Ce qui est inclus",
+    highlight: "Mis en avant", thanksPremium: "Merci d'être Premium !",
+    aiTitle: "PoupaAI — Assistant Financier",
+    aiDesc: "Assistant intelligent IA qui analyse vos données réelles et donne des conseils financiers personnalisés en temps réel.",
+    alertsTitle: "Alertes intelligentes",
+    alertsDesc: "Recevez des avertissements automatiques lorsque vous dépensez au-delà des attentes dans une catégorie.",
+    walletsTitle: "Portefeuilles illimités",
+    walletsDesc: "Créez autant de portefeuilles que vous le souhaitez — courant, épargne, investissements, espèces et plus encore.",
+    goalsTitle: "Objectifs illimités",
+    goalsDesc: "Organisez des objectifs financiers illimités avec des barres de progression, des échéances et des contributions personnalisées.",
+    featuresTitle: "Fonctionnalités Premium",
+    featuresDesc: "Accès anticipé aux nouvelles fonctionnalités et aux rapports avancés avant tout le monde.",
+  },
+  forgotPassword: {
+    title: "Récupérer le mot de passe", subtitle: "Entrez votre e-mail et nous vous enverrons un lien pour créer un nouveau mot de passe.",
+    sentTitle: "E-mail envoyé !", sentDesc: "Vérifiez votre boîte de réception et cliquez sur le lien pour réinitialiser votre mot de passe.",
+    backToLogin: "Retour à la connexion", sendBtn: "Envoyer le lien de récupération",
+    errNotFound: "Aucun compte trouvé avec cet e-mail.",
+    errTooMany: "Trop de tentatives. Veuillez attendre quelques minutes et réessayer.",
+    errGeneric: "Erreur lors de l'envoi. Vérifiez l'adresse et réessayez.",
+    sendError: "Erreur lors de l'envoi de l'e-mail. Réessayez.",
+  },
+  resetPassword: {
+    title: "Nouveau mot de passe", subtitle: "Créez un nouveau mot de passe pour votre compte.",
+    successTitle: "Mot de passe réinitialisé !", successDesc: "Votre mot de passe a été changé avec succès. Redirection…",
+    newPassLabel: "Nouveau mot de passe", minChars: "Minimum 6 caractères",
+    confirmLabel: "Confirmer le mot de passe", repeatPass: "Répétez le nouveau mot de passe",
+    submitBtn: "Réinitialiser le mot de passe",
+    errShort: "Le mot de passe doit comporter au moins 6 caractères.",
+    errMismatch: "Les mots de passe ne correspondent pas.",
+    errExpired: "Le lien de récupération a expiré. Demandez-en un nouveau.",
+    errGeneric: "Erreur lors de la réinitialisation. Réessayez.",
   },
   dashboard: {
     title: "Tableau financier", balance: "Solde total", income: "Revenus", expenses: "Dépenses",
