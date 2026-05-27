@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useI18n } from "@/contexts/i18n-context";
 import { Sparkles, Send, Plus, Trash2, MessageSquare, ChevronLeft, X, TrendingUp, Shield, Target, Lightbulb, Crown, Lock, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -30,15 +31,6 @@ interface Conversation {
   updatedAt: string;
 }
 
-const QUICK_SUGGESTIONS = [
-  { icon: TrendingUp,   label: "Analisar meus gastos",          msg: "Analise meus gastos do mês e me dê um diagnóstico financeiro." },
-  { icon: Lightbulb,    label: "Como economizar mais?",          msg: "Com base nos meus dados, como posso economizar mais dinheiro?" },
-  { icon: Shield,       label: "Alertas financeiros",            msg: "Identifique alertas financeiros nos meus dados e riscos que devo atentar." },
-  { icon: Target,       label: "Progresso das minhas metas",     msg: "Como estão minhas metas financeiras? Estou no caminho certo?" },
-  { icon: MessageSquare, label: "Resumo do mês",                 msg: "Faça um resumo completo das minhas finanças deste mês." },
-  { icon: Lightbulb,    label: "Dicas de investimento",          msg: "Com meu perfil financeiro atual, quais investimentos você recomenda?" },
-];
-
 function TypingDots() {
   return (
     <div className="flex items-center gap-1 py-1">
@@ -63,13 +55,13 @@ function AIAvatar({ size = "sm" }: { size?: "sm" | "md" }) {
   );
 }
 
-function MessageBubble({ msg, isLast }: { msg: Message; isLast: boolean }) {
+function MessageBubble({ msg, isLast, userLabel }: { msg: Message; isLast: boolean; userLabel: string }) {
   const isUser = msg.role === "user";
   return (
     <div className={cn("flex gap-3 group", isUser ? "flex-row-reverse" : "flex-row")}>
       {isUser ? (
         <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center shrink-0 text-xs font-semibold text-foreground">
-          Eu
+          {userLabel}
         </div>
       ) : (
         <AIAvatar size="sm" />
@@ -130,16 +122,11 @@ function FormattedMessage({ content }: { content: string }) {
 }
 
 function ConversationItem({
-  conv,
-  active,
-  onClick,
-  onDelete,
+  conv, active, onClick, onDelete,
 }: {
-  conv: Conversation;
-  active: boolean;
-  onClick: () => void;
-  onDelete: (e: React.MouseEvent) => void;
+  conv: Conversation; active: boolean; onClick: () => void; onDelete: (e: React.MouseEvent) => void;
 }) {
+  const { t } = useI18n();
   return (
     <button
       onClick={onClick}
@@ -161,7 +148,7 @@ function ConversationItem({
           "p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-destructive/20",
           active ? "hover:bg-background/20" : ""
         )}
-        aria-label="Excluir conversa"
+        aria-label={t("common.delete")}
       >
         <Trash2 className="w-3 h-3" />
       </span>
@@ -186,6 +173,7 @@ async function fetchMessages(convId: number) {
 export default function AIPage() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const { t } = useI18n();
   const { toast } = useToast();
   const qc = useQueryClient();
   const [conversations, setConversations]   = useState<Conversation[]>([]);
@@ -199,6 +187,15 @@ export default function AIPage() {
   const inputRef       = useRef<HTMLInputElement>(null);
   const abortRef       = useRef<AbortController | null>(null);
 
+  const QUICK_SUGGESTIONS = [
+    { icon: TrendingUp,    label: t("ai.s1label"), msg: t("ai.s1msg") },
+    { icon: Lightbulb,     label: t("ai.s2label"), msg: t("ai.s2msg") },
+    { icon: Shield,        label: t("ai.s3label"), msg: t("ai.s3msg") },
+    { icon: Target,        label: t("ai.s4label"), msg: t("ai.s4msg") },
+    { icon: MessageSquare, label: t("ai.s5label"), msg: t("ai.s5msg") },
+    { icon: Lightbulb,     label: t("ai.s6label"), msg: t("ai.s6msg") },
+  ];
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -209,7 +206,6 @@ export default function AIPage() {
 
   useEffect(() => {
     fetchConversations().then(setConversations);
-    // Abort any in-flight stream when the component unmounts
     return () => { abortRef.current?.abort(); };
   }, []);
 
@@ -250,7 +246,6 @@ export default function AIPage() {
     if (!msg || streaming) return;
 
     setInput("");
-    // Add user message and placeholder assistant message atomically
     setMessages((prev) => [
       ...prev,
       { role: "user" as const, content: msg },
@@ -258,7 +253,6 @@ export default function AIPage() {
     ]);
     setStreaming(true);
 
-    // Timeout: abort after 90 seconds of no completion
     const controller = new AbortController();
     abortRef.current = controller;
     const timeoutId = setTimeout(() => controller.abort(), 90_000);
@@ -276,8 +270,8 @@ export default function AIPage() {
 
       if (!res.ok || !res.body) {
         const errMsg = res.status === 401
-          ? "Sessão expirada. Por favor, faça login novamente."
-          : "Erro ao conectar com a PoupaAI. Tente novamente.";
+          ? t("ai.errorSession")
+          : t("ai.errorConnect");
         setMessages((prev) =>
           prev.map((m, i) =>
             i === prev.length - 1 ? { role: "assistant" as const, content: errMsg } : m
@@ -299,7 +293,6 @@ export default function AIPage() {
         buffer = lines.pop() ?? "";
 
         for (const line of lines) {
-          // SSE comment (heartbeat) — skip
           if (line.startsWith(":")) continue;
           if (!line.startsWith("data: ")) continue;
           try {
@@ -329,10 +322,10 @@ export default function AIPage() {
               );
             } else if (data.type === "transaction_saved" && data.transaction) {
               const tx = data.transaction;
-              const typeLabel = tx.type === "income" ? "Receita" : "Despesa";
+              const typeLabel = tx.type === "income" ? t("ai.incomeLabel") : t("ai.expenseLabel");
               const amountFmt = tx.amount.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
               toast({
-                title: `${typeLabel} registrada`,
+                title: `${typeLabel} ${t("ai.registered")}`,
                 description: `${amountFmt} em ${tx.categoryName}`,
               });
               qc.invalidateQueries({ queryKey: getGetTransactionsQueryKey() });
@@ -350,12 +343,11 @@ export default function AIPage() {
       setMessages((prev) =>
         prev.map((m, i) =>
           i === prev.length - 1
-            ? { role: "assistant" as const, content: fullContent || "Não consegui gerar uma resposta.", streaming: false }
+            ? { role: "assistant" as const, content: fullContent || t("ai.noResponse"), streaming: false }
             : m
         )
       );
 
-      // Refresh conversation list after stream ends (not inside the loop)
       if (newConvId && !activeConvId) {
         setActiveConvId(newConvId);
         fetchConversations().then(setConversations);
@@ -367,9 +359,7 @@ export default function AIPage() {
           i === prev.length - 1
             ? {
                 role: "assistant" as const,
-                content: isAbort
-                  ? "Tempo esgotado. A PoupaAI demorou muito para responder. Tente novamente."
-                  : "Erro de conexão. Verifique sua internet e tente novamente.",
+                content: isAbort ? t("ai.errorTimeout") : t("ai.errorNetwork"),
               }
             : m
         )
@@ -378,7 +368,7 @@ export default function AIPage() {
       clearTimeout(timeoutId);
       setStreaming(false);
     }
-  }, [streaming, activeConvId]);
+  }, [streaming, activeConvId, t]);
 
   const isEmptyChat = messages.length === 0 && !loadingHistory;
 
@@ -391,16 +381,16 @@ export default function AIPage() {
         <div className="space-y-2 max-w-xs">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary border border-border text-xs text-muted-foreground mb-1">
             <Lock className="w-3 h-3" />
-            Disponível no Premium
+            {t("ai.premiumBadge")}
           </div>
-          <h2 className="text-xl font-bold">PoupaAI exclusivo</h2>
+          <h2 className="text-xl font-bold">{t("ai.premiumTitle")}</h2>
           <p className="text-sm text-muted-foreground leading-relaxed">
-            Seu assistente financeiro inteligente. Analisa seus dados reais e responde em tempo real — disponível apenas no plano Premium.
+            {t("ai.premiumDesc")}
           </p>
         </div>
         <Link href="/premium">
           <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-foreground text-background text-sm font-semibold hover:opacity-90 active:scale-95 transition-all">
-            Ver plano Premium
+            {t("ai.seePremium")}
             <ChevronRight className="w-4 h-4" />
           </button>
         </Link>
@@ -445,14 +435,14 @@ export default function AIPage() {
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-border text-sm text-muted-foreground hover:text-foreground hover:border-foreground/30 hover:bg-secondary/50 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Nova conversa
+            {t("ai.newConversation")}
           </button>
         </div>
 
         <div className="flex-1 overflow-y-auto px-3 pb-4 space-y-1">
           {conversations.length === 0 ? (
             <p className="text-xs text-muted-foreground text-center py-8 px-2">
-              Suas conversas aparecerão aqui
+              {t("ai.noConversations")}
             </p>
           ) : (
             conversations.map((conv) => (
@@ -475,7 +465,7 @@ export default function AIPage() {
           <button
             onClick={() => setShowSidebar(true)}
             className="md:hidden p-1.5 rounded-lg hover:bg-secondary transition-colors"
-            aria-label="Ver histórico"
+            aria-label={t("ai.newConversation")}
           >
             <MessageSquare className="w-5 h-5" />
           </button>
@@ -484,7 +474,7 @@ export default function AIPage() {
             <button
               onClick={startNew}
               className="md:hidden p-1.5 rounded-lg hover:bg-secondary transition-colors"
-              aria-label="Nova conversa"
+              aria-label={t("ai.newConversation")}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -494,7 +484,7 @@ export default function AIPage() {
           <div className="flex-1 min-w-0">
             <h2 className="font-bold text-sm">PoupaAI</h2>
             <p className="text-xs text-muted-foreground truncate">
-              {streaming ? "Digitando…" : "Assistente Financeiro · Online"}
+              {streaming ? t("ai.typing") : t("ai.online")}
             </p>
           </div>
 
@@ -503,7 +493,7 @@ export default function AIPage() {
             className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors border border-border"
           >
             <Plus className="w-3.5 h-3.5" />
-            Novo chat
+            {t("ai.newChat")}
           </button>
         </header>
 
@@ -514,16 +504,15 @@ export default function AIPage() {
               <div className="w-6 h-6 border-2 border-foreground/20 border-t-foreground rounded-full animate-spin" />
             </div>
           ) : isEmptyChat ? (
-            /* Empty state with welcome + suggestions */
             <div className="flex flex-col items-center justify-center h-full px-4 py-8 max-w-xl mx-auto text-center">
               <div className="w-16 h-16 rounded-full bg-foreground text-background flex items-center justify-center mb-5 shadow-lg">
                 <Sparkles className="w-8 h-8" />
               </div>
               <h3 className="text-xl font-bold mb-2">
-                Olá{user?.name ? `, ${user.name.split(" ")[0]}` : ""}! Sou o PoupaAI
+                {user?.name ? `${t("dashboard.greeting")}, ${user.name.split(" ")[0]}! ` : ""}{t("ai.greeting")}
               </h3>
               <p className="text-muted-foreground text-sm mb-8 max-w-sm">
-                Seu assistente financeiro pessoal. Analiso seus dados reais para oferecer insights e recomendações personalizadas.
+                {t("ai.greetingDesc")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md">
                 {QUICK_SUGGESTIONS.map(({ icon: Icon, label, msg }) => (
@@ -547,6 +536,7 @@ export default function AIPage() {
                   key={i}
                   msg={msg}
                   isLast={i === messages.length - 1}
+                  userLabel={t("ai.userLabel")}
                 />
               ))}
               <div ref={messagesEndRef} />
@@ -556,7 +546,6 @@ export default function AIPage() {
 
         {/* Input area */}
         <div className="shrink-0 px-4 pb-4 pt-3 border-t border-border bg-background">
-          {/* Quick chips (only when conversation is active and not empty) */}
           {!isEmptyChat && (
             <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-none">
               {QUICK_SUGGESTIONS.slice(0, 4).map(({ label, msg }) => (
@@ -587,7 +576,7 @@ export default function AIPage() {
                     sendMessage(input);
                   }
                 }}
-                placeholder="Pergunte sobre suas finanças…"
+                placeholder={t("ai.placeholder")}
                 disabled={streaming}
                 className="w-full px-4 py-3 pr-12 rounded-2xl border border-border bg-card text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 focus:border-foreground/30 transition-all disabled:opacity-60"
                 data-testid="input-ai-message"
@@ -597,19 +586,11 @@ export default function AIPage() {
             <button
               type="submit"
               disabled={!input.trim() || streaming}
-              className="w-11 h-11 rounded-2xl bg-foreground text-background flex items-center justify-center shrink-0 hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              data-testid="button-send"
+              className="w-11 h-11 rounded-2xl bg-foreground text-background flex items-center justify-center hover:opacity-90 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
             >
-              {streaming ? (
-                <div className="w-4 h-4 border-2 border-background/40 border-t-background rounded-full animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              <Send className="w-4 h-4" />
             </button>
           </form>
-          <p className="text-center text-xs text-muted-foreground/60 mt-2">
-            PoupaAI analisa seus dados reais · Respostas podem conter erros
-          </p>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, u
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
+import { useI18n } from "@/contexts/i18n-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,16 +11,15 @@ import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
-
-const MONTH_NAMES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-
-
 export default function Dashboard() {
   const { user } = useAuth();
   const { isDark } = useTheme();
+  const { t, locale } = useI18n();
+
   const tooltipStyle = isDark
     ? { backgroundColor: "#1A1A1A", borderColor: "#2A2A2A", color: "#fff" }
     : { backgroundColor: "#FFFFFF", borderColor: "#E0E0E0", color: "#111" };
+
   const { data: summary } = useGetDashboardSummary();
   const { data: spending, isLoading: loadingSpending } = useGetSpendingByCategory();
   const { data: trend, isLoading: loadingTrend } = useGetMonthlyTrend();
@@ -27,11 +27,15 @@ export default function Dashboard() {
   const { data: pending, isLoading: loadingPending } = useGetPendingTransactions({
     query: { staleTime: 0, queryKey: getGetPendingTransactionsQueryKey() },
   });
-  const currency = user?.currency || 'BRL';
+  const currency = user?.currency || "BRL";
+
+  function getMonthShort(month: number) {
+    return new Date(2024, month - 1, 1).toLocaleString(locale, { month: "short" });
+  }
 
   const trendData = trend?.map(t => ({
     ...t,
-    name: MONTH_NAMES[(t.month - 1) % 12],
+    name: getMonthShort(t.month),
   }));
 
   return (
@@ -39,36 +43,36 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Controle financeiro</h1>
-          <p className="text-muted-foreground">Olá, {user?.name ?? "Usuário"}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("dashboard.controlTitle")}</h1>
+          <p className="text-muted-foreground">{t("dashboard.greeting")}, {user?.name ?? "Usuário"}</p>
         </div>
 
         <div className="flex items-center gap-2 w-full md:w-auto">
           <QuickAddTransaction>
             <Button variant="outline" className="flex-1 md:flex-none bg-background">
               <Plus className="w-4 h-4 mr-2" />
-              Nova Transação
+              {t("dashboard.newTransaction")}
             </Button>
           </QuickAddTransaction>
           <Link href="/ai" className="flex-1 md:flex-none">
             <Button className="w-full bg-primary text-primary-foreground">
               <Sparkles className="w-4 h-4 mr-2" />
-              Perguntar ao PoupaAI
+              {t("dashboard.askAI")}
             </Button>
           </Link>
           <Link href="/premium" className="hidden md:flex">
-            <Button variant="outline" size="icon" className="bg-background shrink-0" aria-label="Alertas inteligentes">
+            <Button variant="outline" size="icon" className="bg-background shrink-0" aria-label={t("dashboard.billsToPay")}>
               <Bell className="w-4 h-4" />
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Cartões de Resumo */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Saldo Total</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.balance")}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -77,7 +81,7 @@ export default function Dashboard() {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Receitas do Mês</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyIncome")}</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
           </CardHeader>
           <CardContent>
@@ -86,7 +90,7 @@ export default function Dashboard() {
         </Card>
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Despesas do Mês</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyExpenses")}</CardTitle>
             <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
           </CardHeader>
           <CardContent>
@@ -96,7 +100,7 @@ export default function Dashboard() {
         <Link href="/transactions?status=pending" className="block">
           <Card className="bg-card h-full cursor-pointer hover:bg-secondary/30 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Contas a Pagar</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.billsToPay")}</CardTitle>
               <Clock className="h-4 w-4 text-[#C49A00] dark:text-[#F4C542]" />
             </CardHeader>
             <CardContent>
@@ -109,8 +113,8 @@ export default function Dashboard() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {pending?.count
-                      ? `${pending.count} ${pending.count === 1 ? "conta pendente" : "contas pendentes"}`
-                      : "Nenhuma pendência"}
+                      ? `${pending.count} ${pending.count === 1 ? t("dashboard.pendingBill") : t("dashboard.pendingBills")}`
+                      : t("dashboard.noPending")}
                   </p>
                 </>
               )}
@@ -120,12 +124,12 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Área dos Gráficos */}
+        {/* Charts area */}
         <div className="lg:col-span-2 space-y-8">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Fluxo de Caixa</CardTitle>
-              <CardDescription>Receitas x Despesas ao longo do tempo</CardDescription>
+              <CardTitle>{t("dashboard.cashFlow")}</CardTitle>
+              <CardDescription>{t("dashboard.cashFlowDesc")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="h-[300px] overflow-hidden">
@@ -136,23 +140,22 @@ export default function Dashboard() {
                     <BarChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                       <XAxis dataKey="name" stroke="#888888" fontSize={11} tickLine={false} axisLine={false} />
                       <YAxis stroke="#888888" fontSize={11} tickLine={false} axisLine={false} width={48} tickFormatter={(value) => value >= 1000 ? `${(value/1000).toFixed(0)}k` : `${value}`} />
-                      <RechartsTooltip cursor={{fill: 'transparent'}} contentStyle={tooltipStyle} />
-                      <Bar dataKey="income" name="Receitas" fill="#00C851" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="expenses" name="Despesas" fill="#FF4444" radius={[4, 4, 0, 0]} />
+                      <RechartsTooltip cursor={{fill: "transparent"}} contentStyle={tooltipStyle} />
+                      <Bar dataKey="income" name={t("dashboard.income")} fill="#00C851" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="expenses" name={t("dashboard.expenses")} fill="#FF4444" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </CardContent>
           </Card>
-
         </div>
 
-        {/* Área Lateral */}
+        {/* Sidebar */}
         <div className="space-y-8">
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle>Gastos por Categoria</CardTitle>
+              <CardTitle>{t("dashboard.spendingByCategory")}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[200px] overflow-hidden">
@@ -172,7 +175,7 @@ export default function Dashboard() {
                         paddingAngle={5}
                       >
                         {spending?.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.categoryColor || '#8884d8'} />
+                          <Cell key={`cell-${index}`} fill={entry.categoryColor || "#8884d8"} />
                         ))}
                       </Pie>
                       <RechartsTooltip contentStyle={tooltipStyle} />
@@ -196,9 +199,9 @@ export default function Dashboard() {
 
           <Card className="bg-card border-border">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Progresso das Metas</CardTitle>
+              <CardTitle>{t("dashboard.goalsProgress")}</CardTitle>
               <Link href="/goals">
-                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">Ver todas</Button>
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{t("dashboard.viewAll")}</Button>
               </Link>
             </CardHeader>
             <CardContent>
@@ -206,7 +209,7 @@ export default function Dashboard() {
                 {loadingGoals ? (
                   Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)
                 ) : goals?.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Nenhuma meta ativa.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.noGoals")}</p>
                 ) : (
                   goals?.slice(0, 3).map((g) => {
                     const progress = Math.min(100, Math.round((g.currentAmount / g.targetAmount) * 100));
@@ -219,7 +222,7 @@ export default function Dashboard() {
                         <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
                           <div
                             className="h-full bg-primary transition-all duration-500"
-                            style={{ width: `${progress}%`, backgroundColor: g.color || 'var(--primary)' }}
+                            style={{ width: `${progress}%`, backgroundColor: g.color || "var(--primary)" }}
                           />
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">

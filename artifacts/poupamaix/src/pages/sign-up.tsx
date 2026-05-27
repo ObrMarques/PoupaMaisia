@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2, RefreshCw } from "lucide-react";
+import { useI18n } from "@/contexts/i18n-context";
 
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -16,10 +17,11 @@ const googleIcon = (
 type Step = "form" | "otp";
 
 const OTP_LENGTH = 6;
-const RESEND_COOLDOWN = 60; // seconds
+const RESEND_COOLDOWN = 60;
 
 export default function SignUpPage() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const [step, setStep]           = useState<Step>("form");
   const [name, setName]           = useState("");
   const [email, setEmail]         = useState("");
@@ -29,7 +31,6 @@ export default function SignUpPage() {
   const [googleBusy, setGoogleBusy] = useState(false);
   const [error, setError]         = useState("");
 
-  // OTP state
   const [digits, setDigits]       = useState<string[]>(Array(OTP_LENGTH).fill(""));
   const [verifying, setVerifying] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -39,11 +40,10 @@ export default function SignUpPage() {
   const inputCls =
     "w-full px-3.5 py-2.5 rounded-lg bg-[#f2f2f2] border border-[#e0e0e0] text-[#111111] placeholder:text-[#a0a0a0] text-sm focus:outline-none focus:ring-2 focus:ring-[#111111]/20";
 
-  // Cooldown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
-    const t = setInterval(() => setResendCooldown(c => Math.max(0, c - 1)), 1000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setResendCooldown(c => Math.max(0, c - 1)), 1000);
+    return () => clearInterval(timer);
   }, [resendCooldown]);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -80,7 +80,6 @@ export default function SignUpPage() {
     if (digit && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
-    // Auto-verify when all digits filled
     if (digit && next.every(d => d !== "") && next.join("").length === OTP_LENGTH) {
       handleVerifyOtp(next.join(""));
     }
@@ -114,7 +113,7 @@ export default function SignUpPage() {
   async function handleVerifyOtp(code?: string) {
     const otp = code ?? digits.join("");
     if (otp.length < OTP_LENGTH) {
-      setError("Digite todos os 6 dígitos do código.");
+      setError(t("signUp.enterAllDigits"));
       return;
     }
     setVerifying(true);
@@ -130,7 +129,6 @@ export default function SignUpPage() {
         setError(data.error ?? "Código inválido.");
         return;
       }
-      // Success → redirect to sign-in
       setLocation(`${basePath}/sign-in?verified=1`, { replace: true });
     } catch {
       setError("Sem conexão com o servidor. Tente novamente.");
@@ -165,7 +163,6 @@ export default function SignUpPage() {
   }
 
   async function handleGoogle() {
-    // Import supabase only for Google OAuth (unchanged)
     const { supabase } = await import("@/lib/supabase");
     setError("");
     setGoogleBusy(true);
@@ -189,12 +186,12 @@ export default function SignUpPage() {
         <div className="space-y-1 text-center">
           <img src={`${basePath}/logo.png`} alt="PoupaMais" className="w-16 h-16 mx-auto mb-3 object-contain" />
           <h1 className="text-xl font-bold text-[#111111]">
-            {step === "form" ? "Criar sua conta" : "Verificar e-mail"}
+            {step === "form" ? t("signUp.title") : t("signUp.verifyTitle")}
           </h1>
           <p className="text-sm text-[#737373]">
             {step === "form"
-              ? "Comece sua jornada com o PoupaMais"
-              : `Insira o código enviado para ${email}`}
+              ? t("signUp.subtitle")
+              : `${t("signUp.verifySubtitle")} ${email}`}
           </p>
         </div>
 
@@ -202,19 +199,19 @@ export default function SignUpPage() {
           <>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#111111]">Nome completo</label>
+                <label className="text-sm font-medium text-[#111111]">{t("signUp.fullName")}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Seu nome"
+                  placeholder={t("signUp.fullNamePh")}
                   required
                   className={inputCls}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#111111]">E-mail</label>
+                <label className="text-sm font-medium text-[#111111]">{t("auth.email")}</label>
                 <input
                   type="email"
                   value={email}
@@ -226,13 +223,13 @@ export default function SignUpPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-[#111111]">Senha</label>
+                <label className="text-sm font-medium text-[#111111]">{t("auth.password")}</label>
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
+                    placeholder={t("signUp.passwordPh")}
                     required
                     minLength={6}
                     className={`${inputCls} pr-10`}
@@ -256,13 +253,13 @@ export default function SignUpPage() {
                 className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading && <Loader2 size={15} className="animate-spin" />}
-                {loading ? "Criando conta…" : "Criar conta"}
+                {loading ? t("signUp.creating") : t("signUp.createBtn")}
               </button>
             </form>
 
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-[#e0e0e0]" />
-              <span className="text-xs text-[#737373]">ou</span>
+              <span className="text-xs text-[#737373]">{t("signUp.or")}</span>
               <div className="flex-1 h-px bg-[#e0e0e0]" />
             </div>
 
@@ -273,19 +270,18 @@ export default function SignUpPage() {
               className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] text-sm font-medium text-[#111111] transition-colors disabled:opacity-50"
             >
               {googleBusy ? <Loader2 size={16} className="animate-spin" /> : googleIcon}
-              Continuar com Google
+              {t("signUp.continueGoogle")}
             </button>
 
             <p className="text-center text-sm text-[#737373]">
-              Já tem conta?{" "}
+              {t("signUp.alreadyHaveAccount")}{" "}
               <a href={`${basePath}/sign-in`} className="text-[#111111] font-semibold hover:underline">
-                Entrar
+                {t("signUp.signInLink")}
               </a>
             </p>
           </>
         ) : (
           <div className="space-y-6">
-            {/* OTP digit inputs */}
             <div className="flex justify-center gap-1.5 sm:gap-2.5">
               {digits.map((digit, i) => (
                 <input
@@ -316,7 +312,7 @@ export default function SignUpPage() {
               className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {verifying && <Loader2 size={15} className="animate-spin" />}
-              {verifying ? "Verificando…" : "Confirmar código"}
+              {verifying ? t("signUp.verifying") : t("signUp.verifyBtn")}
             </button>
 
             <div className="flex items-center justify-between text-sm">
@@ -325,7 +321,7 @@ export default function SignUpPage() {
                 onClick={() => { setStep("form"); setError(""); setDigits(Array(OTP_LENGTH).fill("")); }}
                 className="text-[#737373] hover:text-[#111111] transition-colors"
               >
-                ← Voltar
+                {t("signUp.back")}
               </button>
 
               <button
@@ -338,8 +334,8 @@ export default function SignUpPage() {
                   ? <Loader2 size={13} className="animate-spin" />
                   : <RefreshCw size={13} />}
                 {resendCooldown > 0
-                  ? `Reenviar em ${resendCooldown}s`
-                  : "Reenviar código"}
+                  ? `${t("signUp.resendIn")} ${resendCooldown}s`
+                  : t("signUp.resend")}
               </button>
             </div>
           </div>

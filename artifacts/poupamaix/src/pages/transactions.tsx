@@ -8,6 +8,7 @@ import {
 } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
+import { useI18n } from "@/contexts/i18n-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-// ─── Filter types ────────────────────────────────────────────────────────────
 type FilterKey = "all" | "pending" | "income" | "expense";
 
 interface FilterOption {
@@ -31,13 +31,6 @@ interface FilterOption {
   label: string;
   description: string;
 }
-
-const FILTER_OPTIONS: FilterOption[] = [
-  { key: "all",     label: "Todas",      description: "Todas as transações" },
-  { key: "pending", label: "Pendentes",  description: "Contas a pagar / data futura" },
-  { key: "income",  label: "Receitas",   description: "Entradas de dinheiro" },
-  { key: "expense", label: "Despesas",   description: "Gastos concluídos" },
-];
 
 const SESSION_KEY = "poupamaix:tx-filter";
 
@@ -48,7 +41,6 @@ function getQueryParams(filter: FilterKey): Record<string, string> {
   return {};
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
 function daysUntil(dateStr: string): number {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -56,12 +48,12 @@ function daysUntil(dateStr: string): number {
   return Math.round((d.getTime() - today.getTime()) / 86400000);
 }
 
-// ─── FilterDropdown ───────────────────────────────────────────────────────────
 function FilterDropdown({
-  value, onChange,
-}: { value: FilterKey; onChange: (k: FilterKey) => void }) {
+  value, onChange, options,
+}: { value: FilterKey; onChange: (k: FilterKey) => void; options: FilterOption[] }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -78,22 +70,18 @@ function FilterDropdown({
       <Button
         variant="outline"
         onClick={() => setOpen(o => !o)}
-        className={cn(
-          "gap-2 transition-all",
-          active && "border-foreground/40 bg-secondary"
-        )}
-        aria-label="Filtrar transações"
+        className={cn("gap-2 transition-all", active && "border-foreground/40 bg-secondary")}
+        aria-label={t("transactions.filterBtn")}
       >
         <SlidersHorizontal className="w-4 h-4" />
         <span className="hidden sm:inline">
-          {active ? FILTER_OPTIONS.find(o => o.key === value)?.label : "Filtrar"}
+          {active ? options.find(o => o.key === value)?.label : t("transactions.filterBtn")}
         </span>
         {active && (
           <span className="w-1.5 h-1.5 rounded-full bg-foreground/60 sm:hidden" />
         )}
       </Button>
 
-      {/* Dropdown panel */}
       <div
         className={cn(
           "absolute right-0 top-[calc(100%+6px)] z-50 min-w-[210px]",
@@ -105,7 +93,7 @@ function FilterDropdown({
         )}
       >
         <div className="p-1.5">
-          {FILTER_OPTIONS.map((opt) => {
+          {options.map((opt) => {
             const isSelected = value === opt.key;
             return (
               <button
@@ -141,10 +129,17 @@ function FilterDropdown({
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 export default function Transactions() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
+
+  const filterOptions: FilterOption[] = [
+    { key: "all",     label: t("transactions.filterAll"),     description: t("transactions.filterAllDesc") },
+    { key: "pending", label: t("transactions.filterPending"), description: t("transactions.filterPendingDesc") },
+    { key: "income",  label: t("transactions.filterIncome"),  description: t("transactions.filterIncomeDesc") },
+    { key: "expense", label: t("transactions.filterExpense"), description: t("transactions.filterExpenseDesc") },
+  ];
 
   const [filter, setFilter] = useState<FilterKey>(() => {
     try { return (sessionStorage.getItem(SESSION_KEY) as FilterKey) || "all"; }
@@ -180,7 +175,6 @@ export default function Transactions() {
   const deleteMutation = useDeleteTransaction();
   const payMutation    = usePayTransaction();
 
-  // Persist filter in session storage
   const handleFilterChange = (k: FilterKey) => {
     setFilter(k);
     try { sessionStorage.setItem(SESSION_KEY, k); } catch { /* noop */ }
@@ -203,7 +197,7 @@ export default function Transactions() {
       getGetSpendingByCategoryQueryKey(),
       getGetMonthlyTrendQueryKey(),
       getGetPendingTransactionsQueryKey(),
-    ].forEach(key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'all' }));
+    ].forEach(key => queryClient.invalidateQueries({ queryKey: key, refetchType: "all" }));
   };
 
   const resetForm = () => {
@@ -213,19 +207,19 @@ export default function Transactions() {
     setNotes(""); setEditingTransaction(null); setWalletError(false);
   };
 
-  const handleOpenModal = (t?: any) => {
-    if (t) {
-      setEditingTransaction(t);
-      setAmount(t.amount.toFixed(2));
-      setDescription(t.description ?? "");
-      setDate(t.date.split("T")[0]);
-      setType(t.type);
-      setCategoryId(t.categoryId.toString());
-      setCategoryName(t.categoryName || "");
-      setWalletId(t.walletId ?? null);
-      setWalletName(t.walletName ?? null);
-      setWalletColor(t.walletColor ?? null);
-      setNotes(t.notes || "");
+  const handleOpenModal = (tx?: any) => {
+    if (tx) {
+      setEditingTransaction(tx);
+      setAmount(tx.amount.toFixed(2));
+      setDescription(tx.description ?? "");
+      setDate(tx.date.split("T")[0]);
+      setType(tx.type);
+      setCategoryId(tx.categoryId.toString());
+      setCategoryName(tx.categoryName || "");
+      setWalletId(tx.walletId ?? null);
+      setWalletName(tx.walletName ?? null);
+      setWalletColor(tx.walletColor ?? null);
+      setNotes(tx.notes || "");
     } else {
       resetForm();
       if (walletList.length === 1) {
@@ -295,7 +289,7 @@ export default function Transactions() {
     const txQueryKey = getGetTransactionsQueryKey(queryParams as any);
     const prev = queryClient.getQueryData(txQueryKey);
     queryClient.setQueryData(txQueryKey, (old: any) =>
-      Array.isArray(old) ? old.filter((t: any) => t.id !== id) : old
+      Array.isArray(old) ? old.filter((tx: any) => tx.id !== id) : old
     );
     deleteMutation.mutate({ id }, {
       onError: () => queryClient.setQueryData(txQueryKey, prev),
@@ -309,27 +303,27 @@ export default function Transactions() {
 
   const noWallets = walletList.length === 0;
   const canSave   = !!amount && !!categoryId && !!walletId;
-  const emptyMsg  = filter === "pending" ? "Nenhuma conta a pagar." : "Nenhuma transação encontrada.";
+  const emptyMsg  = filter === "pending" ? t("transactions.noPendingMsg") : t("transactions.noTransactions");
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-5 animate-in fade-in">
 
-      {/* ── Header ───────────────────────────────────── */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Transações</h1>
-          <p className="text-muted-foreground">Gerencie suas receitas e despesas.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("transactions.title")}</h1>
+          <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
-                <Plus className="w-4 h-4 mr-2" /> Nova Transação
+                <Plus className="w-4 h-4 mr-2" /> {t("transactions.newTransaction")}
               </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingTransaction ? "Editar Transação" : "Nova Transação"}</DialogTitle>
+                <DialogTitle>{editingTransaction ? t("transactions.editTransaction") : t("transactions.newTransaction")}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -337,56 +331,56 @@ export default function Transactions() {
                     variant={type === "expense" ? "default" : "outline"}
                     className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
                     onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
-                  >Despesa</Button>
+                  >{t("transactions.expense")}</Button>
                   <Button
                     variant={type === "income" ? "default" : "outline"}
                     className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
                     onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
-                  >Receita</Button>
+                  >{t("transactions.income")}</Button>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Valor</Label>
+                  <Label>{t("transactions.amount")}</Label>
                   <CurrencyInput value={amount} onValueChange={setAmount} className="bg-background text-lg font-semibold h-12" data-testid="input-amount" />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Descrição</Label>
-                  <Input placeholder="Ex: Supermercado Extra" value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
+                  <Label>{t("transactions.description")}</Label>
+                  <Input placeholder={t("transactions.descPlaceholder")} value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>
-                      Data{" "}
+                      {t("transactions.date")}{" "}
                       {date > new Date().toISOString().split("T")[0] && (
                         <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#FFF8E1] dark:bg-[#F4C542]/10 text-[#8B6914] dark:text-[#F4C542] ml-1">
-                          pendente
+                          {t("transactions.pendingBadge")}
                         </span>
                       )}
                     </Label>
                     <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
                   </div>
                   <div className="space-y-2">
-                    <Label>Categoria</Label>
+                    <Label>{t("transactions.category")}</Label>
                     <button
                       type="button"
                       onClick={() => setIsCategoryPickerOpen(true)}
                       className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
                       data-testid="select-category"
                     >
-                      <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || "Selecionar..."}</span>
+                      <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || t("transactions.selectCategory")}</span>
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Carteira <span className="text-destructive text-xs">*</span></Label>
+                  <Label>{t("transactions.wallet")} <span className="text-destructive text-xs">*</span></Label>
                   {noWallets ? (
                     <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>Crie uma carteira antes de adicionar transações.</span>
+                      <span>{t("transactions.noWalletWarning")}</span>
                     </div>
                   ) : (
                     <button
@@ -402,7 +396,7 @@ export default function Transactions() {
                       ) : (
                         <>
                           <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                          <span className="flex-1 text-left text-muted-foreground">Selecionar carteira...</span>
+                          <span className="flex-1 text-left text-muted-foreground">{t("transactions.selectWallet")}</span>
                         </>
                       )}
                       <ChevronRight className="w-4 h-4 text-muted-foreground" />
@@ -411,48 +405,48 @@ export default function Transactions() {
                   {walletError && (
                     <p className="text-xs text-destructive flex items-center gap-1">
                       <AlertCircle className="w-3 h-3" />
-                      Selecione uma carteira para continuar.
+                      {t("transactions.walletRequired")}
                     </p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Observações <span className="text-muted-foreground text-xs">(opcional)</span></Label>
-                  <Input placeholder="Notas adicionais..." value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
+                  <Label>{t("transactions.notes")} <span className="text-muted-foreground text-xs">({t("common.optional")})</span></Label>
+                  <Input placeholder={t("transactions.notesPlaceholder")} value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>{t("common.cancel")}</Button>
                 <Button onClick={handleSave} disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending} data-testid="button-save">
-                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                  {createMutation.isPending || updateMutation.isPending ? t("transactions.saving") : t("common.save")}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-          <FilterDropdown value={filter} onChange={handleFilterChange} />
+          <FilterDropdown value={filter} onChange={handleFilterChange} options={filterOptions} />
         </div>
       </div>
 
       <CategoryPicker open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen} value={categoryId} type={type} onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }} />
       <WalletPicker open={isWalletPickerOpen} onOpenChange={setIsWalletPickerOpen} value={walletId} onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }} />
 
-      {/* ── Active filter indicator ───────────────────── */}
+      {/* Active filter indicator */}
       {filter !== "all" && (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span>Mostrando:</span>
+          <span>{t("transactions.showing")}</span>
           <span className="font-medium text-foreground">
-            {FILTER_OPTIONS.find(o => o.key === filter)?.description}
+            {filterOptions.find(o => o.key === filter)?.description}
           </span>
           <button
             onClick={() => handleFilterChange("all")}
             className="text-xs underline-offset-2 hover:underline ml-1"
           >
-            Limpar filtro
+            {t("transactions.clearFilter")}
           </button>
         </div>
       )}
 
-      {/* ── Transaction list ─────────────────────────── */}
+      {/* Transaction list */}
       <Card className="bg-card border-border">
         <CardContent className="p-0">
           <div className="divide-y divide-border">
@@ -462,31 +456,38 @@ export default function Transactions() {
               <div className="p-12 text-center">
                 <p className="text-muted-foreground">{emptyMsg}</p>
                 <Button variant="outline" className="mt-4 bg-background" onClick={() => handleOpenModal()}>
-                  <Plus className="w-4 h-4 mr-2" /> Adicionar transação
+                  <Plus className="w-4 h-4 mr-2" /> {t("transactions.addTransaction")}
                 </Button>
               </div>
             ) : (
-              transactions?.map((t) => {
-                const isPending = t.status === "pending";
-                const days      = isPending ? daysUntil(t.date) : 0;
+              transactions?.map((tx) => {
+                const isPending = tx.status === "pending";
+                const days      = isPending ? daysUntil(tx.date) : 0;
                 const isUrgent  = isPending && days <= 3 && days >= 0;
                 const isOverdue = isPending && days < 0;
 
+                const statusLabel = isOverdue
+                  ? t("transactions.overdue")
+                  : days === 0
+                    ? t("transactions.today")
+                    : days === 1
+                      ? t("transactions.tomorrow")
+                      : `${days}${t("transactions.dUnit")}`;
+
                 return (
                   <div
-                    key={t.id}
+                    key={tx.id}
                     className={cn(
                       "flex items-center justify-between p-4 transition-colors",
                       isPending
                         ? "bg-[#FFF8E1] dark:bg-[#F4C542]/5 hover:bg-[#FFF3CC] dark:hover:bg-[#F4C542]/10"
                         : "hover:bg-secondary/30"
                     )}
-                    data-testid={`row-transaction-${t.id}`}
+                    data-testid={`row-transaction-${tx.id}`}
                   >
-                    {/* Left: icon + details */}
-                    <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(t)}>
+                    <div className="flex items-center gap-4 flex-1 cursor-pointer min-w-0" onClick={() => handleOpenModal(tx)}>
                       <div className="relative">
-                        <CategoryIcon name={t.categoryName || ""} color={t.categoryColor || "#6C5CE7"} />
+                        <CategoryIcon name={tx.categoryName || ""} color={tx.categoryColor || "#6C5CE7"} />
                         {isPending && (
                           <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#F4C542] flex items-center justify-center">
                             <Clock className="w-2.5 h-2.5 text-[#3D2800]" />
@@ -495,72 +496,74 @@ export default function Transactions() {
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-medium text-foreground truncate">{t.description || t.categoryName}</p>
+                          <p className="font-medium text-foreground truncate">{tx.description || tx.categoryName}</p>
                           {isPending && (
                             <span className={cn(
                               "text-[10px] font-semibold px-1.5 py-0.5 rounded-full border shrink-0",
                               isOverdue
-                                ? "bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800"
+                                ? "bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400"
                                 : isUrgent
-                                  ? "bg-orange-100 dark:bg-orange-950/30 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800"
-                                  : "bg-[#FFF3CC] dark:bg-[#F4C542]/15 text-[#8B6914] dark:text-[#F4C542] border-[#F4C542]/40"
+                                  ? "bg-[#FFF8E1] dark:bg-[#F4C542]/10 border-[#F4C542]/40 text-[#8B6914] dark:text-[#F4C542]"
+                                  : "bg-secondary border-border text-muted-foreground"
                             )}>
-                              {isOverdue ? "Vencida" : isUrgent ? "Vence em breve" : "Conta a Pagar"}
+                              {statusLabel}
+                            </span>
+                          )}
+                          {!isPending && tx.status === "completed" && tx.type === "expense" && (
+                            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">
+                              {t("transactions.paid")}
                             </span>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                          <span className="text-xs text-muted-foreground">
-                            {isPending
-                              ? `Vence em ${new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}`
-                              : new Date(t.date + "T00:00:00").toLocaleDateString("pt-BR")}
-                          </span>
-                          {t.categoryName && (
-                            <>
-                              <span className="text-xs text-muted-foreground">·</span>
-                              <Badge variant="outline" className="text-xs py-0 px-1.5 border-border font-normal">{t.categoryName}</Badge>
-                            </>
-                          )}
-                          {t.walletName && (
-                            <>
-                              <span className="text-xs text-muted-foreground">·</span>
-                              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: t.walletColor || "#6B7280" }} />
-                                {t.walletName}
-                              </span>
-                            </>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(tx.date + "T00:00:00").toLocaleDateString()}
+                          </p>
+                          {tx.walletName && (
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tx.walletColor || "#888" }} />
+                              <p className="text-xs text-muted-foreground truncate max-w-[80px]">{tx.walletName}</p>
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: amount + actions */}
-                    <div className="flex items-center gap-2 ml-4 shrink-0">
-                      <div className={cn(
-                        "font-semibold text-right tabular-nums",
-                        isPending
-                          ? "text-[#8B6914] dark:text-[#F4C542]"
-                          : t.type === "income" ? "text-[#00C851]" : "text-foreground"
+                    <div className="flex items-center gap-2 shrink-0 ml-3">
+                      <span className={cn(
+                        "font-semibold tabular-nums text-sm",
+                        tx.type === "income" ? "text-[#00C851]" : isPending ? "text-[#C49A00] dark:text-[#F4C542]" : "text-foreground"
                       )}>
-                        {t.type === "income" ? "+" : "-"}{formatCurrency(t.amount, user?.currency)}
-                      </div>
-                      <div className="flex gap-0.5">
-                        {isPending && (
-                          <Button
-                            variant="ghost" size="icon"
-                            className="h-8 w-8 text-[#8B6914] dark:text-[#F4C542] hover:bg-[#F4C542]/20"
-                            title="Marcar como pago"
-                            onClick={() => handleMarkPaid(t.id)}
-                            disabled={payMutation.isPending}
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </Button>
-                        )}
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => handleOpenModal(t)}>
-                          <Pencil className="w-3.5 h-3.5" />
+                        {tx.type === "income" ? "+" : "-"}{formatCurrency(tx.amount, user?.currency || "BRL")}
+                      </span>
+
+                      {isPending && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 px-2 text-xs bg-background shrink-0"
+                          onClick={() => handleMarkPaid(tx.id)}
+                          disabled={payMutation.isPending}
+                        >
+                          <CheckCircle2 className="w-3 h-3 mr-1" />
+                          {t("transactions.payBtn")}
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(t.id)} data-testid={`button-delete-${t.id}`}>
-                          <Trash2 className="w-3.5 h-3.5" />
+                      )}
+
+                      <div className="flex gap-0.5">
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                          onClick={() => handleOpenModal(tx)}
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </Button>
+                        <Button
+                          variant="ghost" size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleDelete(tx.id)}
+                        >
+                          <Trash2 className="w-3 h-3" />
                         </Button>
                       </div>
                     </div>

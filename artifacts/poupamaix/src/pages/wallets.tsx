@@ -7,6 +7,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useI18n } from "@/contexts/i18n-context";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ const PRESET_COLORS = [
   "#06B6D4", "#6B7280",
 ];
 
-// Icon identifiers stored in DB
 type WalletIconId = "wallet" | "landmark" | "briefcase" | "piggy-bank" | "dollar" | "credit-card" | "banknote";
 
 const WALLET_ICON_MAP: Record<string, LucideIcon> = {
@@ -39,7 +39,6 @@ const WALLET_ICON_MAP: Record<string, LucideIcon> = {
   dollar: DollarSign,
   "credit-card": CreditCard,
   banknote: Banknote,
-  // Legacy emoji fallbacks — map old DB values to icons
   "💰": Wallet,
   "🏦": Landmark,
   "💼": Briefcase,
@@ -67,6 +66,7 @@ const FREE_WALLET_LIMIT = 2;
 export default function Wallets() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
   const currency = user?.currency || "BRL";
   const { isPremium } = useSubscription();
 
@@ -82,10 +82,10 @@ export default function Wallets() {
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),    refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(), refetchType: 'all' });
-    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),        refetchType: 'all' });
+    queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey(),    refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: getGetSpendingByCategoryQueryKey(), refetchType: "all" });
+    queryClient.invalidateQueries({ queryKey: getGetMonthlyTrendQueryKey(),        refetchType: "all" });
   };
 
   const openCreate = () => {
@@ -135,26 +135,26 @@ export default function Wallets() {
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 animate-in fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Carteiras</h1>
-          <p className="text-muted-foreground">Gerencie suas contas e fontes de dinheiro.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("wallets.title")}</h1>
+          <p className="text-muted-foreground">{t("wallets.subtitle")}</p>
         </div>
 
         <div className="flex gap-2 w-full md:w-auto">
           <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
             <DialogTrigger asChild>
               <Button onClick={openCreate} data-testid="button-add-wallet">
-                <Plus className="w-4 h-4 mr-2" /> Nova Carteira
+                <Plus className="w-4 h-4 mr-2" /> {t("wallets.newWallet")}
               </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined} className="sm:max-w-[440px]">
               <DialogHeader>
-                <DialogTitle>{editingId !== null ? "Editar Carteira" : "Nova Carteira"}</DialogTitle>
+                <DialogTitle>{editingId !== null ? t("wallets.editWallet") : t("wallets.newWallet")}</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="space-y-2">
-                  <Label>Nome</Label>
+                  <Label>{t("wallets.name")}</Label>
                   <Input
-                    placeholder="Ex: Conta Corrente, Poupança..."
+                    placeholder={t("wallets.namePlaceholder")}
                     value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     className="bg-background"
@@ -163,7 +163,7 @@ export default function Wallets() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Saldo inicial</Label>
+                  <Label>{t("wallets.initialBalance")}</Label>
                   <CurrencyInput
                     value={form.initialBalance}
                     onValueChange={v => setForm(f => ({ ...f, initialBalance: v }))}
@@ -171,12 +171,12 @@ export default function Wallets() {
                     placeholder="R$ 0,00"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Valor que você já possui nessa conta antes de registrar transações.
+                    {t("wallets.initialBalanceDesc")}
                   </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Ícone</Label>
+                  <Label>{t("wallets.icon")}</Label>
                   <div className="flex flex-wrap gap-2">
                     {PRESET_ICONS.map(iconId => (
                       <button
@@ -195,7 +195,7 @@ export default function Wallets() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Cor</Label>
+                  <Label>{t("wallets.color")}</Label>
                   <div className="flex flex-wrap gap-2">
                     {PRESET_COLORS.map(color => (
                       <button
@@ -219,22 +219,22 @@ export default function Wallets() {
                     <WalletIcon icon={form.icon} className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-medium">{form.name || "Nome da carteira"}</p>
+                    <p className="font-medium">{form.name || t("wallets.previewPlaceholder")}</p>
                     {form.initialBalance && parseFloat(form.initialBalance) !== 0 && (
                       <p className="text-xs text-muted-foreground">
-                        Saldo inicial: {formatCurrency(parseFloat(form.initialBalance), currency)}
+                        {t("wallets.initialBalance")}: {formatCurrency(parseFloat(form.initialBalance), currency)}
                       </p>
                     )}
                   </div>
                 </div>
               </div>
               <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
+                <Button variant="outline" onClick={() => setIsModalOpen(false)}>{t("common.cancel")}</Button>
                 <Button
                   onClick={handleSave}
                   disabled={!form.name.trim() || createMutation.isPending || updateMutation.isPending}
                 >
-                  {createMutation.isPending || updateMutation.isPending ? "Salvando..." : "Salvar"}
+                  {createMutation.isPending || updateMutation.isPending ? t("common.saving") : t("common.save")}
                 </Button>
               </div>
             </DialogContent>
@@ -248,7 +248,7 @@ export default function Wallets() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Wallet className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Saldo total em carteiras</span>
+                <span className="text-sm text-muted-foreground">{t("wallets.totalBalance")}</span>
               </div>
               <span className={`font-bold text-lg tabular-nums ${totalBalance >= 0 ? "text-[#00C851]" : "text-[#FF4444]"}`}>
                 {formatCurrency(totalBalance, currency)}
@@ -261,7 +261,7 @@ export default function Wallets() {
       <div className="space-y-3">
         {isLoading ? (
           <Card className="bg-card border-border">
-            <CardContent className="p-8 text-center text-muted-foreground">Carregando...</CardContent>
+            <CardContent className="p-8 text-center text-muted-foreground">{t("wallets.loading")}</CardContent>
           </Card>
         ) : (wallets ?? []).length === 0 ? (
           <Card className="bg-card border-border">
@@ -269,10 +269,10 @@ export default function Wallets() {
               <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
                 <Briefcase className="w-8 h-8 text-muted-foreground" />
               </div>
-              <p className="text-muted-foreground">Nenhuma carteira criada ainda.</p>
+              <p className="text-muted-foreground">{t("wallets.noWallets")}</p>
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <Button variant="outline" onClick={openCreate} className="bg-background">
-                  <Plus className="w-4 h-4 mr-2" /> Criar primeira carteira
+                  <Plus className="w-4 h-4 mr-2" /> {t("wallets.createFirst")}
                 </Button>
               </div>
             </CardContent>
@@ -308,7 +308,7 @@ export default function Wallets() {
                       </p>
                       {w.initialBalance !== 0 && (
                         <p className="text-xs text-muted-foreground">
-                          saldo inicial: {formatCurrency(w.initialBalance, currency)}
+                          {t("wallets.initialBalance").toLowerCase()}: {formatCurrency(w.initialBalance, currency)}
                         </p>
                       )}
                     </div>
@@ -345,19 +345,19 @@ export default function Wallets() {
       <Dialog open={confirmDeleteId !== null} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
         <DialogContent aria-describedby={undefined} className="sm:max-w-[360px]">
           <DialogHeader>
-            <DialogTitle>Excluir carteira?</DialogTitle>
+            <DialogTitle>{t("wallets.deleteTitle")}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            As transações vinculadas a esta carteira não serão excluídas, apenas desvinculadas.
+            {t("wallets.deleteDesc")}
           </p>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>{t("common.cancel")}</Button>
             <Button
               variant="destructive"
               onClick={() => confirmDeleteId !== null && handleDelete(confirmDeleteId)}
               disabled={deleteMutation.isPending}
             >
-              {deleteMutation.isPending ? "Excluindo..." : "Excluir"}
+              {deleteMutation.isPending ? t("wallets.deleting") : t("common.delete")}
             </Button>
           </div>
         </DialogContent>

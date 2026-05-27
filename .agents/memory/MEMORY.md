@@ -1,0 +1,1 @@
+- [i18n implementation](i18n-implementation.md) — full 4-language i18n (pt-BR, en, es, fr) covering all pages; translations.ts is the single source of truth

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { useI18n } from "@/contexts/i18n-context";
 
 const basePath = import.meta.env.BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -16,6 +17,7 @@ const googleIcon = (
 
 export default function SignInPage() {
   const [, setLocation] = useLocation();
+  const { t } = useI18n();
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -37,7 +39,7 @@ export default function SignInPage() {
         return;
       }
       setLocation("/dashboard", { replace: true });
-    } catch (err: any) {
+    } catch {
       setError("Erro ao entrar. Tente novamente.");
     } finally {
       setLoading(false);
@@ -55,7 +57,7 @@ export default function SignInPage() {
         },
       });
       if (oauthError) setError(translateSupabaseError(oauthError.message));
-    } catch (err: any) {
+    } catch {
       setError("Erro ao entrar com Google.");
     } finally {
       setGoogleBusy(false);
@@ -68,13 +70,13 @@ export default function SignInPage() {
 
         <div className="space-y-1 text-center">
           <img src={`${basePath}/logo.png`} alt="PoupaMais" className="w-16 h-16 mx-auto mb-3 object-contain" />
-          <h1 className="text-xl font-bold text-[#111111]">Bem-vindo de volta</h1>
-          <p className="text-sm text-[#737373]">Entre com sua conta para continuar</p>
+          <h1 className="text-xl font-bold text-[#111111]">{t("signIn.title")}</h1>
+          <p className="text-sm text-[#737373]">{t("signIn.subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#111111]">E-mail</label>
+            <label className="text-sm font-medium text-[#111111]">{t("auth.email")}</label>
             <input
               type="email"
               value={email}
@@ -87,13 +89,13 @@ export default function SignInPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-[#111111]">Senha</label>
+            <label className="text-sm font-medium text-[#111111]">{t("auth.password")}</label>
             <div className="relative">
               <input
                 type={showPass ? "text" : "password"}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder="Sua senha"
+                placeholder={t("auth.password")}
                 required
                 autoComplete="current-password"
                 className={`${inputCls} pr-10`}
@@ -117,13 +119,13 @@ export default function SignInPage() {
             className="w-full py-2.5 rounded-lg bg-[#111111] hover:bg-[#333333] text-white text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading && <Loader2 size={15} className="animate-spin" />}
-            Entrar
+            {t("signIn.signInBtn")}
           </button>
         </form>
 
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-[#e0e0e0]" />
-          <span className="text-xs text-[#737373]">ou</span>
+          <span className="text-xs text-[#737373]">{t("signIn.or")}</span>
           <div className="flex-1 h-px bg-[#e0e0e0]" />
         </div>
 
@@ -134,19 +136,19 @@ export default function SignInPage() {
           className="w-full flex items-center justify-center gap-3 px-4 py-2.5 rounded-lg border border-[#e0e0e0] bg-white hover:bg-[#f5f5f5] text-sm font-medium text-[#111111] transition-colors disabled:opacity-50"
         >
           {googleBusy ? <Loader2 size={16} className="animate-spin" /> : googleIcon}
-          Continuar com Google
+          {t("signIn.continueGoogle")}
         </button>
 
         <div className="space-y-2 text-center">
           <p className="text-sm text-[#737373]">
             <a href={`${basePath}/forgot-password`} className="text-[#111111] font-semibold hover:underline">
-              Esqueci minha senha
+              {t("signIn.forgotPassword")}
             </a>
           </p>
           <p className="text-sm text-[#737373]">
-            Não tem conta?{" "}
+            {t("signIn.noAccount")}{" "}
             <a href={`${basePath}/sign-up`} className="text-[#111111] font-semibold hover:underline">
-              Criar conta
+              {t("signIn.createAccount")}
             </a>
           </p>
         </div>

@@ -6,6 +6,7 @@ import {
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useI18n } from "@/contexts/i18n-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,14 +19,6 @@ import { Plus, Pencil, Trash2, TrendingUp, PiggyBank, Plane, Shield, ShoppingBag
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LucideIcon } from "lucide-react";
 
-const GOAL_TYPES: Record<string, string> = {
-  savings:   "Poupança",
-  travel:    "Viagem",
-  emergency: "Emergência",
-  purchase:  "Compra",
-  other:     "Personalizada",
-};
-
 const GOAL_ICON_MAP: Record<string, LucideIcon> = {
   savings:   PiggyBank,
   travel:    Plane,
@@ -33,18 +26,6 @@ const GOAL_ICON_MAP: Record<string, LucideIcon> = {
   purchase:  ShoppingBag,
   other:     Target,
 };
-
-function GoalTypeIcon({ type, color }: { type: string; color: string }) {
-  const Icon = GOAL_ICON_MAP[type] ?? Target;
-  return (
-    <div
-      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-      style={{ backgroundColor: `${color}20`, color }}
-    >
-      <Icon className="w-5 h-5" />
-    </div>
-  );
-}
 
 const EXAMPLES: Record<string, string[]> = {
   savings:   ["Reserva de emergência", "Fundo de aposentadoria"],
@@ -67,9 +48,21 @@ const GOAL_COLORS = [
 
 type GoalType = "savings" | "travel" | "emergency" | "purchase" | "other";
 
+function GoalTypeIcon({ type, color }: { type: string; color: string }) {
+  const Icon = GOAL_ICON_MAP[type] ?? Target;
+  return (
+    <div
+      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+      style={{ backgroundColor: `${color}20`, color }}
+    >
+      <Icon className="w-5 h-5" />
+    </div>
+  );
+}
+
 function GoalForm({
   name, setName, targetAmount, setTargetAmount, currentAmount, setCurrentAmount,
-  type, color, setColor, deadline, setDeadline, isEditing,
+  type, color, setColor, deadline, setDeadline, isEditing, t,
 }: {
   name: string; setName: (v: string) => void;
   targetAmount: string; setTargetAmount: (v: string) => void;
@@ -78,13 +71,14 @@ function GoalForm({
   color: string; setColor: (v: string) => void;
   deadline: string; setDeadline: (v: string) => void;
   isEditing: boolean;
+  t: (key: string) => string;
 }) {
   return (
     <div className="space-y-4 py-2">
       <div className="space-y-2">
-        <Label>{type === "other" ? "Qual é o seu objetivo?" : "Nome da meta"}</Label>
+        <Label>{type === "other" ? t("goals.goalNameCustom") : t("goals.goalName")}</Label>
         <Input
-          placeholder={type === "other" ? "Ex: Casa própria, iPhone, Curso..." : (EXAMPLES[type]?.[0] ?? "Nome da meta")}
+          placeholder={type === "other" ? "Ex: Casa própria, iPhone, Curso..." : (EXAMPLES[type]?.[0] ?? t("goals.goalName"))}
           value={name}
           onChange={e => setName(e.target.value)}
           className="bg-background"
@@ -108,7 +102,7 @@ function GoalForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-2">
-          <Label>Valor alvo</Label>
+          <Label>{t("goals.targetAmount")}</Label>
           <CurrencyInput
             value={targetAmount}
             onValueChange={setTargetAmount}
@@ -117,7 +111,7 @@ function GoalForm({
           />
         </div>
         <div className="space-y-2">
-          <Label>Valor atual <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+          <Label>{t("goals.currentAmount")} <span className="text-muted-foreground text-xs">({t("goals.optional")})</span></Label>
           <CurrencyInput
             value={currentAmount}
             onValueChange={setCurrentAmount}
@@ -127,7 +121,7 @@ function GoalForm({
       </div>
 
       <div className="space-y-2">
-        <Label>Prazo <span className="text-muted-foreground text-xs">(opcional)</span></Label>
+        <Label>{t("goals.deadline")} <span className="text-muted-foreground text-xs">({t("goals.optional")})</span></Label>
         <Input
           type="date"
           value={deadline}
@@ -137,7 +131,7 @@ function GoalForm({
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">COR DA META</Label>
+        <Label className="text-xs text-muted-foreground">{t("goals.goalColor")}</Label>
         <div className="grid grid-cols-8 gap-1.5">
           {GOAL_COLORS.map(c => (
             <button
@@ -162,6 +156,7 @@ const FREE_GOAL_LIMIT = 2;
 export default function Goals() {
   const { user } = useAuth();
   const { isPremium } = useSubscription();
+  const { t } = useI18n();
   const queryClient = useQueryClient();
 
   const { data: goals, isLoading } = useGetGoals();
@@ -169,6 +164,14 @@ export default function Goals() {
   const updateMutation     = useUpdateGoal();
   const deleteMutation     = useDeleteGoal();
   const contributeMutation = useContributeToGoal();
+
+  const goalTypeLabels: Record<string, string> = {
+    savings:   t("goals.typeSavings"),
+    travel:    t("goals.typeTravel"),
+    emergency: t("goals.typeEmergency"),
+    purchase:  t("goals.typePurchase"),
+    other:     t("goals.typeOther"),
+  };
 
   const [isFormOpen, setIsFormOpen]               = useState(false);
   const [isContributeOpen, setIsContributeOpen]   = useState(false);
@@ -280,19 +283,19 @@ export default function Goals() {
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-in fade-in">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Metas Financeiras</h1>
-          <p className="text-muted-foreground">Acompanhe suas economias e conquistas.</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t("goals.title")}</h1>
+          <p className="text-muted-foreground">{t("goals.subtitle")}</p>
         </div>
         <div className="flex items-center gap-3">
           <Dialog open={isFormOpen} onOpenChange={(open) => { setIsFormOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button onClick={openCreate} data-testid="button-new-goal">
-                <Plus className="w-4 h-4 mr-2" /> Nova Meta
+                <Plus className="w-4 h-4 mr-2" /> {t("goals.newGoal")}
               </Button>
             </DialogTrigger>
             <DialogContent aria-describedby={undefined} className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{editingGoal ? "Editar Meta" : "Criar Nova Meta"}</DialogTitle>
+                <DialogTitle>{editingGoal ? t("goals.editGoal") : t("goals.createGoal")}</DialogTitle>
               </DialogHeader>
 
               <GoalForm
@@ -303,17 +306,18 @@ export default function Goals() {
                 color={color} setColor={setColor}
                 deadline={deadline} setDeadline={setDeadline}
                 isEditing={!!editingGoal}
+                t={t}
               />
 
               <div className="flex justify-between gap-2 pt-2">
                 {editingGoal ? (
                   showDeleteConfirm ? (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs text-muted-foreground">Confirmar exclusão?</span>
+                      <span className="text-xs text-muted-foreground">{t("goals.confirmDelete")}</span>
                       <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
-                        Sim, excluir
+                        {t("goals.yesDelete")}
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>Não</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>{t("goals.no")}</Button>
                     </div>
                   ) : (
                     <Button
@@ -321,14 +325,14 @@ export default function Goals() {
                       className="text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => setShowDeleteConfirm(true)}
                     >
-                      <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Excluir
+                      <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t("common.delete")}
                     </Button>
                   )
                 ) : <div />}
                 <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+                  <Button variant="outline" onClick={() => setIsFormOpen(false)}>{t("common.cancel")}</Button>
                   <Button onClick={handleSave} disabled={isPending || !name.trim() || !targetAmount}>
-                    {isPending ? "Salvando..." : editingGoal ? "Salvar" : "Criar Meta"}
+                    {isPending ? t("goals.saving") : editingGoal ? t("common.save") : t("goals.createGoal")}
                   </Button>
                 </div>
               </div>
@@ -341,11 +345,11 @@ export default function Goals() {
       <Dialog open={isContributeOpen} onOpenChange={setIsContributeOpen}>
         <DialogContent aria-describedby={undefined} className="sm:max-w-[380px]">
           <DialogHeader>
-            <DialogTitle>Adicionar Contribuição</DialogTitle>
+            <DialogTitle>{t("goals.contributeTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Quanto deseja adicionar?</Label>
+              <Label>{t("goals.howMuch")}</Label>
               <CurrencyInput
                 value={contributeAmount}
                 onValueChange={setContributeAmount}
@@ -364,9 +368,9 @@ export default function Goals() {
             </div>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsContributeOpen(false)}>Cancelar</Button>
+            <Button variant="outline" onClick={() => setIsContributeOpen(false)}>{t("common.cancel")}</Button>
             <Button onClick={handleContribute} disabled={contributeMutation.isPending || !contributeAmount}>
-              {contributeMutation.isPending ? "Salvando..." : "Confirmar"}
+              {contributeMutation.isPending ? t("goals.saving") : t("goals.confirm")}
             </Button>
           </div>
         </DialogContent>
@@ -380,10 +384,10 @@ export default function Goals() {
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
               <Target className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold">Nenhuma meta ativa</h3>
-            <p className="text-muted-foreground mt-1 mb-4">Comece a poupar para seus sonhos hoje.</p>
+            <h3 className="text-lg font-semibold">{t("goals.noGoals")}</h3>
+            <p className="text-muted-foreground mt-1 mb-4">{t("goals.noGoalsDesc")}</p>
             <Button onClick={openCreate}>
-              <Plus className="w-4 h-4 mr-2" /> Criar Primeira Meta
+              <Plus className="w-4 h-4 mr-2" /> {t("goals.createFirst")}
             </Button>
           </div>
         ) : (
@@ -398,13 +402,13 @@ export default function Goals() {
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">
                       <CardTitle className="text-base truncate">{g.name}</CardTitle>
-                      <CardDescription>{GOAL_TYPES[g.type] || g.type}</CardDescription>
+                      <CardDescription>{goalTypeLabels[g.type] || g.type}</CardDescription>
                     </div>
                     <div className="flex items-center gap-1 ml-2 shrink-0">
                       <button
                         onClick={() => openEdit(g)}
                         className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors"
-                        aria-label="Editar meta"
+                        aria-label={t("common.edit")}
                       >
                         <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
@@ -416,11 +420,11 @@ export default function Goals() {
                   <div className="flex justify-between items-end">
                     <div>
                       <div className="text-2xl font-bold tabular-nums">{formatCurrency(g.currentAmount, user?.currency)}</div>
-                      <div className="text-xs text-muted-foreground">de {formatCurrency(g.targetAmount, user?.currency)}</div>
+                      <div className="text-xs text-muted-foreground">{t("goals.of")} {formatCurrency(g.targetAmount, user?.currency)}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-xl font-bold" style={{ color: goalColor }}>{progress}%</div>
-                      <div className="text-xs text-muted-foreground">concluído</div>
+                      <div className="text-xs text-muted-foreground">{t("goals.completed")}</div>
                     </div>
                   </div>
 
@@ -433,14 +437,14 @@ export default function Goals() {
                     </div>
                     {g.deadline && remaining > 0 && (
                       <p className="text-xs text-muted-foreground">
-                        Prazo: {new Date(g.deadline).toLocaleDateString("pt-BR")}
+                        {t("goals.deadline")}: {new Date(g.deadline).toLocaleDateString()}
                       </p>
                     )}
                     {remaining > 0 ? (
-                      <p className="text-xs text-muted-foreground">Faltam {formatCurrency(remaining, user?.currency)}</p>
+                      <p className="text-xs text-muted-foreground">{t("goals.remaining")} {formatCurrency(remaining, user?.currency)}</p>
                     ) : (
                       <p className="text-xs text-[#00C851] font-medium flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Meta atingida!
+                        <CheckCircle2 className="w-3.5 h-3.5" /> {t("goals.goalReached")}
                       </p>
                     )}
                   </div>
@@ -452,7 +456,7 @@ export default function Goals() {
                     disabled={remaining <= 0}
                   >
                     <TrendingUp className="w-4 h-4 mr-2" />
-                    Adicionar Valor
+                    {t("goals.addValue")}
                   </Button>
                 </CardContent>
               </Card>

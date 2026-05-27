@@ -8,19 +8,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useI18n } from "@/contexts/i18n-context";
 import { Button } from "@/components/ui/button";
 
-const PAGE_TITLES: Record<string, string> = {
-  "/dashboard":    "Painel",
-  "/":             "Painel",
-  "/transactions": "Transações",
-  "/goals":        "Metas",
-  "/wallets":      "Carteiras",
-  "/reports":      "Relatórios",
-  "/ai":           "PoupaAI",
-  "/premium":      "Premium",
-  "/settings":     "Configurações",
-  "/support":      "Suporte",
-};
-
 const HOME_ROUTES = new Set(["/", "/dashboard"]);
 
 function useNavItems() {
@@ -234,7 +221,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const isHome    = HOME_ROUTES.has(location);
+  const isHome = HOME_ROUTES.has(location);
+  const PAGE_TITLES: Record<string, string> = {
+    "/dashboard":    t("nav.dashboard"),
+    "/":             t("nav.dashboard"),
+    "/transactions": t("nav.transactions"),
+    "/goals":        t("nav.goals"),
+    "/wallets":      t("nav.wallets"),
+    "/reports":      t("nav.reports"),
+    "/ai":           t("nav.ai"),
+    "/premium":      t("nav.premium"),
+    "/settings":     t("nav.settings"),
+    "/support":      t("nav.support"),
+  };
   const pageTitle = PAGE_TITLES[location] ?? "PoupaMais";
 
   const handleBack = () => {
@@ -357,10 +356,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               onClick={handleBack}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors text-xs font-medium"
-              aria-label="Voltar"
+              aria-label={t("common.back")}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Voltar
+              {t("common.back")}
             </button>
           </div>
         )}
