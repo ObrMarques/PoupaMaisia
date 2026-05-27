@@ -5,6 +5,12 @@ import type { Session } from "@supabase/supabase-js";
 import App from "./App";
 import "./index.css";
 
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {});
+  });
+}
+
 // Keep a cached reference updated by the Supabase listener.
 // This avoids calling getSession() (a network/storage round-trip) on
 // every single API request, which can return stale/expired tokens.
