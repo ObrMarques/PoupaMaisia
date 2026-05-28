@@ -65,6 +65,7 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         .limit(1);
 
       let walletId: number;
+      let isNewWallet = false;
 
       if (existing.length) {
         walletId = existing[0].id;
@@ -75,6 +76,7 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         const name = `${account.name ?? institutionName}`;
 
         // Create wallet with initial_balance = 0 for now; we'll adjust after importing txs
+        // so that initial_balance + net_imported_txs = account.balance (no double-counting)
         const [newWallet] = await db.insert(walletsTable).values({
           userId: user.id,
           name,
@@ -86,6 +88,7 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         }).returning();
 
         walletId = newWallet.id;
+        isNewWallet = true;
         createdWallets.push(newWallet);
       }
 
@@ -97,7 +100,7 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
       const { results: txs } = await getTransactions(account.id, { from: fromStr });
 
       let imported = 0;
-      let netImported = 0; // track income - expense of imported txs
+      let netImported = 0; // track net of newly inserted txs (income - expense)
       for (const tx of txs) {
         // Skip if already imported (idempotent)
         const dupCheck = await db
@@ -133,13 +136,16 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         imported++;
       }
 
-      // Adjust initial_balance so that: initial_balance + net_imported = account.balance
-      // This ensures the displayed balance equals the real bank balance.
-      const accountBalance = account.balance ?? 0;
-      const adjustedInitialBalance = accountBalance - netImported;
-      await db.execute(sql`UPDATE wallets SET initial_balance = ${String(adjustedInitialBalance)} WHERE id = ${walletId}`);
-
-      logger.info({ walletId, accountId: account.id, imported, adjustedInitialBalance }, "pluggy: account connected");
+      // For newly created wallets only: adjust initial_balance so that
+      // initial_balance + net_imported = account.balance (avoids double-counting)
+      if (isNewWallet) {
+        const accountBalance = account.balance ?? 0;
+        const adjustedInitialBalance = accountBalance - netImported;
+        await db.execute(sql`UPDATE wallets SET initial_balance = ${String(adjustedInitialBalance)} WHERE id = ${walletId}`);
+        logger.info({ walletId, accountId: account.id, imported, adjustedInitialBalance }, "pluggy: account connected (new)");
+      } else {
+        logger.info({ walletId, accountId: account.id, imported }, "pluggy: account re-connected (existing)");
+      }
     }
 
     res.json({

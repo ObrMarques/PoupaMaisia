@@ -30,7 +30,7 @@ router.get("/wallets", authMiddleware, async (req, res) => {
       COALESCE(SUM(CASE WHEN t.type = 'income'  THEN ABS(t.amount::numeric) ELSE 0 END), 0) -
       COALESCE(SUM(CASE WHEN t.type = 'expense' THEN ABS(t.amount::numeric) ELSE 0 END), 0) AS balance
     FROM wallets w
-    LEFT JOIN transactions t ON t.wallet_id = w.id AND t.status = 'completed'
+    LEFT JOIN transactions t ON t.wallet_id = w.id AND (t.status IS NULL OR t.status = 'completed')
     WHERE w.user_id = ${user.id}
     GROUP BY w.id, w.user_id, w.name, w.color, w.icon, w.initial_balance, w.created_at
     ORDER BY w.id ASC
@@ -84,7 +84,7 @@ router.patch("/wallets/:id", authMiddleware, async (req, res) => {
     SELECT
       COALESCE(SUM(CASE WHEN type = 'income'  THEN ABS(amount::numeric) ELSE 0 END), 0) -
       COALESCE(SUM(CASE WHEN type = 'expense' THEN ABS(amount::numeric) ELSE 0 END), 0) AS balance
-    FROM transactions WHERE wallet_id = ${id} AND status = 'completed'
+    FROM transactions WHERE wallet_id = ${id} AND (status IS NULL OR status = 'completed')
   `);
   const txBalance = (balResult.rows[0] as any)?.balance ?? "0";
   res.json(serializeWallet({ ...wallet, balance: txBalance }));
