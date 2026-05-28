@@ -17,11 +17,9 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
-import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import {
   Plus, Pencil, Trash2, Wallet, Building2,
   Landmark, Briefcase, PiggyBank, DollarSign, CreditCard, Banknote,
-  TrendingDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -82,7 +80,6 @@ export default function Wallets() {
   const [form, setForm]               = useState<WalletFormState>(defaultForm);
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
-  const [quickAdd, setQuickAdd] = useState<{ walletId: number; type: "income" | "expense" } | null>(null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: "all" });
@@ -317,15 +314,6 @@ export default function Wallets() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/50"
-                      onClick={() => setQuickAdd({ walletId: w.id, type: "expense" })}
-                    >
-                      <TrendingDown className="w-3 h-3 mr-1" />
-                      Saída
-                    </Button>
                     {w.pluggyAccountId && (
                       <>
                         <PluggySyncButton walletId={w.id} onSynced={invalidate} />
@@ -374,14 +362,6 @@ export default function Wallets() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <QuickAddTransaction
-        open={quickAdd !== null}
-        onOpenChange={(v) => { if (!v) setQuickAdd(null); }}
-        initialType={quickAdd?.type}
-        initialWalletId={quickAdd?.walletId}
-        lockWallet
-      />
 
       <UpgradeModal
         open={showUpgrade}
