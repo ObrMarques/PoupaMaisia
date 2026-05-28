@@ -188,7 +188,7 @@ function MobileDrawer({
           <div className="flex items-center gap-3 mb-3">
             <div className="w-11 h-11 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0 ring-2 ring-border">
               {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user?.name} className="w-full h-full object-cover" />
+                <img src={user.avatarUrl} alt={user?.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
                 <span className="font-semibold text-base">{user?.name?.charAt(0).toUpperCase()}</span>
               )}
@@ -294,7 +294,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-2.5 mb-3 px-1">
             <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center overflow-hidden shrink-0">
               {user?.avatarUrl ? (
-                <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                <img src={user.avatarUrl} alt={user.name} referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               ) : (
                 <span className="font-medium text-xs">{user?.name?.charAt(0).toUpperCase()}</span>
               )}

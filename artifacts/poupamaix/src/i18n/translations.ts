@@ -32,6 +32,7 @@ type TranslationMap = {
     title: string; profile: string; preferences: string; theme: string; language: string;
     darkMode: string; lightMode: string; currency: string; saveProfile: string;
     savePreferences: string; changePhoto: string; uploadPhoto: string;
+    avatarInvalidType: string; avatarTooLarge: string; avatarUploadError: string;
     danger: string; deleteAccount: string; photoUpdated: string;
     profileUpdated: string; preferencesUpdated: string;
     appearance: string; notifications: string; legal: string; account: string;
@@ -190,6 +191,9 @@ const ptBR: TranslationMap = {
     currency: "Moeda principal", saveProfile: "Salvar Alterações",
     savePreferences: "Salvar Preferências", changePhoto: "Alterar Foto", uploadPhoto: "Enviar Foto",
     danger: "Zona de Perigo", deleteAccount: "Excluir Conta",
+    avatarInvalidType: "Selecione uma imagem válida (JPG, PNG, WebP)",
+    avatarTooLarge: "A imagem deve ter no máximo 10 MB",
+    avatarUploadError: "Erro ao enviar foto. Tente novamente.",
     photoUpdated: "Foto atualizada com sucesso", profileUpdated: "Perfil atualizado com sucesso",
     preferencesUpdated: "Preferências salvas",
     appearance: "Aparência", notifications: "Notificações", legal: "Legal", account: "Conta",
@@ -401,6 +405,9 @@ const en: TranslationMap = {
     theme: "Theme", language: "Language", darkMode: "Dark Mode", lightMode: "Light Mode",
     currency: "Primary Currency", saveProfile: "Save Changes",
     savePreferences: "Save Preferences", changePhoto: "Change Photo", uploadPhoto: "Upload Photo",
+    avatarInvalidType: "Select a valid image (JPG, PNG, WebP)",
+    avatarTooLarge: "Image must be at most 10 MB",
+    avatarUploadError: "Failed to upload photo. Please try again.",
     danger: "Danger Zone", deleteAccount: "Delete Account",
     photoUpdated: "Photo updated successfully", profileUpdated: "Profile updated successfully",
     preferencesUpdated: "Preferences saved",
@@ -614,6 +621,9 @@ const es: TranslationMap = {
     currency: "Moneda principal", saveProfile: "Guardar cambios",
     savePreferences: "Guardar preferencias", changePhoto: "Cambiar foto", uploadPhoto: "Subir foto",
     danger: "Zona de peligro", deleteAccount: "Eliminar cuenta",
+    avatarInvalidType: "Selecciona una imagen válida (JPG, PNG, WebP)",
+    avatarTooLarge: "La imagen debe tener como máximo 10 MB",
+    avatarUploadError: "Error al subir la foto. Inténtalo de nuevo.",
     photoUpdated: "Foto actualizada", profileUpdated: "Perfil actualizado",
     preferencesUpdated: "Preferencias guardadas",
     appearance: "Apariencia", notifications: "Notificaciones", legal: "Legal", account: "Cuenta",
@@ -826,6 +836,9 @@ const fr: TranslationMap = {
     currency: "Devise principale", saveProfile: "Enregistrer", savePreferences: "Sauvegarder",
     changePhoto: "Changer la photo", uploadPhoto: "Télécharger",
     danger: "Zone danger", deleteAccount: "Supprimer le compte",
+    avatarInvalidType: "Sélectionnez une image valide (JPG, PNG, WebP)",
+    avatarTooLarge: "L'image doit faire au maximum 10 Mo",
+    avatarUploadError: "Erreur lors de l'envoi de la photo. Réessayez.",
     photoUpdated: "Photo mise à jour", profileUpdated: "Profil mis à jour",
     preferencesUpdated: "Préférences sauvegardées",
     appearance: "Apparence", notifications: "Notifications", legal: "Légal", account: "Compte",

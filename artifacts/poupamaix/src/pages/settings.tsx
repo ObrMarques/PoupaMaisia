@@ -111,9 +111,11 @@ export default function Settings() {
   const [name,     setName]     = useState(user?.name  || "");
   const [currency, setCurrency] = useState(user?.currency || "BRL");
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [uploadError, setUploadError]           = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const nameDirtyRef = useRef(false);
+  const nameDirtyRef  = useRef(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const [modal, setModal] = useState<"terms" | "privacy" | "cookies" | "delete" | null>(null);
 
@@ -161,19 +163,40 @@ export default function Settings() {
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || file.size > 10 * 1024 * 1024) return;
+    // Reset input so the same file can be re-selected next time
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError(t("settings.avatarInvalidType"));
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError(t("settings.avatarTooLarge"));
+      return;
+    }
+
+    setUploadError(null);
     setIsUploadingPhoto(true);
     try {
       const base64 = await resizeImageToBase64(file);
       updateMutation.mutate(
         { data: { avatarUrl: base64 } },
         {
-          onSuccess:  (updated) => { updateUser(updated); qc.invalidateQueries({ queryKey: getGetMeQueryKey() }); },
-          onError:    () => {},
-          onSettled:  () => setIsUploadingPhoto(false),
+          onSuccess: (updated) => {
+            updateUser(updated);
+            qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+          },
+          onError: () => {
+            setUploadError(t("settings.avatarUploadError"));
+          },
+          onSettled: () => setIsUploadingPhoto(false),
         }
       );
-    } catch { setIsUploadingPhoto(false); }
+    } catch {
+      setUploadError(t("settings.avatarUploadError"));
+      setIsUploadingPhoto(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -216,8 +239,22 @@ export default function Settings() {
                   : <Camera className="w-3.5 h-3.5 text-foreground" />}
               </div>
             </label>
-            <input id="avatar-input" type="file" accept="image/*" className="sr-only" disabled={isUploadingPhoto} onChange={handleAvatarChange} />
-            <p className="text-xs text-muted-foreground">{t("settings.tapChangePhoto")}</p>
+            <input
+              ref={avatarInputRef}
+              id="avatar-input"
+              type="file"
+              accept="image/*"
+              className="sr-only"
+              disabled={isUploadingPhoto}
+              onChange={handleAvatarChange}
+            />
+            {uploadError ? (
+              <p className="text-xs text-destructive text-center flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />{uploadError}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">{t("settings.tapChangePhoto")}</p>
+            )}
           </div>
 
           {/* Fields */}

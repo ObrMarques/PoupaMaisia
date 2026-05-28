@@ -36,7 +36,9 @@ async function uploadAvatarToStorage(supabaseId: string, base64: string): Promis
     .from(AVATARS_BUCKET)
     .getPublicUrl(fileName);
 
-  return publicUrl;
+  // Append a version param so browsers treat each upload as a new URL,
+  // bypassing any disk/memory cache of the old image.
+  return `${publicUrl}?v=${Date.now()}`;
 }
 
 const router = Router();
