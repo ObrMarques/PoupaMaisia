@@ -135,8 +135,16 @@ export default function Transactions() {
   ];
 
   const [filter, setFilter] = useState<FilterKey>(() => {
-    try { return (sessionStorage.getItem(SESSION_KEY) as FilterKey) || "all"; }
-    catch { return "all"; }
+    try {
+      // URL param takes priority (navigation from dashboard cards)
+      const params = new URLSearchParams(window.location.search);
+      const urlFilter = params.get("filter") as FilterKey;
+      if (urlFilter && (["all", "pending", "income", "expense"] as string[]).includes(urlFilter)) {
+        sessionStorage.setItem(SESSION_KEY, urlFilter);
+        return urlFilter;
+      }
+      return (sessionStorage.getItem(SESSION_KEY) as FilterKey) || "all";
+    } catch { return "all"; }
   });
 
   const [isModalOpen, setIsModalOpen]         = useState(false);

@@ -339,25 +339,29 @@ export default function Dashboard() {
             <div className="text-2xl font-bold" data-testid="text-total-balance">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyIncome")}</CardTitle>
-            <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#00C851]">{formatCurrency(summary?.monthlyIncome || 0, currency)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyExpenses")}</CardTitle>
-            <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[#FF4444]">{formatCurrency(summary?.monthlyExpenses || 0, currency)}</div>
-          </CardContent>
-        </Card>
-        <Link href="/transactions?status=pending" className="block">
+        <Link href="/transactions?filter=income" className="block">
+          <Card className="h-full cursor-pointer hover:bg-secondary/30 transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyIncome")}</CardTitle>
+              <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#00C851]">{formatCurrency(summary?.monthlyIncome || 0, currency)}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/transactions?filter=expense" className="block">
+          <Card className="h-full cursor-pointer hover:bg-secondary/30 transition-colors">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyExpenses")}</CardTitle>
+              <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-[#FF4444]">{formatCurrency(summary?.monthlyExpenses || 0, currency)}</div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/transactions?filter=pending" className="block">
           <Card className="h-full cursor-pointer hover:bg-secondary/30 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.billsToPay")}</CardTitle>
