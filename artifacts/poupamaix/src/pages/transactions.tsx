@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
-  useGetTransactions, useCreateTransaction, useUpdateTransaction, useDeleteTransaction,
-  usePayTransaction, useGetWallets, useGetCategories,
+  useGetTransactions, useDeleteTransaction, usePayTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey, getGetGoalsQueryKey,
   getGetWalletsQueryKey, getGetPendingTransactionsQueryKey,
@@ -12,16 +11,10 @@ import { useI18n } from "@/contexts/i18n-context";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@/components/currency-input";
-import { CategoryPicker } from "@/components/category-picker";
-import { WalletPicker } from "@/components/wallet-picker";
+import { TransactionDialog } from "@/components/transaction-dialog";
 import { CategoryIcon } from "@/components/category-icon";
-import { Plus, Trash2, Pencil, ChevronRight, Wallet, AlertCircle, Clock, CheckCircle2, SlidersHorizontal, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, Clock, CheckCircle2, SlidersHorizontal, Check } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 type FilterKey = "all" | "pending" | "income" | "expense";
@@ -146,32 +139,12 @@ export default function Transactions() {
     catch { return "all"; }
   });
 
-  const [isModalOpen, setIsModalOpen]   = useState(false);
-  const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
-  const [isWalletPickerOpen, setIsWalletPickerOpen]     = useState(false);
-  const [editingTransaction, setEditingTransaction]     = useState<any>(null);
-  const [walletError, setWalletError]   = useState(false);
-
-  const [amount, setAmount]             = useState("");
-  const [description, setDescription]   = useState("");
-  const [date, setDate]                 = useState(new Date().toISOString().split("T")[0]);
-  const [type, setType]                 = useState<"income" | "expense">("expense");
-  const [categoryId, setCategoryId]     = useState("");
-  const [categoryName, setCategoryName] = useState("");
-  const [walletId, setWalletId]         = useState<number | null>(null);
-  const [walletName, setWalletName]     = useState<string | null>(null);
-  const [walletColor, setWalletColor]   = useState<string | null>(null);
-  const [notes, setNotes]               = useState("");
-
-  const { data: categories } = useGetCategories();
-  const { data: wallets }    = useGetWallets();
-  const walletList = wallets ?? [];
+  const [isModalOpen, setIsModalOpen]         = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<any>(null);
 
   const queryParams = getQueryParams(filter);
   const { data: transactions, isLoading } = useGetTransactions(queryParams as any);
 
-  const createMutation = useCreateTransaction();
-  const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
   const payMutation    = usePayTransaction();
 
@@ -179,13 +152,6 @@ export default function Transactions() {
     setFilter(k);
     try { sessionStorage.setItem(SESSION_KEY, k); } catch { /* noop */ }
   };
-
-  useEffect(() => {
-    if (isModalOpen && !editingTransaction && walletId === null && walletList.length === 1) {
-      const w = walletList[0];
-      setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
-    }
-  }, [isModalOpen, editingTransaction, walletList, walletId]);
 
   const invalidateAll = () => {
     [
@@ -200,89 +166,9 @@ export default function Transactions() {
     ].forEach(key => queryClient.invalidateQueries({ queryKey: key, refetchType: "all" }));
   };
 
-  const resetForm = () => {
-    setAmount(""); setDescription(""); setDate(new Date().toISOString().split("T")[0]);
-    setType("expense"); setCategoryId(""); setCategoryName("");
-    setWalletId(null); setWalletName(null); setWalletColor(null);
-    setNotes(""); setEditingTransaction(null); setWalletError(false);
-  };
-
   const handleOpenModal = (tx?: any) => {
-    if (tx) {
-      setEditingTransaction(tx);
-      setAmount(tx.amount.toFixed(2));
-      setDescription(tx.description ?? "");
-      setDate(tx.date.split("T")[0]);
-      setType(tx.type);
-      setCategoryId(tx.categoryId.toString());
-      setCategoryName(tx.categoryName || "");
-      setWalletId(tx.walletId ?? null);
-      setWalletName(tx.walletName ?? null);
-      setWalletColor(tx.walletColor ?? null);
-      setNotes(tx.notes || "");
-    } else {
-      resetForm();
-      if (walletList.length === 1) {
-        const w = walletList[0]; setWalletId(w.id); setWalletName(w.name); setWalletColor(w.color);
-      }
-    }
+    setEditingTransaction(tx ?? null);
     setIsModalOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!amount || !categoryId) return;
-    if (!walletId) { setWalletError(true); return; }
-    setWalletError(false);
-
-    const payload: any = {
-      type, amount: parseFloat(amount), description,
-      date, categoryId: parseInt(categoryId, 10), walletId,
-      notes: notes || null,
-    };
-
-    if (editingTransaction) {
-      const prevId = editingTransaction.id;
-      setIsModalOpen(false); resetForm();
-      updateMutation.mutate({ id: prevId, data: payload }, { onSettled: () => invalidateAll() });
-      return;
-    }
-
-    const txQueryKey = getGetTransactionsQueryKey(queryParams as any);
-    await queryClient.cancelQueries({ queryKey: txQueryKey });
-    const previousTransactions = queryClient.getQueryData(txQueryKey);
-
-    const category = (categories ?? []).find(c => c.id === parseInt(categoryId, 10));
-    const today = new Date().toISOString().split("T")[0];
-    const autoStatus = date > today ? "pending" : "completed";
-
-    const optimisticTx = {
-      id: Date.now() * -1, userId: user?.id ?? 0,
-      type, amount: parseFloat(amount), description, date,
-      categoryId: parseInt(categoryId, 10), categoryName,
-      categoryColor: category?.color || "#6C5CE7",
-      categoryIcon: category?.icon || "",
-      walletId, walletName, walletColor,
-      cardId: null, notes: notes || null,
-      status: autoStatus,
-      createdAt: new Date().toISOString(),
-    };
-
-    const shouldAdd = filter === "all"
-      || (filter === "pending"  && autoStatus === "pending")
-      || (filter === "income"   && type === "income")
-      || (filter === "expense"  && type === "expense" && autoStatus === "completed");
-
-    if (shouldAdd) {
-      queryClient.setQueryData(txQueryKey, (old: any) =>
-        Array.isArray(old) ? [optimisticTx, ...old] : [optimisticTx]
-      );
-    }
-
-    setIsModalOpen(false); resetForm();
-    createMutation.mutate({ data: payload }, {
-      onError: () => queryClient.setQueryData(txQueryKey, previousTransactions),
-      onSettled: () => invalidateAll(),
-    });
   };
 
   const handleDelete = (id: number) => {
@@ -301,8 +187,6 @@ export default function Transactions() {
     payMutation.mutate({ id }, { onSettled: () => invalidateAll() });
   };
 
-  const noWallets = walletList.length === 0;
-  const canSave   = !!amount && !!categoryId && !!walletId;
   const emptyMsg  = filter === "pending" ? t("transactions.noPendingMsg") : t("transactions.noTransactions");
 
   return (
@@ -315,120 +199,19 @@ export default function Transactions() {
           <p className="text-muted-foreground">{t("transactions.subtitle")}</p>
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <Dialog open={isModalOpen} onOpenChange={(open) => { setIsModalOpen(open); if (!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
-                <Plus className="w-4 h-4 mr-2" /> {t("transactions.newTransaction")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent aria-describedby={undefined} className="sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingTransaction ? t("transactions.editTransaction") : t("transactions.newTransaction")}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Button
-                    variant={type === "expense" ? "default" : "outline"}
-                    className={type === "expense" ? "bg-destructive hover:bg-destructive/90 text-white" : "bg-background"}
-                    onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
-                  >{t("transactions.expense")}</Button>
-                  <Button
-                    variant={type === "income" ? "default" : "outline"}
-                    className={type === "income" ? "bg-[#00C851] hover:bg-[#00C851]/90 text-white" : "bg-background"}
-                    onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
-                  >{t("transactions.income")}</Button>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("transactions.amount")}</Label>
-                  <CurrencyInput value={amount} onValueChange={setAmount} className="bg-background text-lg font-semibold h-12" data-testid="input-amount" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("transactions.description")}</Label>
-                  <Input placeholder={t("transactions.descPlaceholder")} value={description} onChange={e => setDescription(e.target.value)} className="bg-background" data-testid="input-description" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>
-                      {t("transactions.date")}{" "}
-                      {date > new Date().toISOString().split("T")[0] && (
-                        <span className="text-[10px] font-normal px-1.5 py-0.5 rounded-full bg-[#FFF8E1] dark:bg-[#F4C542]/10 text-[#8B6914] dark:text-[#F4C542] ml-1">
-                          {t("transactions.pendingBadge")}
-                        </span>
-                      )}
-                    </Label>
-                    <Input type="date" value={date} onChange={e => setDate(e.target.value)} className="bg-background" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>{t("transactions.category")}</Label>
-                    <button
-                      type="button"
-                      onClick={() => setIsCategoryPickerOpen(true)}
-                      className="w-full flex items-center justify-between px-3 h-10 rounded-md border border-input bg-background text-sm transition-colors hover:bg-secondary"
-                      data-testid="select-category"
-                    >
-                      <span className={categoryName ? "text-foreground" : "text-muted-foreground"}>{categoryName || t("transactions.selectCategory")}</span>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("transactions.wallet")} <span className="text-destructive text-xs">*</span></Label>
-                  {noWallets ? (
-                    <div className="flex items-center gap-2 px-3 h-10 rounded-md border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-800 text-sm text-amber-700 dark:text-amber-400">
-                      <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{t("transactions.noWalletWarning")}</span>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
-                      className={`w-full flex items-center gap-2 px-3 h-10 rounded-md border text-sm transition-colors hover:bg-secondary ${walletError ? "border-destructive bg-destructive/5" : "border-input bg-background"}`}
-                    >
-                      {walletId !== null && walletColor ? (
-                        <>
-                          <div className="w-4 h-4 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                          <span className="flex-1 text-left text-foreground">{walletName}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                          <span className="flex-1 text-left text-muted-foreground">{t("transactions.selectWallet")}</span>
-                        </>
-                      )}
-                      <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  )}
-                  {walletError && (
-                    <p className="text-xs text-destructive flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" />
-                      {t("transactions.walletRequired")}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("transactions.notes")} <span className="text-muted-foreground text-xs">({t("common.optional")})</span></Label>
-                  <Input placeholder={t("transactions.notesPlaceholder")} value={notes} onChange={e => setNotes(e.target.value)} className="bg-background" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>{t("common.cancel")}</Button>
-                <Button onClick={handleSave} disabled={!canSave || noWallets || createMutation.isPending || updateMutation.isPending} data-testid="button-save">
-                  {createMutation.isPending || updateMutation.isPending ? t("transactions.saving") : t("common.save")}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={() => handleOpenModal()} data-testid="button-add-transaction">
+            <Plus className="w-4 h-4 mr-2" /> {t("transactions.newTransaction")}
+          </Button>
           <FilterDropdown value={filter} onChange={handleFilterChange} options={filterOptions} />
         </div>
       </div>
 
-      <CategoryPicker open={isCategoryPickerOpen} onOpenChange={setIsCategoryPickerOpen} value={categoryId} type={type} onSelect={(id, name) => { setCategoryId(id); setCategoryName(name); }} />
-      <WalletPicker open={isWalletPickerOpen} onOpenChange={setIsWalletPickerOpen} value={walletId} onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); setWalletError(false); }} />
+      {/* Shared transaction form dialog */}
+      <TransactionDialog
+        open={isModalOpen}
+        onOpenChange={(v) => { setIsModalOpen(v); if (!v) setEditingTransaction(null); }}
+        editingTransaction={editingTransaction}
+      />
 
       {/* Active filter indicator */}
       {filter !== "all" && (
