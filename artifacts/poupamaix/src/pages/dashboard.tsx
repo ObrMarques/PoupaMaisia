@@ -1,4 +1,4 @@
-import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey, useGetWallets } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
@@ -27,7 +27,10 @@ export default function Dashboard() {
   const { data: pending, isLoading: loadingPending } = useGetPendingTransactions({
     query: { staleTime: 0, queryKey: getGetPendingTransactionsQueryKey() },
   });
+  const { data: wallets, isLoading: loadingWallets } = useGetWallets();
   const currency = user?.currency || "BRL";
+
+  const totalWalletBalance = wallets?.reduce((sum, w) => sum + w.balance, 0) ?? 0;
 
   function getMonthShort(month: number) {
     return new Date(2024, month - 1, 1).toLocaleString(locale, { month: "short" });
@@ -153,6 +156,56 @@ export default function Dashboard() {
 
         {/* Sidebar */}
         <div className="space-y-8">
+          {/* Wallets Card */}
+          <Card className="bg-card border-border">
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <CardTitle>{t("dashboard.wallets")}</CardTitle>
+              <Link href="/wallets">
+                <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">{t("dashboard.viewAll")}</Button>
+              </Link>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {loadingWallets ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-8 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ) : wallets?.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-2">{t("dashboard.noWallets")}</p>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between border-b border-border pb-3">
+                    <span className="text-xs text-muted-foreground">{t("dashboard.walletsTotal")}</span>
+                    <span className="text-lg font-bold">{formatCurrency(totalWalletBalance, currency)}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {wallets?.slice(0, 4).map((w) => (
+                      <div key={w.id} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: w.color + "26" }}>
+                            <span>{w.icon}</span>
+                          </div>
+                          <span className="text-muted-foreground truncate max-w-[110px]">{w.name}</span>
+                        </div>
+                        <span className={`font-medium tabular-nums ${w.balance < 0 ? "text-[#FF4444]" : ""}`}>
+                          {formatCurrency(w.balance, currency)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  {(wallets?.length ?? 0) > 4 && (
+                    <Link href="/wallets">
+                      <p className="text-xs text-muted-foreground text-center pt-1 hover:text-foreground transition-colors cursor-pointer">
+                        +{(wallets?.length ?? 0) - 4} {t("dashboard.viewAll").toLowerCase()}
+                      </p>
+                    </Link>
+                  )}
+                </>
+              )}
+            </CardContent>
+          </Card>
+
           <Card className="bg-card border-border">
             <CardHeader>
               <CardTitle>{t("dashboard.spendingByCategory")}</CardTitle>

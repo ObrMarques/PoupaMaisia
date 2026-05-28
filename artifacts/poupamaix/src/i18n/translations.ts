@@ -97,6 +97,7 @@ type TranslationMap = {
     monthlyIncome: string; monthlyExpenses: string; billsToPay: string;
     pendingBill: string; pendingBills: string; noPending: string;
     cashFlow: string; cashFlowDesc: string; goalsProgress: string; viewAll: string; noGoals: string;
+    wallets: string; walletsTotal: string; noWallets: string;
   };
   transactions: {
     title: string; subtitle: string; newTransaction: string; editTransaction: string;
@@ -279,6 +280,8 @@ const ptBR: TranslationMap = {
     noPending: "Nenhuma pendência", cashFlow: "Fluxo de Caixa",
     cashFlowDesc: "Receitas x Despesas ao longo do tempo", goalsProgress: "Progresso das Metas",
     viewAll: "Ver todas", noGoals: "Nenhuma meta ativa.",
+    wallets: "Minhas Carteiras", walletsTotal: "Saldo total em carteiras",
+    noWallets: "Nenhuma carteira criada.",
   },
   transactions: {
     title: "Transações", subtitle: "Gerencie suas receitas e despesas.",
@@ -489,6 +492,8 @@ const en: TranslationMap = {
     noPending: "No pending bills", cashFlow: "Cash Flow",
     cashFlowDesc: "Income vs Expenses over time", goalsProgress: "Goals Progress",
     viewAll: "View all", noGoals: "No active goals.",
+    wallets: "My Wallets", walletsTotal: "Total wallet balance",
+    noWallets: "No wallets created.",
   },
   transactions: {
     title: "Transactions", subtitle: "Manage your income and expenses.",
@@ -699,6 +704,8 @@ const es: TranslationMap = {
     noPending: "Sin pendientes", cashFlow: "Flujo de caja",
     cashFlowDesc: "Ingresos vs Gastos a lo largo del tiempo", goalsProgress: "Progreso de metas",
     viewAll: "Ver todas", noGoals: "Sin metas activas.",
+    wallets: "Mis Carteras", walletsTotal: "Saldo total en carteras",
+    noWallets: "Ninguna cartera creada.",
   },
   transactions: {
     title: "Transacciones", subtitle: "Gestiona tus ingresos y gastos.",
@@ -909,6 +916,8 @@ const fr: TranslationMap = {
     noPending: "Aucune facture en attente", cashFlow: "Flux de trésorerie",
     cashFlowDesc: "Revenus vs Dépenses dans le temps", goalsProgress: "Progression des objectifs",
     viewAll: "Voir tout", noGoals: "Aucun objectif actif.",
+    wallets: "Mes Portefeuilles", walletsTotal: "Solde total des portefeuilles",
+    noWallets: "Aucun portefeuille créé.",
   },
   transactions: {
     title: "Transactions", subtitle: "Gérez vos revenus et dépenses.",
