@@ -22,14 +22,15 @@ interface OnboardingCarouselProps {
 }
 
 function OnboardingCarousel({ hasWallet, hasGoal, hasTransaction }: OnboardingCarouselProps) {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const qc = useQueryClient();
   const updateMutation = useUpdateProfile();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIdx, setActiveIdx] = useState(0);
   const isDragging = useRef(false);
   const dragStartX = useRef(0);
-  const dragStartScroll = useRef(0);
+  const dragScrollLeft = useRef(0);
+  const didDrag = useRef(false);
 
   const total = 3;
   const done = [hasWallet, hasGoal, hasTransaction].filter(Boolean).length;
@@ -54,193 +55,197 @@ function OnboardingCarousel({ hasWallet, hasGoal, hasTransaction }: OnboardingCa
   }, [total]);
 
   const goTo = (idx: number) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ left: idx * el.clientWidth, behavior: "smooth" });
+    scrollRef.current?.scrollTo({ left: idx * (scrollRef.current.clientWidth), behavior: "smooth" });
   };
 
-  /* mouse drag for desktop */
   const onMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true;
+    didDrag.current = false;
     dragStartX.current = e.pageX;
-    dragStartScroll.current = scrollRef.current?.scrollLeft ?? 0;
-    if (scrollRef.current) scrollRef.current.style.cursor = "grabbing";
+    dragScrollLeft.current = scrollRef.current?.scrollLeft ?? 0;
   };
   const onMouseMove = (e: React.MouseEvent) => {
     if (!isDragging.current || !scrollRef.current) return;
-    e.preventDefault();
-    scrollRef.current.scrollLeft = dragStartScroll.current - (e.pageX - dragStartX.current);
+    const dx = e.pageX - dragStartX.current;
+    if (Math.abs(dx) > 4) didDrag.current = true;
+    scrollRef.current.scrollLeft = dragScrollLeft.current - dx;
   };
-  const onMouseUp = () => {
-    isDragging.current = false;
-    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
-  };
+  const onMouseUp = () => { isDragging.current = false; };
 
   interface StepDef {
     key: string;
     icon: React.ElementType;
-    gradient: string;
+    iconBg: string;
     iconColor: string;
     title: string;
-    desc: string;
+    subtitle: string;
     done: boolean;
-    cta: React.ReactNode;
+    href?: string;
+    isTransaction?: boolean;
   }
 
   const steps: StepDef[] = [
     {
       key: "wallet",
       icon: Wallet,
-      gradient: "from-blue-500/20 to-blue-600/5",
+      iconBg: "bg-blue-500/10",
       iconColor: "text-blue-500",
-      title: "Criar primeira carteira",
-      desc: "Organize seu dinheiro separando por conta corrente, poupança ou carteira de dinheiro.",
+      title: "Criar carteira",
+      subtitle: "Organize por conta ou banco",
       done: hasWallet,
-      cta: (
-        <Link href="/wallets">
-          <Button className="w-full mt-4" size="sm">Criar carteira</Button>
-        </Link>
-      ),
+      href: "/wallets",
     },
     {
       key: "goal",
       icon: Target,
-      gradient: "from-purple-500/20 to-purple-600/5",
+      iconBg: "bg-purple-500/10",
       iconColor: "text-purple-500",
-      title: "Criar primeira meta",
-      desc: "Defina um objetivo financeiro — viagem, reserva de emergência ou qualquer sonho.",
+      title: "Criar meta",
+      subtitle: "Defina um objetivo financeiro",
       done: hasGoal,
-      cta: (
-        <Link href="/goals">
-          <Button className="w-full mt-4" size="sm">Criar meta</Button>
-        </Link>
-      ),
+      href: "/goals",
     },
     {
       key: "transaction",
       icon: Receipt,
-      gradient: "from-emerald-500/20 to-emerald-600/5",
+      iconBg: "bg-emerald-500/10",
       iconColor: "text-emerald-500",
-      title: "Adicionar transação",
-      desc: "Registre sua primeira receita ou despesa para começar a controlar seu dinheiro.",
+      title: "Primeira transação",
+      subtitle: "Registre uma receita ou despesa",
       done: hasTransaction,
-      cta: (
-        <QuickAddTransaction>
-          <Button className="w-full mt-4" size="sm">Nova transação</Button>
-        </QuickAddTransaction>
-      ),
+      isTransaction: true,
     },
   ];
 
   return (
-    <div className="relative">
-      {/* Header row */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold">Primeiros Passos</h2>
-          <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+    <Card className="bg-card overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-1.5">
+          <CardTitle className="text-sm font-medium text-muted-foreground">Primeiros Passos</CardTitle>
+          <span className="text-[10px] font-medium bg-secondary text-muted-foreground px-1.5 py-0.5 rounded-full leading-none">
             {done}/{total}
           </span>
         </div>
         <button
           onClick={handleDismiss}
           disabled={updateMutation.isPending}
-          className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          className="text-muted-foreground hover:text-foreground transition-colors p-0.5"
           aria-label="Fechar"
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="h-3.5 w-3.5" />
         </button>
-      </div>
+      </CardHeader>
 
-      {/* Progress bar */}
-      <div className="h-0.5 bg-secondary rounded-full overflow-hidden mb-4 mx-1">
+      <CardContent className="pb-4">
+        {/* Progress bar */}
+        <div className="h-0.5 bg-secondary rounded-full overflow-hidden mb-3">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-700"
+            style={{ width: `${(done / total) * 100}%` }}
+          />
+        </div>
+
+        {/* Carousel track */}
         <div
-          className="h-full bg-primary rounded-full transition-all duration-700"
-          style={{ width: `${(done / total) * 100}%` }}
-        />
-      </div>
+          ref={scrollRef}
+          onScroll={onScroll}
+          onMouseDown={onMouseDown}
+          onMouseMove={onMouseMove}
+          onMouseUp={onMouseUp}
+          onMouseLeave={onMouseUp}
+          className="flex overflow-x-scroll select-none"
+          style={{
+            scrollSnapType: "x mandatory",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            WebkitOverflowScrolling: "touch",
+          }}
+        >
+          {steps.map((step, i) => {
+            const Icon = step.icon;
 
-      {/* Carousel */}
-      <div
-        ref={scrollRef}
-        onScroll={onScroll}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseUp}
-        className="flex overflow-x-scroll gap-3 pb-2 select-none"
-        style={{
-          scrollSnapType: "x mandatory",
-          scrollbarWidth: "none",
-          msOverflowStyle: "none",
-          cursor: "grab",
-          WebkitOverflowScrolling: "touch",
-        }}
-      >
-        {steps.map((step, i) => {
-          const Icon = step.icon;
-          return (
-            <div
-              key={step.key}
-              style={{ scrollSnapAlign: "start", minWidth: "calc(85% - 6px)", flexShrink: 0 }}
-              className={cn(
-                "rounded-2xl border border-border/60 bg-card p-5 relative overflow-hidden transition-all duration-300",
-                step.done && "opacity-70"
-              )}
-            >
-              {/* Gradient background blob */}
-              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 pointer-events-none", step.gradient)} />
-
-              {/* Done badge */}
-              {step.done && (
-                <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#00C851]/15 text-[#00C851] text-xs font-medium px-2 py-0.5 rounded-full border border-[#00C851]/20">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Concluído
-                </div>
-              )}
-
-              {/* Step number */}
-              <div className="flex items-center gap-2 mb-3 relative">
+            const inner = (
+              <div className="flex items-center gap-3">
                 <div className={cn(
-                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                  step.done ? "bg-[#00C851]/15" : "bg-secondary"
+                  "w-9 h-9 rounded-xl flex items-center justify-center shrink-0",
+                  step.done ? "bg-[#00C851]/10" : step.iconBg
                 )}>
                   {step.done
-                    ? <CheckCircle2 className="w-5 h-5 text-[#00C851]" />
-                    : <Icon className={cn("w-5 h-5", step.iconColor)} />
+                    ? <CheckCircle2 className="w-4 h-4 text-[#00C851]" />
+                    : <Icon className={cn("w-4 h-4", step.iconColor)} />
                   }
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">Passo {i + 1} de {total}</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-tight">{step.title}</p>
+                  {step.done
+                    ? <p className="text-xs text-[#00C851] mt-0.5 font-medium">Concluído</p>
+                    : <p className="text-xs text-muted-foreground mt-0.5 truncate">{step.subtitle}</p>
+                  }
+                </div>
               </div>
+            );
 
-              {/* Content */}
-              <div className="relative">
-                <h3 className="text-base font-semibold leading-snug">{step.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
-                {!step.done && step.cta}
+            const slideStyle: React.CSSProperties = {
+              scrollSnapAlign: "start",
+              minWidth: "100%",
+              flexShrink: 0,
+            };
+
+            if (!step.done && step.isTransaction) {
+              return (
+                <div key={step.key} style={slideStyle}>
+                  <QuickAddTransaction>
+                    <div className="cursor-pointer">{inner}</div>
+                  </QuickAddTransaction>
+                  <p className="text-[10px] text-muted-foreground mt-2 ml-12">
+                    Passo {i + 1} de {total} · Toque para adicionar
+                  </p>
+                </div>
+              );
+            }
+
+            if (!step.done && step.href) {
+              return (
+                <div key={step.key} style={slideStyle}>
+                  <Link href={step.href}>
+                    <div className="cursor-pointer">{inner}</div>
+                  </Link>
+                  <p className="text-[10px] text-muted-foreground mt-2 ml-12">
+                    Passo {i + 1} de {total} · Toque para configurar
+                  </p>
+                </div>
+              );
+            }
+
+            return (
+              <div key={step.key} style={slideStyle}>
+                {inner}
+                <p className="text-[10px] text-muted-foreground mt-2 ml-12">
+                  Passo {i + 1} de {total}
+                </p>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* Dot indicators */}
-      <div className="flex items-center justify-center gap-1.5 mt-3">
-        {steps.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goTo(i)}
-            className={cn(
-              "rounded-full transition-all duration-300",
-              i === activeIdx
-                ? "w-5 h-1.5 bg-primary"
-                : "w-1.5 h-1.5 bg-secondary hover:bg-muted-foreground/40"
-            )}
-            aria-label={`Ir para passo ${i + 1}`}
-          />
-        ))}
-      </div>
-    </div>
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center gap-1 mt-3">
+          {steps.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => goTo(i)}
+              className={cn(
+                "rounded-full transition-all duration-300",
+                i === activeIdx
+                  ? "w-4 h-1 bg-primary"
+                  : "w-1 h-1 bg-border hover:bg-muted-foreground/40"
+              )}
+              aria-label={`Ir para passo ${i + 1}`}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -315,17 +320,15 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Primeiros Passos — Carrossel (oculto quando dismissed ou todos concluídos) */}
-      {!gettingStartedLoading && !user?.onboardingDismissed && !(hasWallet && hasGoal && hasTransaction) && (
-        <OnboardingCarousel
-          hasWallet={hasWallet}
-          hasGoal={hasGoal}
-          hasTransaction={hasTransaction}
-        />
-      )}
-
-      {/* Summary Cards */}
+      {/* Summary Cards (+ Primeiros Passos quando aplicável) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {!gettingStartedLoading && !user?.onboardingDismissed && !(hasWallet && hasGoal && hasTransaction) && (
+          <OnboardingCarousel
+            hasWallet={hasWallet}
+            hasGoal={hasGoal}
+            hasTransaction={hasTransaction}
+          />
+        )}
         <Card className="bg-card">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.balance")}</CardTitle>
