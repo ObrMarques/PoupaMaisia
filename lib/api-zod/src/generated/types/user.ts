@@ -18,5 +18,6 @@ export interface User {
   /** @nullable */
   premiumExpiresAt?: string | null;
   onboardingCompleted: boolean;
+  onboardingDismissed: boolean;
   createdAt: string;
 }

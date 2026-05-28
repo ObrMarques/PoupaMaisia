@@ -54,6 +54,7 @@ function serializeUser(user: any) {
     isPremium: user.isPremium,
     premiumExpiresAt: user.premiumExpiresAt?.toISOString() ?? null,
     onboardingCompleted: user.onboardingCompleted,
+    onboardingDismissed: user.onboardingDismissed,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -71,6 +72,7 @@ router.patch("/users/profile", authMiddleware, async (req, res) => {
   if (parsed.data.email !== undefined && parsed.data.email !== null) updates.email = parsed.data.email;
   if (parsed.data.currency !== undefined && parsed.data.currency !== null) updates.currency = parsed.data.currency;
   if (parsed.data.language !== undefined && parsed.data.language !== null) updates.language = parsed.data.language;
+  if (parsed.data.onboardingDismissed !== undefined) updates.onboardingDismissed = parsed.data.onboardingDismissed;
 
   // Avatar: if base64 string, upload to Supabase Storage and store URL instead
   if (parsed.data.avatarUrl !== undefined) {

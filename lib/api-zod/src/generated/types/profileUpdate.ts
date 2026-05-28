@@ -17,4 +17,5 @@ export interface ProfileUpdate {
   currency?: string | null;
   /** @nullable */
   language?: string | null;
+  onboardingDismissed?: boolean;
 }

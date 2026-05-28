@@ -1,130 +1,246 @@
-import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey, useGetWallets, getGetWalletsQueryKey } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey, useGetWallets, getGetWalletsQueryKey, useUpdateProfile, getGetMeQueryKey } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock, Target, Receipt } from "lucide-react";
-import React from "react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock, Target, Receipt, X, CheckCircle2 } from "lucide-react";
+import React, { useRef, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
-/* ── Primeiros Passos ──────────────────────────────────────────── */
-interface OnboardingStep {
-  key: string;
-  icon: React.ElementType;
-  color: string;
-  bg: string;
-  label: string;
-  desc: string;
-  cta: React.ReactNode;
-}
-
-interface GettingStartedProps {
+/* ── Primeiros Passos — Carrossel ──────────────────────────────── */
+interface OnboardingCarouselProps {
   hasWallet: boolean;
   hasGoal: boolean;
   hasTransaction: boolean;
-  isLoading: boolean;
 }
 
-function GettingStarted({ hasWallet, hasGoal, hasTransaction, isLoading }: GettingStartedProps) {
+function OnboardingCarousel({ hasWallet, hasGoal, hasTransaction }: OnboardingCarouselProps) {
+  const { user, updateUser } = useAuth();
+  const qc = useQueryClient();
+  const updateMutation = useUpdateProfile();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const isDragging = useRef(false);
+  const dragStartX = useRef(0);
+  const dragStartScroll = useRef(0);
+
   const total = 3;
   const done = [hasWallet, hasGoal, hasTransaction].filter(Boolean).length;
 
-  if (isLoading) return null;
-  if (done === total) return null;
+  const handleDismiss = () => {
+    updateMutation.mutate(
+      { data: { onboardingDismissed: true } },
+      {
+        onSuccess: (updated) => {
+          updateUser(updated as any);
+          qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+        },
+      }
+    );
+  };
 
-  const allSteps: OnboardingStep[] = [
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const idx = Math.round(el.scrollLeft / el.clientWidth);
+    setActiveIdx(Math.max(0, Math.min(total - 1, idx)));
+  }, [total]);
+
+  const goTo = (idx: number) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: "smooth" });
+  };
+
+  /* mouse drag for desktop */
+  const onMouseDown = (e: React.MouseEvent) => {
+    isDragging.current = true;
+    dragStartX.current = e.pageX;
+    dragStartScroll.current = scrollRef.current?.scrollLeft ?? 0;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grabbing";
+  };
+  const onMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging.current || !scrollRef.current) return;
+    e.preventDefault();
+    scrollRef.current.scrollLeft = dragStartScroll.current - (e.pageX - dragStartX.current);
+  };
+  const onMouseUp = () => {
+    isDragging.current = false;
+    if (scrollRef.current) scrollRef.current.style.cursor = "grab";
+  };
+
+  interface StepDef {
+    key: string;
+    icon: React.ElementType;
+    gradient: string;
+    iconColor: string;
+    title: string;
+    desc: string;
+    done: boolean;
+    cta: React.ReactNode;
+  }
+
+  const steps: StepDef[] = [
     {
       key: "wallet",
       icon: Wallet,
-      color: "text-blue-500",
-      bg: "bg-blue-500/10",
-      label: "Criar primeira carteira",
-      desc: "Organize seu dinheiro por conta ou banco",
+      gradient: "from-blue-500/20 to-blue-600/5",
+      iconColor: "text-blue-500",
+      title: "Criar primeira carteira",
+      desc: "Organize seu dinheiro separando por conta corrente, poupança ou carteira de dinheiro.",
+      done: hasWallet,
       cta: (
         <Link href="/wallets">
-          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Criar</Button>
+          <Button className="w-full mt-4" size="sm">Criar carteira</Button>
         </Link>
       ),
     },
     {
       key: "goal",
       icon: Target,
-      color: "text-purple-500",
-      bg: "bg-purple-500/10",
-      label: "Criar primeira meta financeira",
-      desc: "Defina um objetivo e acompanhe seu progresso",
+      gradient: "from-purple-500/20 to-purple-600/5",
+      iconColor: "text-purple-500",
+      title: "Criar primeira meta",
+      desc: "Defina um objetivo financeiro — viagem, reserva de emergência ou qualquer sonho.",
+      done: hasGoal,
       cta: (
         <Link href="/goals">
-          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Criar</Button>
+          <Button className="w-full mt-4" size="sm">Criar meta</Button>
         </Link>
       ),
     },
     {
       key: "transaction",
       icon: Receipt,
-      color: "text-emerald-500",
-      bg: "bg-emerald-500/10",
-      label: "Adicionar primeira transação",
-      desc: "Registre uma receita ou despesa",
+      gradient: "from-emerald-500/20 to-emerald-600/5",
+      iconColor: "text-emerald-500",
+      title: "Adicionar transação",
+      desc: "Registre sua primeira receita ou despesa para começar a controlar seu dinheiro.",
+      done: hasTransaction,
       cta: (
         <QuickAddTransaction>
-          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Adicionar</Button>
+          <Button className="w-full mt-4" size="sm">Nova transação</Button>
         </QuickAddTransaction>
       ),
     },
   ];
 
-  const doneMap: Record<string, boolean> = { wallet: hasWallet, goal: hasGoal, transaction: hasTransaction };
-  const steps = allSteps.filter((s) => !doneMap[s.key]);
-
   return (
-    <Card className="bg-card border-border overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <CardTitle className="text-base flex items-center gap-2">
-              Primeiros Passos
-              <span className="text-xs font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
-                {done}/{total}
-              </span>
-            </CardTitle>
-            <CardDescription className="mt-0.5">Configure seu controle financeiro</CardDescription>
-          </div>
+    <div className="relative">
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold">Primeiros Passos</h2>
+          <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+            {done}/{total}
+          </span>
         </div>
-        <div className="mt-3 h-1 bg-secondary rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary rounded-full transition-all duration-700"
-            style={{ width: `${(done / total) * 100}%` }}
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0 space-y-2 pb-4">
-        {steps.map((step) => {
+        <button
+          onClick={handleDismiss}
+          disabled={updateMutation.isPending}
+          className="w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+          aria-label="Fechar"
+        >
+          <X className="w-3.5 h-3.5" />
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-0.5 bg-secondary rounded-full overflow-hidden mb-4 mx-1">
+        <div
+          className="h-full bg-primary rounded-full transition-all duration-700"
+          style={{ width: `${(done / total) * 100}%` }}
+        />
+      </div>
+
+      {/* Carousel */}
+      <div
+        ref={scrollRef}
+        onScroll={onScroll}
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseUp={onMouseUp}
+        onMouseLeave={onMouseUp}
+        className="flex overflow-x-scroll gap-3 pb-2 select-none"
+        style={{
+          scrollSnapType: "x mandatory",
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+          cursor: "grab",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
+        {steps.map((step, i) => {
           const Icon = step.icon;
           return (
             <div
               key={step.key}
-              className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border/40 hover:bg-secondary/50 transition-colors"
+              style={{ scrollSnapAlign: "start", minWidth: "calc(85% - 6px)", flexShrink: 0 }}
+              className={cn(
+                "rounded-2xl border border-border/60 bg-card p-5 relative overflow-hidden transition-all duration-300",
+                step.done && "opacity-70"
+              )}
             >
-              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", step.bg)}>
-                <Icon className={cn("w-4 h-4", step.color)} />
+              {/* Gradient background blob */}
+              <div className={cn("absolute inset-0 bg-gradient-to-br opacity-60 pointer-events-none", step.gradient)} />
+
+              {/* Done badge */}
+              {step.done && (
+                <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#00C851]/15 text-[#00C851] text-xs font-medium px-2 py-0.5 rounded-full border border-[#00C851]/20">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Concluído
+                </div>
+              )}
+
+              {/* Step number */}
+              <div className="flex items-center gap-2 mb-3 relative">
+                <div className={cn(
+                  "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                  step.done ? "bg-[#00C851]/15" : "bg-secondary"
+                )}>
+                  {step.done
+                    ? <CheckCircle2 className="w-5 h-5 text-[#00C851]" />
+                    : <Icon className={cn("w-5 h-5", step.iconColor)} />
+                  }
+                </div>
+                <span className="text-xs font-medium text-muted-foreground">Passo {i + 1} de {total}</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium leading-tight">{step.label}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+
+              {/* Content */}
+              <div className="relative">
+                <h3 className="text-base font-semibold leading-snug">{step.title}</h3>
+                <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{step.desc}</p>
+                {!step.done && step.cta}
               </div>
-              {step.cta}
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Dot indicators */}
+      <div className="flex items-center justify-center gap-1.5 mt-3">
+        {steps.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goTo(i)}
+            className={cn(
+              "rounded-full transition-all duration-300",
+              i === activeIdx
+                ? "w-5 h-1.5 bg-primary"
+                : "w-1.5 h-1.5 bg-secondary hover:bg-muted-foreground/40"
+            )}
+            aria-label={`Ir para passo ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -199,13 +315,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Primeiros Passos */}
-      <GettingStarted
-        hasWallet={hasWallet}
-        hasGoal={hasGoal}
-        hasTransaction={hasTransaction}
-        isLoading={gettingStartedLoading}
-      />
+      {/* Primeiros Passos — Carrossel (oculto quando dismissed ou todos concluídos) */}
+      {!gettingStartedLoading && !user?.onboardingDismissed && !(hasWallet && hasGoal && hasTransaction) && (
+        <OnboardingCarousel
+          hasWallet={hasWallet}
+          hasGoal={hasGoal}
+          hasTransaction={hasTransaction}
+        />
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

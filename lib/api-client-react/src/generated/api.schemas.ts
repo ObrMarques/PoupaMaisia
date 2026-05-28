@@ -50,6 +50,7 @@ export interface User {
   /** @nullable */
   premiumExpiresAt?: string | null;
   onboardingCompleted: boolean;
+  onboardingDismissed: boolean;
   createdAt: string;
 }
 
@@ -69,6 +70,7 @@ export interface ProfileUpdate {
   currency?: string | null;
   /** @nullable */
   language?: string | null;
+  onboardingDismissed?: boolean;
 }
 
 export interface OnboardingInput {

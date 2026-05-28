@@ -13,6 +13,7 @@ export const usersTable = pgTable("users", {
   isPremium: boolean("is_premium").notNull().default(false),
   premiumExpiresAt: timestamp("premium_expires_at"),
   onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+  onboardingDismissed: boolean("onboarding_dismissed").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

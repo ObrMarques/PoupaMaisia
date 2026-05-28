@@ -18,6 +18,7 @@ function serializeUser(user: any) {
     isPremium: user.isPremium,
     premiumExpiresAt: user.premiumExpiresAt?.toISOString() ?? null,
     onboardingCompleted: user.onboardingCompleted,
+    onboardingDismissed: user.onboardingDismissed,
     createdAt: user.createdAt.toISOString(),
   };
 }

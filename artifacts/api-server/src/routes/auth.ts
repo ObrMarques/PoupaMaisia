@@ -22,6 +22,7 @@ router.get("/auth/me", authMiddleware, (req, res) => {
     isPremium: isOwner ? true : user.isPremium,
     premiumExpiresAt: user.premiumExpiresAt?.toISOString() ?? null,
     onboardingCompleted: user.onboardingCompleted,
+    onboardingDismissed: user.onboardingDismissed,
     createdAt: user.createdAt.toISOString(),
   });
 });

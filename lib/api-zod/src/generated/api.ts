@@ -54,6 +54,7 @@ export const LoginResponse = zod.object({
   "isPremium": zod.boolean(),
   "premiumExpiresAt": zod.string().nullish(),
   "onboardingCompleted": zod.boolean(),
+  "onboardingDismissed": zod.boolean(),
   "createdAt": zod.string()
 }),
   "token": zod.string()
@@ -82,6 +83,7 @@ export const GetMeResponse = zod.object({
   "isPremium": zod.boolean(),
   "premiumExpiresAt": zod.string().nullish(),
   "onboardingCompleted": zod.boolean(),
+  "onboardingDismissed": zod.boolean(),
   "createdAt": zod.string()
 })
 
@@ -94,7 +96,8 @@ export const UpdateProfileBody = zod.object({
   "email": zod.string().nullish(),
   "avatarUrl": zod.string().nullish(),
   "currency": zod.string().nullish(),
-  "language": zod.string().nullish()
+  "language": zod.string().nullish(),
+  "onboardingDismissed": zod.boolean().optional()
 })
 
 export const UpdateProfileResponse = zod.object({
@@ -107,6 +110,7 @@ export const UpdateProfileResponse = zod.object({
   "isPremium": zod.boolean(),
   "premiumExpiresAt": zod.string().nullish(),
   "onboardingCompleted": zod.boolean(),
+  "onboardingDismissed": zod.boolean(),
   "createdAt": zod.string()
 })
 
@@ -131,6 +135,7 @@ export const CompleteOnboardingResponse = zod.object({
   "isPremium": zod.boolean(),
   "premiumExpiresAt": zod.string().nullish(),
   "onboardingCompleted": zod.boolean(),
+  "onboardingDismissed": zod.boolean(),
   "createdAt": zod.string()
 })
 

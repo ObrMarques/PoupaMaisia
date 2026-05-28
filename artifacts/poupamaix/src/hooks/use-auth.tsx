@@ -14,6 +14,7 @@ export interface AppUser {
   isPremium: boolean;
   premiumExpiresAt?: string | null;
   onboardingCompleted: boolean;
+  onboardingDismissed: boolean;
   createdAt: string;
 }
 
