@@ -197,7 +197,7 @@ const ptBR: TranslationMap = {
     photoUpdated: "Foto atualizada com sucesso", profileUpdated: "Perfil atualizado com sucesso",
     preferencesUpdated: "Preferências salvas",
     appearance: "Aparência", notifications: "Notificações", legal: "Legal", account: "Conta",
-    tapChangePhoto: "Toque para alterar a foto", fullName: "Nome completo", notEditable: "não editável",
+    tapChangePhoto: "Toque para alterar a foto", fullName: "Nome", notEditable: "não editável",
     saved: "Salvo!", saveError: "Erro ao salvar. Tente novamente.",
     darkModeOn: "Fundo escuro, textos claros", darkModeOff: "Fundo claro, textos escuros",
     pushNotif: "Notificações push", pushNotifDesc: "Alertas e atualizações",
