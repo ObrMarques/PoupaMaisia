@@ -11,10 +11,10 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UpgradeModal } from "@/components/upgrade-modal";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CurrencyInput } from "@/components/currency-input";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Plus, Pencil, Trash2, TrendingUp, PiggyBank, Plane, Shield, ShoppingBag, Target, CheckCircle2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { LucideIcon } from "lucide-react";
@@ -74,14 +74,18 @@ function GoalForm({
   t: (key: string) => string;
 }) {
   return (
-    <div className="space-y-4 py-2">
-      <div className="space-y-2">
-        <Label>{type === "other" ? t("goals.goalNameCustom") : t("goals.goalName")}</Label>
+    <div className="space-y-5 py-2">
+
+      {/* Name */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {type === "other" ? t("goals.goalNameCustom") : t("goals.goalName")}
+        </label>
         <Input
           placeholder={type === "other" ? "Ex: Casa própria, iPhone, Curso..." : (EXAMPLES[type]?.[0] ?? t("goals.goalName"))}
           value={name}
           onChange={e => setName(e.target.value)}
-          className="bg-background"
+          className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
           data-testid="input-goal-name"
         />
         {!isEditing && type !== "other" && EXAMPLES[type] && (
@@ -91,7 +95,7 @@ function GoalForm({
                 key={ex}
                 type="button"
                 onClick={() => setName(ex)}
-                className="text-xs px-2 py-0.5 rounded-full border border-border text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                className="text-xs px-2.5 py-1 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
               >
                 {ex}
               </button>
@@ -100,53 +104,68 @@ function GoalForm({
         )}
       </div>
 
+      {/* Amounts */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label>{t("goals.targetAmount")}</Label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            {t("goals.targetAmount")}
+          </label>
           <CurrencyInput
             value={targetAmount}
             onValueChange={setTargetAmount}
-            className="bg-background font-semibold h-11"
+            className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40 font-semibold"
             data-testid="input-goal-amount"
           />
         </div>
-        <div className="space-y-2">
-          <Label>{t("goals.currentAmount")} <span className="text-muted-foreground text-xs">({t("goals.optional")})</span></Label>
+        <div className="space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+            {t("goals.currentAmount")}{" "}
+            <span className="normal-case font-normal tracking-normal">({t("goals.optional")})</span>
+          </label>
           <CurrencyInput
             value={currentAmount}
             onValueChange={setCurrentAmount}
-            className="bg-background h-11"
+            className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label>{t("goals.deadline")} <span className="text-muted-foreground text-xs">({t("goals.optional")})</span></Label>
+      {/* Deadline */}
+      <div className="space-y-1.5">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {t("goals.deadline")}{" "}
+          <span className="normal-case font-normal tracking-normal">({t("goals.optional")})</span>
+        </label>
         <Input
           type="date"
           value={deadline}
           onChange={e => setDeadline(e.target.value)}
-          className="bg-background"
+          className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40 text-sm"
         />
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">{t("goals.goalColor")}</Label>
-        <div className="grid grid-cols-8 gap-1.5">
+      {/* Color */}
+      <div className="space-y-1.5 pb-1">
+        <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+          {t("goals.goalColor")}
+        </label>
+        <div className="flex flex-wrap gap-2">
           {GOAL_COLORS.map(c => (
             <button
               key={c.value}
               type="button"
               title={c.label}
               onClick={() => setColor(c.value)}
-              className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
-                color === c.value ? "border-primary scale-110" : "border-transparent"
-              }`}
+              className={cn(
+                "w-8 h-8 rounded-full transition-transform hover:scale-110",
+                color === c.value ? "ring-2 ring-offset-2 ring-foreground scale-110" : ""
+              )}
               style={{ backgroundColor: c.value }}
             />
           ))}
         </div>
       </div>
+
     </div>
   );
 }
@@ -293,23 +312,42 @@ export default function Goals() {
                 <Plus className="w-4 h-4 mr-2" /> {t("goals.newGoal")}
               </Button>
             </DialogTrigger>
-            <DialogContent aria-describedby={undefined} className="sm:max-w-[460px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>{editingGoal ? t("goals.editGoal") : t("goals.createGoal")}</DialogTitle>
-              </DialogHeader>
+            <DialogContent
+              aria-describedby={undefined}
+              className={cn(
+                "p-0 gap-0 border-0 shadow-2xl overflow-hidden",
+                "w-[calc(100%-32px)] max-w-[460px]",
+                "rounded-2xl sm:rounded-2xl",
+                "flex flex-col",
+                "max-h-[92dvh]",
+                "duration-200",
+              )}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              {/* ── Header ─────────────────────────────────────── */}
+              <div className="px-6 pt-6 pb-4 shrink-0">
+                <DialogTitle className="text-base font-semibold tracking-tight">
+                  {editingGoal ? t("goals.editGoal") : t("goals.createGoal")}
+                </DialogTitle>
+              </div>
 
-              <GoalForm
-                name={name} setName={setName}
-                targetAmount={targetAmount} setTargetAmount={setTargetAmount}
-                currentAmount={currentAmount} setCurrentAmount={setCurrentAmount}
-                type={type}
-                color={color} setColor={setColor}
-                deadline={deadline} setDeadline={setDeadline}
-                isEditing={!!editingGoal}
-                t={t}
-              />
+              {/* ── Scrollable body ────────────────────────────── */}
+              <div className="flex-1 overflow-y-auto px-6 pb-2 min-h-0">
+                <GoalForm
+                  name={name} setName={setName}
+                  targetAmount={targetAmount} setTargetAmount={setTargetAmount}
+                  currentAmount={currentAmount} setCurrentAmount={setCurrentAmount}
+                  type={type}
+                  color={color} setColor={setColor}
+                  deadline={deadline} setDeadline={setDeadline}
+                  isEditing={!!editingGoal}
+                  t={t}
+                />
+              </div>
 
-              <div className="flex justify-between gap-2 pt-2">
+              {/* ── Sticky footer ──────────────────────────────── */}
+              <div className="shrink-0 px-6 py-4 bg-background border-t border-border flex items-center justify-between gap-3">
+                {/* Delete / confirm delete — only when editing */}
                 {editingGoal ? (
                   showDeleteConfirm ? (
                     <div className="flex items-center gap-2 flex-wrap">
@@ -317,7 +355,9 @@ export default function Goals() {
                       <Button variant="destructive" size="sm" onClick={handleDelete} disabled={isPending}>
                         {t("goals.yesDelete")}
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>{t("goals.no")}</Button>
+                      <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+                        {t("goals.no")}
+                      </Button>
                     </div>
                   ) : (
                     <Button
@@ -328,13 +368,23 @@ export default function Goals() {
                       <Trash2 className="w-3.5 h-3.5 mr-1.5" /> {t("common.delete")}
                     </Button>
                   )
-                ) : <div />}
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsFormOpen(false)}>{t("common.cancel")}</Button>
-                  <Button onClick={handleSave} disabled={isPending || !name.trim() || !targetAmount}>
-                    {isPending ? t("goals.saving") : editingGoal ? t("common.save") : t("goals.createGoal")}
+                ) : (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setIsFormOpen(false)}
+                    className="flex-none text-muted-foreground hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {t("common.cancel")}
                   </Button>
-                </div>
+                )}
+                <Button
+                  className="flex-1 h-12 text-base font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background transition-all"
+                  onClick={handleSave}
+                  disabled={isPending || !name.trim() || !targetAmount}
+                >
+                  {isPending ? t("goals.saving") : editingGoal ? t("common.save") : t("goals.createGoal")}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -343,33 +393,66 @@ export default function Goals() {
 
       {/* Contribute dialog */}
       <Dialog open={isContributeOpen} onOpenChange={setIsContributeOpen}>
-        <DialogContent aria-describedby={undefined} className="sm:max-w-[380px]">
-          <DialogHeader>
-            <DialogTitle>{t("goals.contributeTitle")}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>{t("goals.howMuch")}</Label>
+        <DialogContent
+          aria-describedby={undefined}
+          className={cn(
+            "p-0 gap-0 border-0 shadow-2xl overflow-hidden",
+            "w-[calc(100%-32px)] max-w-[380px]",
+            "rounded-2xl sm:rounded-2xl",
+            "flex flex-col",
+            "max-h-[92dvh]",
+            "duration-200",
+          )}
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          {/* Header */}
+          <div className="px-6 pt-6 pb-4 shrink-0">
+            <DialogTitle className="text-base font-semibold tracking-tight">
+              {t("goals.contributeTitle")}
+            </DialogTitle>
+          </div>
+
+          {/* Body */}
+          <div className="px-6 pb-2 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                {t("goals.howMuch")}
+              </label>
               <CurrencyInput
                 value={contributeAmount}
                 onValueChange={setContributeAmount}
-                className="bg-background text-lg font-semibold h-12"
-                autoFocus
+                className="h-14 text-2xl font-bold bg-secondary border-0 rounded-xl px-4 focus-visible:ring-2 focus-visible:ring-ring/40"
               />
             </div>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap pb-2">
               {["50", "100", "250", "500", "1000"].map(v => (
-                <Button key={v} variant="outline" size="sm" className="bg-background text-xs"
+                <button
+                  key={v}
+                  type="button"
                   onClick={() => setContributeAmount(v + ".00")}
+                  className="text-xs px-3 py-1.5 rounded-full bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {formatCurrency(parseFloat(v), user?.currency)}
-                </Button>
+                </button>
               ))}
             </div>
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsContributeOpen(false)}>{t("common.cancel")}</Button>
-            <Button onClick={handleContribute} disabled={contributeMutation.isPending || !contributeAmount}>
+
+          {/* Footer */}
+          <div className="shrink-0 px-6 py-4 bg-background border-t border-border flex gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setIsContributeOpen(false)}
+              className="flex-none text-muted-foreground hover:text-foreground"
+              tabIndex={-1}
+            >
+              {t("common.cancel")}
+            </Button>
+            <Button
+              className="flex-1 h-12 text-base font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background transition-all"
+              onClick={handleContribute}
+              disabled={contributeMutation.isPending || !contributeAmount}
+            >
               {contributeMutation.isPending ? t("goals.saving") : t("goals.confirm")}
             </Button>
           </div>
