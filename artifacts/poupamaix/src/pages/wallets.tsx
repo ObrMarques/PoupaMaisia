@@ -70,7 +70,9 @@ export default function Wallets() {
   const currency = user?.currency || "BRL";
   const { isPremium } = useSubscription();
 
-  const { data: wallets, isLoading } = useGetWallets();
+  const { data: wallets, isLoading } = useGetWallets({
+    query: { staleTime: 0, queryKey: getGetWalletsQueryKey() },
+  });
   const createMutation = useCreateWallet();
   const updateMutation = useUpdateWallet();
   const deleteMutation = useDeleteWallet();

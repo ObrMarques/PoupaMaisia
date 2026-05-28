@@ -1,4 +1,4 @@
-import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey, useGetWallets } from "@workspace/api-client-react";
+import { useGetDashboardSummary, useGetSpendingByCategory, useGetMonthlyTrend, useGetGoals, useGetPendingTransactions, getGetPendingTransactionsQueryKey, useGetWallets, getGetWalletsQueryKey } from "@workspace/api-client-react";
 import { formatCurrency } from "@/lib/format";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
@@ -27,7 +27,9 @@ export default function Dashboard() {
   const { data: pending, isLoading: loadingPending } = useGetPendingTransactions({
     query: { staleTime: 0, queryKey: getGetPendingTransactionsQueryKey() },
   });
-  const { data: wallets, isLoading: loadingWallets } = useGetWallets();
+  const { data: wallets, isLoading: loadingWallets } = useGetWallets({
+    query: { staleTime: 0, queryKey: getGetWalletsQueryKey() },
+  });
   const currency = user?.currency || "BRL";
 
   const totalWalletBalance = wallets?.reduce((sum, w) => sum + w.balance, 0) ?? 0;
