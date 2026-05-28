@@ -18,10 +18,10 @@ router.get("/dashboard/summary", authMiddleware, async (req, res) => {
   // All figures based solely on completed current-month transactions
   const txResult = await db.execute(sql`
     SELECT
-      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_income,
-      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN amount::numeric ELSE 0 END) AS monthly_expenses,
-      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_income,
-      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN amount::numeric ELSE 0 END) AS prev_expenses,
+      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN ABS(amount::numeric) ELSE 0 END) AS monthly_income,
+      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${month}     AND EXTRACT(YEAR FROM date) = ${year}     THEN ABS(amount::numeric) ELSE 0 END) AS monthly_expenses,
+      SUM(CASE WHEN type = 'income'  AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN ABS(amount::numeric) ELSE 0 END) AS prev_income,
+      SUM(CASE WHEN type = 'expense' AND EXTRACT(MONTH FROM date) = ${prevMonth} AND EXTRACT(YEAR FROM date) = ${prevYear} THEN ABS(amount::numeric) ELSE 0 END) AS prev_expenses,
       COUNT(CASE WHEN EXTRACT(MONTH FROM date) = ${month} AND EXTRACT(YEAR FROM date) = ${year} THEN 1 END) AS tx_count
     FROM transactions
     WHERE user_id = ${user.id} AND (status IS NULL OR status = 'completed')
@@ -61,7 +61,7 @@ router.get("/dashboard/spending-by-category", authMiddleware, async (req, res) =
       c.name  AS category_name,
       c.color AS category_color,
       c.icon  AS category_icon,
-      SUM(t.amount::numeric) AS total_amount,
+      SUM(ABS(t.amount::numeric)) AS total_amount,
       COUNT(*) AS tx_count
     FROM transactions t
     LEFT JOIN categories c ON c.id = t.category_id
@@ -102,8 +102,8 @@ router.get("/dashboard/monthly-trend", authMiddleware, async (req, res) => {
     SELECT
       EXTRACT(MONTH FROM date)::int AS month,
       EXTRACT(YEAR  FROM date)::int AS year,
-      SUM(CASE WHEN type = 'income'  THEN amount::numeric ELSE 0 END) AS income,
-      SUM(CASE WHEN type = 'expense' THEN amount::numeric ELSE 0 END) AS expenses
+      SUM(CASE WHEN type = 'income'  THEN ABS(amount::numeric) ELSE 0 END) AS income,
+      SUM(CASE WHEN type = 'expense' THEN ABS(amount::numeric) ELSE 0 END) AS expenses
     FROM transactions
     WHERE user_id = ${user.id} AND date >= ${cutoff} AND (status IS NULL OR status = 'completed')
     GROUP BY EXTRACT(MONTH FROM date), EXTRACT(YEAR FROM date)
