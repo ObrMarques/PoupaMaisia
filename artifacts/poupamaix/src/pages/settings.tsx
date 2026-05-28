@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
@@ -42,10 +42,13 @@ function resizeImageToBase64(file: File, maxSize = 200): Promise<string> {
   });
 }
 
-function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
+function SectionCard({ title, children, right }: { title: string; children: React.ReactNode; right?: React.ReactNode }) {
   return (
     <div className="mb-2">
-      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground px-1 mb-2">{title}</p>
+      <div className="flex items-center justify-between px-1 mb-2">
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{title}</p>
+        {right}
+      </div>
       <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {children}
       </div>
@@ -114,8 +117,11 @@ export default function Settings() {
   const [uploadError, setUploadError]           = useState<string | null>(null);
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const nameDirtyRef  = useRef(false);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [prefSaved, setPrefSaved] = useState(false);
+  const nameDirtyRef       = useRef(false);
+  const avatarInputRef     = useRef<HTMLInputElement>(null);
+  const currencyTimerRef   = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const prefSavedTimerRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const [modal, setModal] = useState<"terms" | "privacy" | "cookies" | "delete" | null>(null);
 
@@ -123,6 +129,12 @@ export default function Settings() {
     if (user?.name && !nameDirtyRef.current) setName(user.name);
     if (user?.currency) setCurrency(user.currency);
   }, [user?.name, user?.currency]);
+
+  const showPrefSaved = useCallback(() => {
+    setPrefSaved(true);
+    clearTimeout(prefSavedTimerRef.current);
+    prefSavedTimerRef.current = setTimeout(() => setPrefSaved(false), 2500);
+  }, []);
 
   const handleSaveProfile = () => {
     const trimmedName = name.trim();
@@ -146,20 +158,36 @@ export default function Settings() {
     );
   };
 
-  const handleSavePreferences = () => {
+  const handleLanguageChange = (lang: string) => {
+    setLanguage(lang as Language);
     updateMutation.mutate(
-      { data: { currency, language } },
+      { data: { language: lang } },
       {
         onSuccess: (updated) => {
           updateUser(updated);
           qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+          showPrefSaved();
         },
-        onError: () => {},
       }
     );
   };
 
-  const handleLanguageChange = (lang: string) => setLanguage(lang as Language);
+  const handleCurrencyChange = (val: string) => {
+    setCurrency(val);
+    clearTimeout(currencyTimerRef.current);
+    currencyTimerRef.current = setTimeout(() => {
+      updateMutation.mutate(
+        { data: { currency: val } },
+        {
+          onSuccess: (updated) => {
+            updateUser(updated);
+            qc.invalidateQueries({ queryKey: getGetMeQueryKey() });
+            showPrefSaved();
+          },
+        }
+      );
+    }, 400);
+  };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -310,7 +338,16 @@ export default function Settings() {
         </SectionCard>
 
         {/* ── Preferências ─────────────────────────── */}
-        <SectionCard title={t("settings.preferences")}>
+        <SectionCard
+          title={t("settings.preferences")}
+          right={
+            prefSaved ? (
+              <span className="flex items-center gap-1 text-xs text-green-500 animate-in fade-in duration-200">
+                <Check className="w-3 h-3" /> {t("settings.saved")}
+              </span>
+            ) : undefined
+          }
+        >
           <SettingRow
             icon={<Moon className="w-4 h-4 text-purple-400" />}
             iconBg="bg-[#ffffff26]"
@@ -340,7 +377,7 @@ export default function Settings() {
             iconBg="bg-[#ffffff26]"
             label={t("settings.currency")}
             right={
-              <Select value={currency} onValueChange={setCurrency}>
+              <Select value={currency} onValueChange={handleCurrencyChange}>
                 <SelectTrigger className="w-32 h-8 text-xs bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
@@ -353,11 +390,6 @@ export default function Settings() {
             }
             divider={false}
           />
-          <div className="px-4 py-3 border-t border-border/60">
-            <Button onClick={handleSavePreferences} disabled={updateMutation.isPending} variant="outline" className="w-full">
-              {updateMutation.isPending ? t("common.saving") : t("settings.savePreferences")}
-            </Button>
-          </div>
         </SectionCard>
 
         {/* ── Legal ────────────────────────────────── */}
