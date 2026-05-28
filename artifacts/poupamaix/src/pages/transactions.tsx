@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { Repeat } from "lucide-react";
 import {
   useGetTransactions, useDeleteTransaction, usePayTransaction,
   getGetTransactionsQueryKey, getGetRecentTransactionsQueryKey, getGetDashboardSummaryQueryKey,
@@ -303,6 +304,12 @@ export default function Transactions() {
                           {!isPending && tx.status === "completed" && tx.type === "expense" && (
                             <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">
                               {t("transactions.paid")}
+                            </span>
+                          )}
+                          {tx.isRecurring && (
+                            <span className="inline-flex items-center gap-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-secondary text-muted-foreground shrink-0">
+                              <Repeat className="w-2.5 h-2.5" />
+                              {t("transactions.recurringBadge")}
                             </span>
                           )}
                         </div>

@@ -14,6 +14,14 @@ function isFutureDate(dateStr: string): boolean {
   return txDate > today;
 }
 
+function nextRecurringDate(dateStr: string, period: string): string {
+  const d = new Date(dateStr + "T00:00:00");
+  if (period === "weekly")  d.setDate(d.getDate() + 7);
+  else if (period === "monthly") d.setMonth(d.getMonth() + 1);
+  else if (period === "yearly")  d.setFullYear(d.getFullYear() + 1);
+  return d.toISOString().split("T")[0];
+}
+
 async function serializeTransaction(tx: any, cat: any, walletMap: Map<number, any> = new Map()) {
   const wallet = tx.walletId ? walletMap.get(tx.walletId) : null;
   return {
@@ -179,6 +187,24 @@ router.patch("/transactions/:id/pay", authMiddleware, async (req, res) => {
 
   if (tx.cardId && tx.type === "expense") {
     await recalculateCardBalance(tx.cardId, user.id);
+  }
+
+  // Auto-create next pending occurrence for recurring transactions
+  if (tx.isRecurring && tx.recurringPeriod) {
+    const nextDate = nextRecurringDate(tx.date, tx.recurringPeriod);
+    await db.insert(transactionsTable).values({
+      userId: tx.userId,
+      type: tx.type,
+      amount: tx.amount,
+      description: tx.description,
+      date: nextDate,
+      categoryId: tx.categoryId,
+      isRecurring: true,
+      recurringPeriod: tx.recurringPeriod,
+      walletId: tx.walletId,
+      notes: tx.notes,
+      status: "pending",
+    });
   }
 
   const [cats, wallets] = await Promise.all([

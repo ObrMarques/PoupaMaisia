@@ -116,6 +116,9 @@ type TranslationMap = {
     saving: string; noPendingMsg: string; noTransactions: string; addTransaction: string;
     overdue: string; today: string; tomorrow: string; dUnit: string;
     paid: string; payBtn: string;
+    recurring: string; recurringDesc: string;
+    recurringFreq: string; recurringMonthly: string; recurringWeekly: string; recurringYearly: string;
+    recurringBadge: string;
   };
   wallets: {
     title: string; subtitle: string; newWallet: string; editWallet: string;
@@ -306,6 +309,9 @@ const ptBR: TranslationMap = {
     noTransactions: "Nenhuma transação encontrada.", addTransaction: "Adicionar transação",
     overdue: "atrasado", today: "hoje", tomorrow: "amanhã", dUnit: "d",
     paid: "pago", payBtn: "Pagar",
+    recurring: "Conta recorrente", recurringDesc: "Repete automaticamente todo período",
+    recurringFreq: "Frequência", recurringMonthly: "Mensal", recurringWeekly: "Semanal", recurringYearly: "Anual",
+    recurringBadge: "recorrente",
   },
   wallets: {
     title: "Carteiras", subtitle: "Gerencie suas contas e fontes de dinheiro.",
@@ -521,6 +527,9 @@ const en: TranslationMap = {
     noTransactions: "No transactions found.", addTransaction: "Add transaction",
     overdue: "overdue", today: "today", tomorrow: "tomorrow", dUnit: "d",
     paid: "paid", payBtn: "Pay",
+    recurring: "Recurring bill", recurringDesc: "Repeats automatically each period",
+    recurringFreq: "Frequency", recurringMonthly: "Monthly", recurringWeekly: "Weekly", recurringYearly: "Yearly",
+    recurringBadge: "recurring",
   },
   wallets: {
     title: "Wallets", subtitle: "Manage your accounts and money sources.",
@@ -736,6 +745,9 @@ const es: TranslationMap = {
     noTransactions: "No se encontraron transacciones.", addTransaction: "Agregar transacción",
     overdue: "vencida", today: "hoy", tomorrow: "mañana", dUnit: "d",
     paid: "pagado", payBtn: "Pagar",
+    recurring: "Factura recurrente", recurringDesc: "Se repite automáticamente cada período",
+    recurringFreq: "Frecuencia", recurringMonthly: "Mensual", recurringWeekly: "Semanal", recurringYearly: "Anual",
+    recurringBadge: "recurrente",
   },
   wallets: {
     title: "Carteras", subtitle: "Gestiona tus cuentas y fuentes de dinero.",
@@ -951,6 +963,9 @@ const fr: TranslationMap = {
     noTransactions: "Aucune transaction trouvée.", addTransaction: "Ajouter une transaction",
     overdue: "en retard", today: "aujourd'hui", tomorrow: "demain", dUnit: "j",
     paid: "payé", payBtn: "Payer",
+    recurring: "Facture récurrente", recurringDesc: "Se répète automatiquement chaque période",
+    recurringFreq: "Fréquence", recurringMonthly: "Mensuel", recurringWeekly: "Hebdomadaire", recurringYearly: "Annuel",
+    recurringBadge: "récurrent",
   },
   wallets: {
     title: "Portefeuilles", subtitle: "Gérez vos comptes et sources d'argent.",

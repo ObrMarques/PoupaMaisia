@@ -17,8 +17,9 @@ import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
 import { WalletFormDialog } from "@/components/wallet-form-dialog";
-import { AlertCircle, ChevronRight, Wallet, Plus } from "lucide-react";
+import { AlertCircle, ChevronRight, Wallet, Plus, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 export interface TransactionDialogProps {
   open: boolean;
@@ -58,6 +59,8 @@ export function TransactionDialog({
   const [walletName, setWalletName]     = useState<string | null>(null);
   const [walletColor, setWalletColor]   = useState<string | null>(null);
   const [notes, setNotes]               = useState("");
+  const [isRecurring, setIsRecurring]               = useState(false);
+  const [recurringPeriod, setRecurringPeriod]       = useState<"weekly" | "monthly" | "yearly">("monthly");
 
   const { data: categories } = useGetCategories();
   const { data: wallets }    = useGetWallets();
@@ -72,6 +75,7 @@ export function TransactionDialog({
     setDate(new Date().toISOString().split("T")[0]);
     setCategoryId(""); setCategoryName("");
     setNotes(""); setWalletError(false);
+    setIsRecurring(false); setRecurringPeriod("monthly");
     if (initialWalletId != null) {
       const w = walletList.find(w => w.id === initialWalletId);
       setWalletId(initialWalletId);
@@ -96,6 +100,8 @@ export function TransactionDialog({
       setWalletName(tx.walletName ?? null);
       setWalletColor(tx.walletColor ?? null);
       setNotes(tx.notes || "");
+      setIsRecurring(tx.isRecurring ?? false);
+      setRecurringPeriod((tx.recurringPeriod as "weekly" | "monthly" | "yearly") || "monthly");
       setWalletError(false);
     } else {
       resetForm();
@@ -131,6 +137,8 @@ export function TransactionDialog({
       type, amount: parseFloat(amount), description,
       date, categoryId: parseInt(categoryId, 10), walletId,
       notes: notes || null,
+      isRecurring,
+      recurringPeriod: isRecurring ? recurringPeriod : null,
     };
 
     if (editingTransaction) {
@@ -388,6 +396,48 @@ export function TransactionDialog({
                       onChange={e => setNotes(e.target.value)}
                       className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
                     />
+                  </div>
+
+                  {/* Recurring */}
+                  <div className="rounded-xl bg-secondary p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Repeat className="w-4 h-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium leading-none">{t("transactions.recurring")}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{t("transactions.recurringDesc")}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={isRecurring}
+                        onCheckedChange={setIsRecurring}
+                      />
+                    </div>
+
+                    {isRecurring && (
+                      <div className="space-y-1.5 pt-1">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                          {t("transactions.recurringFreq")}
+                        </p>
+                        <div className="flex gap-2">
+                          {(["weekly", "monthly", "yearly"] as const).map(p => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setRecurringPeriod(p)}
+                              className={cn(
+                                "flex-1 py-2 rounded-lg text-sm font-medium transition-colors border",
+                                recurringPeriod === p
+                                  ? "bg-foreground text-background border-foreground"
+                                  : "bg-background text-muted-foreground border-border hover:border-foreground/40"
+                              )}
+                            >
+                              {t(`transactions.recurring${p.charAt(0).toUpperCase() + p.slice(1)}` as any)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )
