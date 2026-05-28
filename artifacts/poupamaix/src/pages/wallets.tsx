@@ -21,7 +21,7 @@ import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import {
   Plus, Pencil, Trash2, Wallet, Building2,
   Landmark, Briefcase, PiggyBank, DollarSign, CreditCard, Banknote,
-  TrendingUp, TrendingDown,
+  TrendingDown,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -317,15 +317,6 @@ export default function Wallets() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 shrink-0 flex-wrap justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 px-2 text-xs text-[#00C851] border-[#00C851]/30 hover:bg-[#00C851]/10 hover:text-[#00C851] hover:border-[#00C851]/50"
-                      onClick={() => setQuickAdd({ walletId: w.id, type: "income" })}
-                    >
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      Entrada
-                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
