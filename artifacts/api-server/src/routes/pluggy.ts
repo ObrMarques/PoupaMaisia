@@ -74,12 +74,13 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         const institutionName = item.connector?.name ?? account.bankData?.transferNumber ?? "Banco";
         const name = `${account.name ?? institutionName}`;
 
+        // Create wallet with initial_balance = 0 for now; we'll adjust after importing txs
         const [newWallet] = await db.insert(walletsTable).values({
           userId: user.id,
           name,
           color,
           icon,
-          initialBalance: String(account.balance ?? 0),
+          initialBalance: "0",
           pluggyItemId: itemId,
           pluggyAccountId: account.id,
         }).returning();
@@ -96,6 +97,7 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
       const { results: txs } = await getTransactions(account.id, { from: fromStr });
 
       let imported = 0;
+      let netImported = 0; // track income - expense of imported txs
       for (const tx of txs) {
         // Skip if already imported (idempotent)
         const dupCheck = await db
@@ -110,7 +112,8 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
         if (dupCheck.length) continue;
 
         const isExpense = tx.type === "DEBIT" || tx.amount < 0;
-        const amount = Math.abs(tx.amount).toFixed(2);
+        const absAmount = Math.abs(tx.amount);
+        const amount = absAmount.toFixed(2);
         const txDate = tx.date?.split("T")[0] ?? new Date().toISOString().split("T")[0];
         const description = tx.description ?? tx.descriptionRaw ?? "Transação importada";
 
@@ -123,12 +126,20 @@ router.post("/pluggy/connect", authMiddleware, async (req, res) => {
           categoryId: defaultCategoryId,
           walletId,
           pluggyTransactionId: tx.id,
+          status: "completed",
         });
 
+        netImported += isExpense ? -absAmount : absAmount;
         imported++;
       }
 
-      logger.info({ walletId, accountId: account.id, imported }, "pluggy: account connected");
+      // Adjust initial_balance so that: initial_balance + net_imported = account.balance
+      // This ensures the displayed balance equals the real bank balance.
+      const accountBalance = account.balance ?? 0;
+      const adjustedInitialBalance = accountBalance - netImported;
+      await db.execute(sql`UPDATE wallets SET initial_balance = ${String(adjustedInitialBalance)} WHERE id = ${walletId}`);
+
+      logger.info({ walletId, accountId: account.id, imported, adjustedInitialBalance }, "pluggy: account connected");
     }
 
     res.json({
