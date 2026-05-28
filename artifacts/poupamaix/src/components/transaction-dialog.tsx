@@ -16,9 +16,8 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
-import { AlertCircle, ChevronRight, Wallet, X } from "lucide-react";
+import { AlertCircle, ChevronRight, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
-import * as DialogPrimitive from "@radix-ui/react-dialog";
 
 export interface TransactionDialogProps {
   open: boolean;
@@ -198,17 +197,10 @@ export function TransactionDialog({
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {/* ── Header ─────────────────────────────────────── */}
-          <div className="relative flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+          <div className="px-6 pt-6 pb-4 shrink-0">
             <DialogTitle className="text-base font-semibold tracking-tight">
               {isEditing ? t("transactions.editTransaction") : t("transactions.newTransaction")}
             </DialogTitle>
-            <DialogPrimitive.Close
-              className="flex items-center justify-center w-8 h-8 rounded-full bg-secondary hover:bg-secondary/80 text-muted-foreground hover:text-foreground transition-colors"
-              tabIndex={-1}
-            >
-              <X className="w-4 h-4" />
-              <span className="sr-only">Fechar</span>
-            </DialogPrimitive.Close>
           </div>
 
           {/* ── Scrollable body ────────────────────────────── */}
