@@ -4,12 +4,129 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/contexts/theme-context";
 import { useI18n } from "@/contexts/i18n-context";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Wallet, Sparkles, Plus, Bell, Clock, Target, Receipt } from "lucide-react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+/* ── Primeiros Passos ──────────────────────────────────────────── */
+interface OnboardingStep {
+  key: string;
+  icon: React.ElementType;
+  color: string;
+  bg: string;
+  label: string;
+  desc: string;
+  cta: React.ReactNode;
+}
+
+interface GettingStartedProps {
+  hasWallet: boolean;
+  hasGoal: boolean;
+  hasTransaction: boolean;
+  isLoading: boolean;
+}
+
+function GettingStarted({ hasWallet, hasGoal, hasTransaction, isLoading }: GettingStartedProps) {
+  const total = 3;
+  const done = [hasWallet, hasGoal, hasTransaction].filter(Boolean).length;
+
+  if (isLoading) return null;
+  if (done === total) return null;
+
+  const allSteps: OnboardingStep[] = [
+    {
+      key: "wallet",
+      icon: Wallet,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      label: "Criar primeira carteira",
+      desc: "Organize seu dinheiro por conta ou banco",
+      cta: (
+        <Link href="/wallets">
+          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Criar</Button>
+        </Link>
+      ),
+    },
+    {
+      key: "goal",
+      icon: Target,
+      color: "text-purple-500",
+      bg: "bg-purple-500/10",
+      label: "Criar primeira meta financeira",
+      desc: "Defina um objetivo e acompanhe seu progresso",
+      cta: (
+        <Link href="/goals">
+          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Criar</Button>
+        </Link>
+      ),
+    },
+    {
+      key: "transaction",
+      icon: Receipt,
+      color: "text-emerald-500",
+      bg: "bg-emerald-500/10",
+      label: "Adicionar primeira transação",
+      desc: "Registre uma receita ou despesa",
+      cta: (
+        <QuickAddTransaction>
+          <Button size="sm" variant="outline" className="shrink-0 h-8 text-xs px-3">Adicionar</Button>
+        </QuickAddTransaction>
+      ),
+    },
+  ];
+
+  const doneMap: Record<string, boolean> = { wallet: hasWallet, goal: hasGoal, transaction: hasTransaction };
+  const steps = allSteps.filter((s) => !doneMap[s.key]);
+
+  return (
+    <Card className="bg-card border-border overflow-hidden">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <CardTitle className="text-base flex items-center gap-2">
+              Primeiros Passos
+              <span className="text-xs font-normal text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">
+                {done}/{total}
+              </span>
+            </CardTitle>
+            <CardDescription className="mt-0.5">Configure seu controle financeiro</CardDescription>
+          </div>
+        </div>
+        <div className="mt-3 h-1 bg-secondary rounded-full overflow-hidden">
+          <div
+            className="h-full bg-primary rounded-full transition-all duration-700"
+            style={{ width: `${(done / total) * 100}%` }}
+          />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-2 pb-4">
+        {steps.map((step) => {
+          const Icon = step.icon;
+          return (
+            <div
+              key={step.key}
+              className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border/40 hover:bg-secondary/50 transition-colors"
+            >
+              <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", step.bg)}>
+                <Icon className={cn("w-4 h-4", step.color)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium leading-tight">{step.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{step.desc}</p>
+              </div>
+              {step.cta}
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -43,6 +160,15 @@ export default function Dashboard() {
     name: getMonthShort(t.month),
   }));
 
+  // Primeiros Passos flags — derived from already-fetched data, no extra API call
+  const hasWallet     = (wallets?.length ?? 0) > 0;
+  const hasGoal       = (goals?.length ?? 0) > 0;
+  const hasTransaction =
+    (summary?.monthlyIncome ?? 0) > 0 ||
+    (summary?.monthlyExpenses ?? 0) > 0 ||
+    (spending?.length ?? 0) > 0;
+  const gettingStartedLoading = loadingWallets || loadingGoals;
+
   return (
     <div className="p-4 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
       {/* Header */}
@@ -72,6 +198,14 @@ export default function Dashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Primeiros Passos */}
+      <GettingStarted
+        hasWallet={hasWallet}
+        hasGoal={hasGoal}
+        hasTransaction={hasTransaction}
+        isLoading={gettingStartedLoading}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
