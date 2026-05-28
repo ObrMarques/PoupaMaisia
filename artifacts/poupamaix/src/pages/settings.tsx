@@ -313,14 +313,14 @@ export default function Settings() {
         <SectionCard title={t("settings.preferences")}>
           <SettingRow
             icon={<Moon className="w-4 h-4 text-purple-400" />}
-            iconBg="bg-purple-500/15"
+            iconBg="bg-[#ffffff26]"
             label={t("settings.darkMode")}
             description={isDark ? t("settings.darkModeOn") : t("settings.darkModeOff")}
             right={<Switch checked={isDark} onCheckedChange={toggleTheme} data-testid="switch-theme" />}
           />
           <SettingRow
             icon={<Globe className="w-4 h-4 text-amber-500" />}
-            iconBg="bg-amber-500/15"
+            iconBg="bg-[#ffffff26]"
             label={t("settings.language")}
             right={
               <Select value={language} onValueChange={handleLanguageChange}>
@@ -337,7 +337,7 @@ export default function Settings() {
           />
           <SettingRow
             icon={<Banknote className="w-4 h-4 text-green-500" />}
-            iconBg="bg-green-500/15"
+            iconBg="bg-[#ffffff26]"
             label={t("settings.currency")}
             right={
               <Select value={currency} onValueChange={setCurrency}>
