@@ -8,6 +8,7 @@ import { AppLayout } from "@/components/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ThemeProvider } from "@/contexts/theme-context";
 import { I18nProvider } from "@/contexts/i18n-context";
+import { useRealtime } from "./hooks/use-realtime";
 import {
   getDashboardSummary, getSpendingByCategory, getMonthlyTrend,
   getGetDashboardSummaryQueryKey, getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
@@ -39,7 +40,7 @@ const queryClient = new QueryClient({
         return failureCount < 1;
       },
       refetchInterval:      false,
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: true,
       refetchOnReconnect:   true,
     },
   },
@@ -68,6 +69,11 @@ function SpinnerLoader() {
       <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
     </div>
   );
+}
+
+function RealtimeSync() {
+  useRealtime();
+  return null;
 }
 
 function DashboardPrefetcher() {
@@ -118,6 +124,7 @@ function AppShell() {
         <AuthProvider>
           <div className="min-h-[100dvh] bg-background text-foreground" translate="no">
             <DashboardPrefetcher />
+            <RealtimeSync />
             <Switch>
               <Route path="/"             component={HomeRedirect} />
               <Route path="/sign-in"      component={() => <Suspense fallback={<SpinnerLoader />}><SignInPage /></Suspense>} />

@@ -4,6 +4,40 @@ import { eq } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { supabaseAdmin } from "../lib/supabase";
 import { UpdateProfileBody, CompleteOnboardingBody } from "@workspace/api-zod";
+import { broadcastChange } from "../lib/realtime";
+
+const AVATARS_BUCKET = "avatars";
+
+async function ensureAvatarsBucket() {
+  await supabaseAdmin.storage.createBucket(AVATARS_BUCKET, {
+    public: true,
+    fileSizeLimit: 2 * 1024 * 1024,
+    allowedMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/gif"],
+  }).catch(() => {});
+}
+
+async function uploadAvatarToStorage(supabaseId: string, base64: string): Promise<string | null> {
+  const matches = base64.match(/^data:(image\/[a-z+]+);base64,(.+)$/);
+  if (!matches) return null;
+  const [, contentType, data] = matches;
+  const ext = contentType === "image/png" ? "png" : contentType === "image/webp" ? "webp" : "jpg";
+  const fileName = `${supabaseId}/avatar.${ext}`;
+  const buffer = Buffer.from(data!, "base64");
+
+  await ensureAvatarsBucket();
+
+  const { error } = await supabaseAdmin.storage
+    .from(AVATARS_BUCKET)
+    .upload(fileName, buffer, { contentType: contentType!, upsert: true });
+
+  if (error) return null;
+
+  const { data: { publicUrl } } = supabaseAdmin.storage
+    .from(AVATARS_BUCKET)
+    .getPublicUrl(fileName);
+
+  return publicUrl;
+}
 
 const router = Router();
 
@@ -33,9 +67,18 @@ router.patch("/users/profile", authMiddleware, async (req, res) => {
   const updates: any = {};
   if (parsed.data.name !== undefined && parsed.data.name !== null) updates.name = parsed.data.name;
   if (parsed.data.email !== undefined && parsed.data.email !== null) updates.email = parsed.data.email;
-  if (parsed.data.avatarUrl !== undefined) updates.avatarUrl = parsed.data.avatarUrl;
   if (parsed.data.currency !== undefined && parsed.data.currency !== null) updates.currency = parsed.data.currency;
   if (parsed.data.language !== undefined && parsed.data.language !== null) updates.language = parsed.data.language;
+
+  // Avatar: if base64 string, upload to Supabase Storage and store URL instead
+  if (parsed.data.avatarUrl !== undefined) {
+    if (parsed.data.avatarUrl && parsed.data.avatarUrl.startsWith("data:image/")) {
+      const storageUrl = await uploadAvatarToStorage(user.supabaseId, parsed.data.avatarUrl);
+      updates.avatarUrl = storageUrl ?? parsed.data.avatarUrl;
+    } else {
+      updates.avatarUrl = parsed.data.avatarUrl;
+    }
+  }
 
   // Persist to our DB (source of truth)
   const [updated] = await db.update(usersTable).set(updates).where(eq(usersTable.id, user.id)).returning();
@@ -48,6 +91,7 @@ router.patch("/users/profile", authMiddleware, async (req, res) => {
     }).catch(() => {});
   }
 
+  broadcastChange(user.supabaseId, "profile").catch(() => {});
   res.json(serializeUser(updated));
 });
 

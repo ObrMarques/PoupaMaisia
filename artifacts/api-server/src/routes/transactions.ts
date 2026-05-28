@@ -3,6 +3,7 @@ import { db, transactionsTable, categoriesTable, cardsTable, walletsTable } from
 import { eq, and, desc, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateTransactionBody, UpdateTransactionBody, GetTransactionsQueryParams } from "@workspace/api-zod";
+import { broadcastChange } from "../lib/realtime";
 
 const router = Router();
 
@@ -138,6 +139,7 @@ router.post("/transactions", authMiddleware, async (req, res) => {
   ]);
   const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
   res.status(201).json(await serializeTransaction(tx, cats[0], walletMap));
+  broadcastChange(user.supabaseId, "transaction").catch(() => {});
 });
 
 router.get("/transactions/:id", authMiddleware, async (req, res) => {
@@ -185,6 +187,7 @@ router.patch("/transactions/:id/pay", authMiddleware, async (req, res) => {
   ]);
   const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
   res.json(await serializeTransaction(tx, cats[0], walletMap));
+  broadcastChange(user.supabaseId, "transaction").catch(() => {});
 });
 
 router.patch("/transactions/:id", authMiddleware, async (req, res) => {
@@ -241,6 +244,7 @@ router.patch("/transactions/:id", authMiddleware, async (req, res) => {
   ]);
   const walletMap = new Map((wallets as any[]).map(w => [w.id, w]));
   res.json(await serializeTransaction(tx, cats[0], walletMap));
+  broadcastChange(user.supabaseId, "transaction").catch(() => {});
 });
 
 router.delete("/transactions/:id", authMiddleware, async (req, res) => {
@@ -261,6 +265,7 @@ router.delete("/transactions/:id", authMiddleware, async (req, res) => {
   }
 
   res.json({ success: true, message: "Deleted" });
+  broadcastChange(user.supabaseId, "transaction").catch(() => {});
 });
 
 export default router;

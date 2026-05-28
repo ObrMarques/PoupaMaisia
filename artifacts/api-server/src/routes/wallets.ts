@@ -3,6 +3,7 @@ import { db, walletsTable } from "@workspace/db";
 import { eq, and, sql } from "drizzle-orm";
 import { authMiddleware, getUser } from "../lib/auth";
 import { CreateWalletBody, UpdateWalletBody } from "@workspace/api-zod";
+import { broadcastChange } from "../lib/realtime";
 
 const router = Router();
 
@@ -54,6 +55,7 @@ router.post("/wallets", authMiddleware, async (req, res) => {
   }).returning();
 
   res.status(201).json(serializeWallet({ ...wallet, balance: "0" }));
+  broadcastChange(user.supabaseId, "wallet").catch(() => {});
 });
 
 router.patch("/wallets/:id", authMiddleware, async (req, res) => {
@@ -88,6 +90,7 @@ router.patch("/wallets/:id", authMiddleware, async (req, res) => {
   `);
   const txBalance = (balResult.rows[0] as any)?.balance ?? "0";
   res.json(serializeWallet({ ...wallet, balance: txBalance }));
+  broadcastChange(user.supabaseId, "wallet").catch(() => {});
 });
 
 router.delete("/wallets/:id", authMiddleware, async (req, res) => {
@@ -102,6 +105,7 @@ router.delete("/wallets/:id", authMiddleware, async (req, res) => {
   await db.execute(sql`UPDATE transactions SET wallet_id = NULL WHERE wallet_id = ${id}`);
   await db.delete(walletsTable).where(and(eq(walletsTable.id, id), eq(walletsTable.userId, user.id)));
   res.json({ success: true, message: "Deleted" });
+  broadcastChange(user.supabaseId, "wallet").catch(() => {});
 });
 
 export default router;
