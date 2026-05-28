@@ -16,7 +16,8 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/currency-input";
 import { CategoryPicker } from "@/components/category-picker";
 import { WalletPicker } from "@/components/wallet-picker";
-import { AlertCircle, ChevronRight, Wallet } from "lucide-react";
+import { WalletFormDialog } from "@/components/wallet-form-dialog";
+import { AlertCircle, ChevronRight, Wallet, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface TransactionDialogProps {
@@ -44,6 +45,7 @@ export function TransactionDialog({
 
   const [isCategoryPickerOpen, setIsCategoryPickerOpen] = useState(false);
   const [isWalletPickerOpen, setIsWalletPickerOpen]     = useState(false);
+  const [isWalletFormOpen, setIsWalletFormOpen]         = useState(false);
   const [walletError, setWalletError]                   = useState(false);
 
   const [type, setType]                 = useState<"income" | "expense">(initialType ?? "expense");
@@ -178,9 +180,6 @@ export function TransactionDialog({
   const isPending = date > today;
   const isBusy    = createMutation.isPending || updateMutation.isPending;
 
-  const accentExpense = "#EF4444";
-  const accentIncome  = "#00C851";
-
   return (
     <>
       <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) resetForm(); }}>
@@ -204,172 +203,195 @@ export function TransactionDialog({
           </div>
 
           {/* ── Scrollable body ────────────────────────────── */}
-          <div className="flex-1 overflow-y-auto px-6 pb-2 space-y-5 min-h-0">
-
-            {/* Type toggle — segmented pill */}
-            <div className="relative flex rounded-xl bg-secondary p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
-                className={cn(
-                  "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  type === "expense"
-                    ? "bg-background shadow text-[#EF4444]"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                disabled={lockWallet && initialType === "income"}
-              >
-                {t("transactions.expense")}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
-                className={cn(
-                  "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  type === "income"
-                    ? "bg-background shadow text-[#00C851]"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                disabled={lockWallet && initialType === "expense"}
-              >
-                {t("transactions.income")}
-              </button>
-            </div>
-
-            {/* Amount — hero input */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {t("transactions.amount")}
-              </label>
-              <CurrencyInput
-                value={amount}
-                onValueChange={setAmount}
-                className={cn(
-                  "h-14 text-2xl font-bold bg-secondary border-0 rounded-xl px-4",
-                  "focus-visible:ring-2 placeholder:text-muted-foreground/40",
-                  type === "expense"
-                    ? "focus-visible:ring-[#EF4444]/40 text-[#EF4444] placeholder:text-[#EF4444]/30"
-                    : "focus-visible:ring-[#00C851]/40 text-[#00C851] placeholder:text-[#00C851]/30"
-                )}
-                placeholder={type === "expense" ? "- R$ 0,00" : "+ R$ 0,00"}
-              />
-            </div>
-
-            {/* Description */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {t("transactions.description")}
-              </label>
-              <Input
-                placeholder={t("transactions.descPlaceholder")}
-                value={description}
-                onChange={e => setDescription(e.target.value)}
-                className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
-              />
-            </div>
-
-            {/* Date + Category */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
-                  {t("transactions.date")}
-                  {isPending && (
-                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 normal-case tracking-normal">
-                      {t("transactions.pendingBadge")}
-                    </span>
-                  )}
-                </label>
-                <Input
-                  type="date"
-                  value={date}
-                  onChange={e => setDate(e.target.value)}
-                  className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40 text-sm"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {t("transactions.category")}
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setIsCategoryPickerOpen(true)}
-                  className={cn(
-                    "w-full h-11 flex items-center justify-between px-3 rounded-xl text-sm transition-colors",
-                    "bg-secondary border-0 hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-                    !categoryName && "text-muted-foreground"
-                  )}
-                >
-                  <span className="truncate">{categoryName || t("transactions.selectCategory")}</span>
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 ml-1" />
-                </button>
-              </div>
-            </div>
-
-            {/* Wallet */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                {t("transactions.wallet")}
-                <span className="text-destructive text-[10px] normal-case font-normal">*</span>
-              </label>
-              {noWallets ? (
-                <div className="flex items-center gap-2 px-3 h-11 rounded-xl bg-amber-50 dark:bg-amber-950/20 text-sm text-amber-700 dark:text-amber-400">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{t("transactions.noWalletWarning")}</span>
+          <div className="flex-1 overflow-y-auto px-6 pb-2 min-h-0">
+            {noWallets
+              ? (
+                /* Empty state when no wallets exist */
+                <div className="flex flex-col items-center justify-center py-10 text-center space-y-5">
+                  <div className="w-20 h-20 rounded-2xl bg-secondary flex items-center justify-center">
+                    <Wallet className="w-10 h-10 text-muted-foreground" />
+                  </div>
+                  <div className="space-y-1.5 max-w-[260px]">
+                    <p className="font-semibold text-base text-foreground">
+                      {t("wallets.createFirst")}
+                    </p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {t("transactions.noWalletWarning")}
+                    </p>
+                  </div>
                 </div>
-              ) : lockWallet && walletId !== null ? (
-                <div className="flex items-center gap-2 px-3 h-11 rounded-xl bg-secondary text-sm">
-                  {walletColor && (
-                    <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                  )}
-                  <span className="flex-1 text-foreground font-medium">{walletName}</span>
-                </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
-                  className={cn(
-                    "w-full flex items-center gap-2 px-3 h-11 rounded-xl text-sm transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2",
-                    walletError
-                      ? "bg-destructive/8 ring-2 ring-destructive/40 focus-visible:ring-destructive/40"
-                      : "bg-secondary hover:bg-secondary/70 focus-visible:ring-ring/40"
-                  )}
-                >
-                  {walletId !== null && walletColor ? (
-                    <>
-                      <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
-                      <span className="flex-1 text-left text-foreground font-medium">{walletName}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
-                      <span className="flex-1 text-left text-muted-foreground">{t("transactions.selectWallet")}</span>
-                    </>
-                  )}
-                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-                </button>
-              )}
-              {walletError && (
-                <p className="text-xs text-destructive flex items-center gap-1 mt-1">
-                  <AlertCircle className="w-3 h-3 shrink-0" />
-                  {t("transactions.walletRequired")}
-                </p>
-              )}
-            </div>
+              )
+              : (
+                /* Normal transaction form */
+                <div className="space-y-5 py-2">
+                  {/* Type toggle — segmented pill */}
+                  <div className="relative flex rounded-xl bg-secondary p-1 gap-1">
+                    <button
+                      type="button"
+                      onClick={() => { setType("expense"); setCategoryId(""); setCategoryName(""); }}
+                      className={cn(
+                        "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        type === "expense"
+                          ? "bg-background shadow text-[#EF4444]"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      disabled={lockWallet && initialType === "income"}
+                    >
+                      {t("transactions.expense")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setType("income"); setCategoryId(""); setCategoryName(""); }}
+                      className={cn(
+                        "flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        type === "income"
+                          ? "bg-background shadow text-[#00C851]"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                      disabled={lockWallet && initialType === "expense"}
+                    >
+                      {t("transactions.income")}
+                    </button>
+                  </div>
 
-            {/* Notes */}
-            <div className="space-y-1.5 pb-1">
-              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {t("transactions.notes")}{" "}
-                <span className="normal-case font-normal tracking-normal">({t("common.optional")})</span>
-              </label>
-              <Input
-                placeholder={t("transactions.notesPlaceholder")}
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
-              />
-            </div>
+                  {/* Amount — hero input */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t("transactions.amount")}
+                    </label>
+                    <CurrencyInput
+                      value={amount}
+                      onValueChange={setAmount}
+                      className={cn(
+                        "h-14 text-2xl font-bold bg-secondary border-0 rounded-xl px-4",
+                        "focus-visible:ring-2 placeholder:text-muted-foreground/40",
+                        type === "expense"
+                          ? "focus-visible:ring-[#EF4444]/40 text-[#EF4444] placeholder:text-[#EF4444]/30"
+                          : "focus-visible:ring-[#00C851]/40 text-[#00C851] placeholder:text-[#00C851]/30"
+                      )}
+                      placeholder={type === "expense" ? "- R$ 0,00" : "+ R$ 0,00"}
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t("transactions.description")}
+                    </label>
+                    <Input
+                      placeholder={t("transactions.descPlaceholder")}
+                      value={description}
+                      onChange={e => setDescription(e.target.value)}
+                      className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
+                    />
+                  </div>
+
+                  {/* Date + Category */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
+                        {t("transactions.date")}
+                        {isPending && (
+                          <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 normal-case tracking-normal">
+                            {t("transactions.pendingBadge")}
+                          </span>
+                        )}
+                      </label>
+                      <Input
+                        type="date"
+                        value={date}
+                        onChange={e => setDate(e.target.value)}
+                        className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40 text-sm"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {t("transactions.category")}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsCategoryPickerOpen(true)}
+                        className={cn(
+                          "w-full h-11 flex items-center justify-between px-3 rounded-xl text-sm transition-colors",
+                          "bg-secondary border-0 hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                          !categoryName && "text-muted-foreground"
+                        )}
+                      >
+                        <span className="truncate">{categoryName || t("transactions.selectCategory")}</span>
+                        <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 ml-1" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Wallet */}
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      {t("transactions.wallet")}
+                      <span className="text-destructive text-[10px] normal-case font-normal">*</span>
+                    </label>
+                    {lockWallet && walletId !== null
+                      ? (
+                        <div className="flex items-center gap-2 px-3 h-11 rounded-xl bg-secondary text-sm">
+                          {walletColor && (
+                            <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                          )}
+                          <span className="flex-1 text-foreground font-medium">{walletName}</span>
+                        </div>
+                      )
+                      : (
+                        <button
+                          type="button"
+                          onClick={() => { setIsWalletPickerOpen(true); setWalletError(false); }}
+                          className={cn(
+                            "w-full flex items-center gap-2 px-3 h-11 rounded-xl text-sm transition-colors",
+                            "focus-visible:outline-none focus-visible:ring-2",
+                            walletError
+                              ? "bg-destructive/8 ring-2 ring-destructive/40 focus-visible:ring-destructive/40"
+                              : "bg-secondary hover:bg-secondary/70 focus-visible:ring-ring/40"
+                          )}
+                        >
+                          {walletId !== null && walletColor
+                            ? (
+                              <>
+                                <div className="w-3.5 h-3.5 rounded-full shrink-0" style={{ backgroundColor: walletColor }} />
+                                <span className="flex-1 text-left text-foreground font-medium">{walletName}</span>
+                              </>
+                            )
+                            : (
+                              <>
+                                <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
+                                <span className="flex-1 text-left text-muted-foreground">{t("transactions.selectWallet")}</span>
+                              </>
+                            )
+                          }
+                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        </button>
+                      )
+                    }
+                    {walletError && (
+                      <p className="text-xs text-destructive flex items-center gap-1 mt-1">
+                        <AlertCircle className="w-3 h-3 shrink-0" />
+                        {t("transactions.walletRequired")}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Notes */}
+                  <div className="space-y-1.5 pb-1">
+                    <label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {t("transactions.notes")}{" "}
+                      <span className="normal-case font-normal tracking-normal">({t("common.optional")})</span>
+                    </label>
+                    <Input
+                      placeholder={t("transactions.notesPlaceholder")}
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      className="h-11 bg-secondary border-0 rounded-xl focus-visible:ring-2 focus-visible:ring-ring/40"
+                    />
+                  </div>
+                </div>
+              )
+            }
           </div>
 
           {/* ── Sticky footer ──────────────────────────────── */}
@@ -382,18 +404,31 @@ export function TransactionDialog({
             >
               {t("common.cancel")}
             </Button>
-            <Button
-              className={cn(
-                "flex-1 h-12 text-base font-semibold rounded-xl transition-all",
-                type === "expense"
-                  ? "bg-[#EF4444] hover:bg-[#EF4444]/90 text-white"
-                  : "bg-[#00C851] hover:bg-[#00C851]/90 text-white"
-              )}
-              onClick={handleSave}
-              disabled={!canSave || noWallets || isBusy}
-            >
-              {isBusy ? t("transactions.saving") : isEditing ? t("common.save") : t("transactions.newTransaction")}
-            </Button>
+            {noWallets
+              ? (
+                <Button
+                  className="flex-1 h-12 text-base font-semibold rounded-xl bg-foreground hover:bg-foreground/90 text-background transition-all"
+                  onClick={() => setIsWalletFormOpen(true)}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t("wallets.newWallet")}
+                </Button>
+              )
+              : (
+                <Button
+                  className={cn(
+                    "flex-1 h-12 text-base font-semibold rounded-xl transition-all",
+                    type === "expense"
+                      ? "bg-[#EF4444] hover:bg-[#EF4444]/90 text-white"
+                      : "bg-[#00C851] hover:bg-[#00C851]/90 text-white"
+                  )}
+                  onClick={handleSave}
+                  disabled={!canSave || isBusy}
+                >
+                  {isBusy ? t("transactions.saving") : isEditing ? t("common.save") : t("transactions.newTransaction")}
+                </Button>
+              )
+            }
           </div>
         </DialogContent>
       </Dialog>
@@ -411,6 +446,11 @@ export function TransactionDialog({
         onOpenChange={setIsWalletPickerOpen}
         value={walletId}
         onSelect={(id, name, color) => { setWalletId(id); setWalletName(name); setWalletColor(color); }}
+      />
+
+      <WalletFormDialog
+        open={isWalletFormOpen}
+        onOpenChange={setIsWalletFormOpen}
       />
     </>
   );

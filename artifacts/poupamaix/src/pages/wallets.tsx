@@ -1,35 +1,23 @@
 import { useState } from "react";
 import {
-  useGetWallets, useCreateWallet, useUpdateWallet, useDeleteWallet,
+  useGetWallets, useDeleteWallet,
   getGetWalletsQueryKey, getGetDashboardSummaryQueryKey,
   getGetSpendingByCategoryQueryKey, getGetMonthlyTrendQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { useSubscription } from "@/hooks/use-subscription";
 import { useI18n } from "@/contexts/i18n-context";
 import { formatCurrency } from "@/lib/format";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@/components/currency-input";
-import { UpgradeModal } from "@/components/upgrade-modal";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { WalletFormDialog } from "@/components/wallet-form-dialog";
 import { PluggySyncButton, PluggyDisconnectButton } from "@/components/pluggy-connect";
 import {
   Plus, Pencil, Trash2, Wallet, Building2,
   Landmark, Briefcase, PiggyBank, DollarSign, CreditCard, Banknote,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-
-const PRESET_COLORS = [
-  "#1A1A1A", "#3B82F6", "#10B981", "#F59E0B",
-  "#EF4444", "#8B5CF6", "#EC4899", "#F97316",
-  "#06B6D4", "#6B7280",
-];
-
-type WalletIconId = "wallet" | "landmark" | "briefcase" | "piggy-bank" | "dollar" | "credit-card" | "banknote";
 
 const WALLET_ICON_MAP: Record<string, LucideIcon> = {
   wallet: Wallet,
@@ -45,43 +33,25 @@ const WALLET_ICON_MAP: Record<string, LucideIcon> = {
   "🐷": PiggyBank,
 };
 
-const PRESET_ICONS: WalletIconId[] = ["wallet", "landmark", "briefcase", "piggy-bank", "dollar", "credit-card", "banknote"];
-
 function WalletIcon({ icon, className }: { icon: string; className?: string }) {
   const Icon = WALLET_ICON_MAP[icon] ?? Wallet;
   return <Icon className={className ?? "w-5 h-5"} />;
 }
-
-interface WalletFormState {
-  name: string;
-  color: string;
-  icon: string;
-  initialBalance: string;
-}
-
-const defaultForm: WalletFormState = { name: "", color: "#3B82F6", icon: "wallet", initialBalance: "" };
-
-const FREE_WALLET_LIMIT = 2;
 
 export default function Wallets() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { t } = useI18n();
   const currency = user?.currency || "BRL";
-  const { isPremium } = useSubscription();
 
   const { data: wallets, isLoading } = useGetWallets({
     query: { staleTime: 0, queryKey: getGetWalletsQueryKey() },
   });
-  const createMutation = useCreateWallet();
-  const updateMutation = useUpdateWallet();
   const deleteMutation = useDeleteWallet();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId]     = useState<number | null>(null);
-  const [form, setForm]               = useState<WalletFormState>(defaultForm);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
-  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [isFormOpen, setIsFormOpen]                   = useState(false);
+  const [editingWallet, setEditingWallet]             = useState<any>(null);
+  const [confirmDeleteId, setConfirmDeleteId]         = useState<number | null>(null);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getGetWalletsQueryKey(),             refetchType: "all" });
@@ -91,38 +61,13 @@ export default function Wallets() {
   };
 
   const openCreate = () => {
-    if (!isPremium && (wallets?.length ?? 0) >= FREE_WALLET_LIMIT) {
-      setShowUpgrade(true);
-      return;
-    }
-    setEditingId(null);
-    setForm(defaultForm);
-    setIsModalOpen(true);
+    setEditingWallet(null);
+    setIsFormOpen(true);
   };
 
   const openEdit = (w: any) => {
-    setEditingId(w.id);
-    setForm({ name: w.name, color: w.color, icon: w.icon, initialBalance: (w.initialBalance ?? 0).toFixed(2) });
-    setIsModalOpen(true);
-  };
-
-  const handleSave = () => {
-    if (!form.name.trim()) return;
-    const initialBalance = form.initialBalance ? parseFloat(form.initialBalance) : 0;
-    if (editingId !== null) {
-      updateMutation.mutate({ id: editingId, data: { name: form.name, color: form.color, icon: form.icon, initialBalance } }, {
-        onSuccess: () => { setIsModalOpen(false); invalidate(); },
-      });
-    } else {
-      if (!isPremium && (wallets?.length ?? 0) >= FREE_WALLET_LIMIT) {
-        setIsModalOpen(false);
-        setShowUpgrade(true);
-        return;
-      }
-      createMutation.mutate({ data: { name: form.name, color: form.color, icon: form.icon, initialBalance } }, {
-        onSuccess: () => { setIsModalOpen(false); invalidate(); },
-      });
-    }
+    setEditingWallet(w);
+    setIsFormOpen(true);
   };
 
   const handleDelete = (id: number) => {
@@ -140,107 +85,10 @@ export default function Wallets() {
           <h1 className="text-3xl font-bold tracking-tight">{t("wallets.title")}</h1>
           <p className="text-muted-foreground">{t("wallets.subtitle")}</p>
         </div>
-
         <div className="flex gap-2 w-full md:w-auto">
-          <Dialog open={isModalOpen} onOpenChange={(v) => { setIsModalOpen(v); if (!v) { setEditingId(null); setForm(defaultForm); } }}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreate} data-testid="button-add-wallet">
-                <Plus className="w-4 h-4 mr-2" /> {t("wallets.newWallet")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent aria-describedby={undefined} className="sm:max-w-[440px]">
-              <DialogHeader>
-                <DialogTitle>{editingId !== null ? t("wallets.editWallet") : t("wallets.newWallet")}</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label>{t("wallets.name")}</Label>
-                  <Input
-                    placeholder={t("wallets.namePlaceholder")}
-                    value={form.name}
-                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                    className="bg-background"
-                    autoFocus
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("wallets.initialBalance")}</Label>
-                  <CurrencyInput
-                    value={form.initialBalance}
-                    onValueChange={v => setForm(f => ({ ...f, initialBalance: v }))}
-                    className="bg-background"
-                    placeholder="R$ 0,00"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {t("wallets.initialBalanceDesc")}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("wallets.icon")}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_ICONS.map(iconId => (
-                      <button
-                        key={iconId}
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, icon: iconId }))}
-                        className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors ${
-                          form.icon === iconId ? "bg-secondary ring-2 ring-foreground" : "bg-secondary/50 hover:bg-secondary"
-                        }`}
-                        style={{ color: form.color }}
-                      >
-                        <WalletIcon icon={iconId} className="w-5 h-5" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>{t("wallets.color")}</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {PRESET_COLORS.map(color => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, color }))}
-                        className={`w-8 h-8 rounded-full transition-transform hover:scale-110 ${
-                          form.color === color ? "ring-2 ring-offset-2 ring-foreground scale-110" : ""
-                        }`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-secondary/50 border border-border">
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: `${form.color}22`, border: `2px solid ${form.color}`, color: form.color }}
-                  >
-                    <WalletIcon icon={form.icon} className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{form.name || t("wallets.previewPlaceholder")}</p>
-                    {form.initialBalance && parseFloat(form.initialBalance) !== 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        {t("wallets.initialBalance")}: {formatCurrency(parseFloat(form.initialBalance), currency)}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsModalOpen(false)}>{t("common.cancel")}</Button>
-                <Button
-                  onClick={handleSave}
-                  disabled={!form.name.trim() || createMutation.isPending || updateMutation.isPending}
-                >
-                  {createMutation.isPending || updateMutation.isPending ? t("common.saving") : t("common.save")}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <Button onClick={openCreate} data-testid="button-add-wallet">
+            <Plus className="w-4 h-4 mr-2" /> {t("wallets.newWallet")}
+          </Button>
         </div>
       </div>
 
@@ -344,6 +192,13 @@ export default function Wallets() {
         )}
       </div>
 
+      <WalletFormDialog
+        open={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        editingWallet={editingWallet}
+        onSuccess={invalidate}
+      />
+
       <Dialog open={confirmDeleteId !== null} onOpenChange={(v) => { if (!v) setConfirmDeleteId(null); }}>
         <DialogContent aria-describedby={undefined} className="sm:max-w-[360px]">
           <DialogHeader>
@@ -364,12 +219,6 @@ export default function Wallets() {
           </div>
         </DialogContent>
       </Dialog>
-
-      <UpgradeModal
-        open={showUpgrade}
-        onClose={() => setShowUpgrade(false)}
-        feature="Carteiras ilimitadas"
-      />
     </div>
   );
 }
