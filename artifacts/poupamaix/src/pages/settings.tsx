@@ -10,8 +10,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Camera, Moon, Globe, Mail, Check, AlertCircle, ChevronRight,
-  Bell, FileText, Shield, Cookie, LogOut, Trash2, Lock, X,
+  Camera, Moon, Globe, Banknote, Check, AlertCircle, ChevronRight,
+  FileText, Shield, Cookie, LogOut, Trash2, Lock, X,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { supabase } from "@/lib/supabase";
@@ -114,9 +114,6 @@ export default function Settings() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const nameDirtyRef = useRef(false);
-
-  const [pushNotif, setPushNotif]   = useState(false);
-  const [emailPromo, setEmailPromo] = useState(false);
 
   const [modal, setModal] = useState<"terms" | "privacy" | "cookies" | "delete" | null>(null);
 
@@ -275,8 +272,8 @@ export default function Settings() {
           </div>
         </SectionCard>
 
-        {/* ── Aparência ────────────────────────────── */}
-        <SectionCard title={t("settings.appearance")}>
+        {/* ── Preferências ─────────────────────────── */}
+        <SectionCard title={t("settings.preferences")}>
           <SettingRow
             icon={<Moon className="w-4 h-4 text-purple-400" />}
             iconBg="bg-purple-500/15"
@@ -288,10 +285,9 @@ export default function Settings() {
             icon={<Globe className="w-4 h-4 text-amber-500" />}
             iconBg="bg-amber-500/15"
             label={t("settings.language")}
-            description={languages[language]}
             right={
               <Select value={language} onValueChange={handleLanguageChange}>
-                <SelectTrigger className="w-36 h-8 text-xs bg-background border-border">
+                <SelectTrigger className="w-32 h-8 text-xs bg-background border-border">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-64">
@@ -301,47 +297,30 @@ export default function Settings() {
                 </SelectContent>
               </Select>
             }
-            divider={false}
           />
-        </SectionCard>
-
-        {/* ── Moeda ────────────────────────────────── */}
-        <SectionCard title={t("settings.preferences")}>
-          <div className="px-4 py-4 space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("settings.currency")}</Label>
+          <SettingRow
+            icon={<Banknote className="w-4 h-4 text-green-500" />}
+            iconBg="bg-green-500/15"
+            label={t("settings.currency")}
+            right={
               <Select value={currency} onValueChange={setCurrency}>
-                <SelectTrigger className="bg-background"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-32 h-8 text-xs bg-background border-border">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="BRL">BRL — R$ (Real)</SelectItem>
-                  <SelectItem value="USD">USD — $ (Dólar)</SelectItem>
-                  <SelectItem value="EUR">EUR — € (Euro)</SelectItem>
+                  <SelectItem value="BRL">R$ — Real</SelectItem>
+                  <SelectItem value="USD">$ — Dólar</SelectItem>
+                  <SelectItem value="EUR">€ — Euro</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            }
+            divider={false}
+          />
+          <div className="px-4 py-3 border-t border-border/60">
             <Button onClick={handleSavePreferences} disabled={updateMutation.isPending} variant="outline" className="w-full">
               {updateMutation.isPending ? t("common.saving") : t("settings.savePreferences")}
             </Button>
           </div>
-        </SectionCard>
-
-        {/* ── Notificações ─────────────────────────── */}
-        <SectionCard title={t("settings.notifications")}>
-          <SettingRow
-            icon={<Bell className="w-4 h-4 text-green-500" />}
-            iconBg="bg-green-500/15"
-            label={t("settings.pushNotif")}
-            description={t("settings.pushNotifDesc")}
-            right={<Switch checked={pushNotif} onCheckedChange={setPushNotif} />}
-          />
-          <SettingRow
-            icon={<Mail className="w-4 h-4 text-blue-500" />}
-            iconBg="bg-blue-500/15"
-            label={t("settings.emailPromo")}
-            description={t("settings.emailPromoDesc")}
-            right={<Switch checked={emailPromo} onCheckedChange={setEmailPromo} />}
-            divider={false}
-          />
         </SectionCard>
 
         {/* ── Legal ────────────────────────────────── */}
