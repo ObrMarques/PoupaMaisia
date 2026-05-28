@@ -43,18 +43,21 @@ interface CategoryIconProps {
   name: string;
   color?: string;
   className?: string;
+  size?: "sm" | "md";
 }
 
-export function CategoryIcon({ name, color, className }: CategoryIconProps) {
+export function CategoryIcon({ name, color, className, size = "md" }: CategoryIconProps) {
   const Icon = CATEGORY_ICON_MAP[name] ?? Folder;
   const iconColor = color || "#6C5CE7";
+  const containerCls = size === "sm" ? "w-9 h-9" : "w-11 h-11";
+  const iconCls      = size === "sm" ? "w-4 h-4" : "w-5 h-5";
 
   return (
     <div
-      className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 ${className ?? ""}`}
+      className={`${containerCls} rounded-full flex items-center justify-center shrink-0 ${className ?? ""}`}
       style={{ backgroundColor: `${iconColor}20`, color: iconColor }}
     >
-      <Icon className="w-5 h-5" />
+      <Icon className={iconCls} />
     </div>
   );
 }

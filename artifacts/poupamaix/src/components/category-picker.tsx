@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Plus, Check, ChevronRight, Pencil, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CategoryIcon } from "@/components/category-icon";
 
 
 interface CategoryPickerProps {
@@ -270,19 +271,12 @@ export function CategoryPicker({ open, onOpenChange, value, onSelect, type }: Ca
                       )}
                       style={isSelected ? { borderColor: cat.color ?? "#6C5CE7" } : {}}
                     >
-                      {/* Color circle / icon */}
-                      <div
-                        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-transform"
-                        style={{
-                          backgroundColor: `${cat.color ?? "#6C5CE7"}22`,
-                          border: `2px solid ${cat.color ?? "#6C5CE7"}`,
-                        }}
-                      >
-                        {cat.icon
-                          ? <span className="text-base leading-none">{cat.icon}</span>
-                          : <div className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color ?? "#6C5CE7" }} />
-                        }
-                      </div>
+                      {/* Category icon */}
+                      <CategoryIcon
+                        name={cat.name}
+                        color={cat.color ?? "#6C5CE7"}
+                        size="sm"
+                      />
 
                       {/* Name */}
                       <span
