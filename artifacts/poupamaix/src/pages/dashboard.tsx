@@ -11,6 +11,7 @@ import { Link } from "wouter";
 import { QuickAddTransaction } from "@/components/quick-add-transaction";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WalletIcon } from "@/components/wallet-icon";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -439,9 +440,7 @@ export default function Dashboard() {
                     {wallets?.slice(0, 4).map((w) => (
                       <div key={w.id} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm shrink-0" style={{ backgroundColor: w.color + "26" }}>
-                            <span>{w.icon}</span>
-                          </div>
+                          <WalletIcon icon={w.icon} color={w.color} size="sm" />
                           <span className="text-muted-foreground truncate max-w-[110px]">{w.name}</span>
                         </div>
                         <span className={`font-medium tabular-nums ${w.balance < 0 ? "text-[#FF4444]" : ""}`}>
