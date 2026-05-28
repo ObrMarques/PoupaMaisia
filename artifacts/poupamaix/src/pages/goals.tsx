@@ -380,7 +380,7 @@ export default function Goals() {
         {isLoading ? (
           Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-xl" />)
         ) : goals?.length === 0 ? (
-          <div className="col-span-full text-center py-16 bg-card rounded-xl border border-border">
+          <div className="col-span-full text-center py-16 bg-card rounded-2xl premium-card border">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
               <Target className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -397,7 +397,7 @@ export default function Goals() {
             const goalColor = g.color || "#7C3AED";
 
             return (
-              <Card key={g.id} className="bg-card flex flex-col group" data-testid={`card-goal-${g.id}`}>
+              <Card key={g.id} className="flex flex-col group" data-testid={`card-goal-${g.id}`}>
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <div className="flex-1 min-w-0">

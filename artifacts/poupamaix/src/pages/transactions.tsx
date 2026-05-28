@@ -230,7 +230,7 @@ export default function Transactions() {
       )}
 
       {/* Transaction list */}
-      <Card className="bg-card border-border">
+      <Card>
         <CardContent className="p-0">
           <div className="divide-y divide-border">
             {isLoading ? (

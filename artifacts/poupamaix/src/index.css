@@ -52,7 +52,7 @@
   /* Fundo levemente acinzentado — evita branco puro */
   --background: 210 40% 98%;      /* #F8FAFC */
   --foreground: 222 47% 11%;      /* #111827 */
-  --border: 215 20% 88%;          /* #DBEAFE-ish */
+  --border: 215 20% 91%;          /* sutil, quase invisível */
   --input: 210 30% 94%;
   --ring: 222 47% 11%;
 
@@ -92,14 +92,14 @@
   /* #111827 — azul-grafite profundo, nunca preto puro */
   --background: 221 39% 11%;
   --foreground: 210 40% 98%;      /* #F9FAFB */
-  --border: 215 19% 27%;          /* #374151 */
+  --border: 215 19% 32%;          /* suavizado */
   --input: 215 19% 27%;
   --ring: 160 84% 39%;            /* verde financeiro como ring de foco */
 
-  /* #1F2937 — superfície de card */
-  --card: 215 28% 17%;
+  /* superfície de card levemente elevada */
+  --card: 215 28% 19%;
   --card-foreground: 210 40% 98%;
-  --card-border: 215 19% 27%;
+  --card-border: 215 19% 32%;
 
   /* #1F2937 — popovers */
   --popover: 215 28% 17%;
@@ -181,5 +181,21 @@ svg, img, video, canvas,
   }
   .dark .shadow-premium {
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
+  }
+}
+
+/* ── CARD PREMIUM (glassmorphism suave) ──────────────────── */
+@layer components {
+  .premium-card {
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.06),
+      0 1px 2px 0 rgb(0 0 0 / 0.04);
+  }
+  .dark .premium-card {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    box-shadow:
+      0 2px 8px 0 rgb(0 0 0 / 0.28),
+      0 0 0 1px rgb(255 255 255 / 0.05);
   }
 }

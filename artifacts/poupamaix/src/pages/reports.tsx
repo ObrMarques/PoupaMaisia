@@ -60,7 +60,7 @@ export default function Reports() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-card">
+        <Card>
           <CardHeader>
             <CardTitle>{t("reports.spendingByCategory")}</CardTitle>
             <CardDescription>{t("reports.spendingDesc")}</CardDescription>
@@ -119,7 +119,7 @@ export default function Reports() {
         </Card>
 
         <div className="space-y-6">
-          <Card className="bg-card">
+          <Card>
             <CardHeader>
               <CardTitle>{t("reports.cashFlow")}</CardTitle>
               <CardDescription>{t("reports.cashFlowDesc")}</CardDescription>

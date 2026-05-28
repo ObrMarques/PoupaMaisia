@@ -325,7 +325,7 @@ export default function Cards() {
         {isLoading ? (
           Array(2).fill(0).map((_, i) => <Skeleton key={i} className="h-56 w-full rounded-2xl" />)
         ) : cards?.length === 0 ? (
-          <div className="col-span-full text-center py-16 bg-card rounded-xl border border-border">
+          <div className="col-span-full text-center py-16 bg-card rounded-2xl premium-card border">
             <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-4">
               <CreditCard className="w-8 h-8 text-muted-foreground" />
             </div>
@@ -381,7 +381,7 @@ export default function Cards() {
                   </div>
                 </div>
 
-                <UICard className="bg-card">
+                <UICard>
                   <CardContent className="p-4 space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Utilização do limite</span>

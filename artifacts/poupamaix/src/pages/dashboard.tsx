@@ -119,7 +119,7 @@ function OnboardingCarousel({ hasWallet, hasGoal, hasTransaction }: OnboardingCa
   ];
 
   return (
-    <Card className="bg-card overflow-hidden">
+    <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div className="flex items-center gap-1.5">
           <CardTitle className="text-sm font-medium text-muted-foreground">Primeiros Passos</CardTitle>
@@ -330,7 +330,7 @@ export default function Dashboard() {
             hasTransaction={hasTransaction}
           />
         )}
-        <Card className="bg-card">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.balance")}</CardTitle>
             <Wallet className="h-4 w-4 text-muted-foreground" />
@@ -339,7 +339,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold" data-testid="text-total-balance">{formatCurrency(summary?.totalBalance || 0, currency)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyIncome")}</CardTitle>
             <ArrowUpRight className="h-4 w-4 text-[#00C851]" />
@@ -348,7 +348,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-[#00C851]">{formatCurrency(summary?.monthlyIncome || 0, currency)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-card">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.monthlyExpenses")}</CardTitle>
             <ArrowDownRight className="h-4 w-4 text-[#FF4444]" />
@@ -358,7 +358,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
         <Link href="/transactions?status=pending" className="block">
-          <Card className="bg-card h-full cursor-pointer hover:bg-secondary/30 transition-colors">
+          <Card className="h-full cursor-pointer hover:bg-secondary/30 transition-colors">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">{t("dashboard.billsToPay")}</CardTitle>
               <Clock className="h-4 w-4 text-[#C49A00] dark:text-[#F4C542]" />
@@ -386,7 +386,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Charts area */}
         <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-card border-border">
+          <Card>
             <CardHeader>
               <CardTitle>{t("dashboard.cashFlow")}</CardTitle>
               <CardDescription>{t("dashboard.cashFlowDesc")}</CardDescription>
@@ -414,7 +414,7 @@ export default function Dashboard() {
         {/* Sidebar */}
         <div className="space-y-8">
           {/* Wallets Card */}
-          <Card className="bg-card border-border">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle>{t("dashboard.wallets")}</CardTitle>
               <Link href="/wallets">
@@ -461,7 +461,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card>
             <CardHeader>
               <CardTitle>{t("dashboard.spendingByCategory")}</CardTitle>
             </CardHeader>
@@ -505,7 +505,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>{t("dashboard.goalsProgress")}</CardTitle>
               <Link href="/goals">

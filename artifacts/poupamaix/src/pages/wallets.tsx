@@ -93,7 +93,7 @@ export default function Wallets() {
       </div>
 
       {(wallets ?? []).length > 0 && (
-        <Card className="bg-card border-border">
+        <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -110,11 +110,11 @@ export default function Wallets() {
 
       <div className="space-y-3">
         {isLoading ? (
-          <Card className="bg-card border-border">
+          <Card>
             <CardContent className="p-8 text-center text-muted-foreground">{t("wallets.loading")}</CardContent>
           </Card>
         ) : (wallets ?? []).length === 0 ? (
-          <Card className="bg-card border-border">
+          <Card>
             <CardContent className="p-12 text-center space-y-3">
               <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mx-auto">
                 <Briefcase className="w-8 h-8 text-muted-foreground" />
@@ -129,7 +129,7 @@ export default function Wallets() {
           </Card>
         ) : (
           (wallets ?? []).map((w) => (
-            <Card key={w.id} className="bg-card border-border">
+            <Card key={w.id}>
               <CardContent className="p-4">
                 <div className="flex items-center gap-4">
                   <div
